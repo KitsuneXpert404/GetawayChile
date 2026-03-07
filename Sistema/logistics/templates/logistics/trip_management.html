@@ -1,0 +1,118 @@
+{% extends 'core/base_dashboard.html' %}
+{% load humanize %}
+
+{% block title %}Gestión de Viajes | Logística — Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="gc-page-title mb-0"><i class="fas fa-route me-2" style="color:var(--gc-gold);"></i>Gestión de Viajes</h1>
+        <p class="gc-page-sub mb-0">Asignación logística por stop — vehículo · hora · notas</p>
+    </div>
+    <a href="{% url 'logistics_dashboard' %}" class="btn-gc-outline"><i class="fas fa-arrow-left"></i> Dashboard</a>
+</div>
+
+{# ── Filters ── #}
+<div class="gc-card mb-4">
+    <div class="gc-card-header"><i class="fas fa-filter"></i> Filtros</div>
+    <div class="p-3">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="gc-label"><i class="fas fa-calendar-alt me-1"></i>Fecha del Tour</label>
+                <input type="date" name="date" class="gc-input" value="{{ date_filter }}" max="{{ today_str }}">
+            </div>
+            <div class="col-md-5">
+                <label class="gc-label"><i class="fas fa-search me-1"></i>Buscar Cliente</label>
+                <input type="text" name="q" class="gc-input" placeholder="Nombre, RUT, teléfono…" value="{{ search_q }}">
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn-gc-primary flex-fill justify-content-center"><i class="fas fa-search"></i> Buscar</button>
+                <a href="{% url 'logistics_trip_management' %}" class="btn-gc-outline flex-fill justify-content-center"><i class="fas fa-times"></i> Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ── Sales list with per-stop logistics ── #}
+{% for sale in sales %}
+<div class="gc-card mb-4">
+    {# Sale header #}
+    <div class="gc-card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:linear-gradient(135deg,#1a2a31,#1a4a55);">
+        <div>
+            <span class="fw-bold" style="color:var(--gc-gold);font-size:1rem;">#{{ sale.pk }}</span>
+            <span class="ms-2 text-white fw-semibold">{{ sale.client_first_name }} {{ sale.client_last_name }}</span>
+            <span class="ms-2 text-white-50 small">{{ sale.client_phone }}</span>
+            {% if sale.hotel_address %}<span class="ms-2 small" style="color:rgba(255,255,255,.6);"><i class="fas fa-map-marker-alt me-1"></i>{{ sale.hotel_address }}</span>{% endif %}
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            {% if sale.status == 'CONFIRMADA' %}<span class="gc-badge gc-badge-green"><i class="fas fa-check-circle"></i> Confirmada</span>{% endif %}
+            <a href="{% url 'logistics_sale_detail' sale.pk %}" class="btn btn-sm btn-outline-light py-1 px-3"><i class="fas fa-eye me-1"></i>Ver Venta</a>
+        </div>
+    </div>
+    <div class="p-0">
+        {% for stop in sale.tour_stops.all %}
+        <div class="py-3 px-4 {% if not forloop.last %}border-bottom{% endif %}">
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <div>
+                    <span class="fw-bold" style="color:var(--gc-teal);font-size:.95rem;">{{ stop.tour.name|default:"Tour Privado" }}</span>
+                    <span class="badge bg-light text-dark border ms-2 small">{{ stop.tour_date|date:"d/m/Y" }}</span>
+                    <span class="ms-2 text-muted small">{{ stop.pax_adults }} adultos{% if stop.pax_infants %} + {{ stop.pax_infants }} infantes{% endif %}</span>
+                    {# Stop status badge #}
+                    {% if stop.stop_status == 'CONFIRMADA' %}
+                    <span class="gc-badge gc-badge-green ms-1" style="font-size:.72rem;"><i class="fas fa-check"></i> Confirmado</span>
+                    {% elif stop.stop_status == 'CANCELADA' %}
+                    <span class="gc-badge gc-badge-red ms-1" style="font-size:.72rem;"><i class="fas fa-times"></i> Cancelado</span>
+                    {% else %}
+                    <span class="gc-badge ms-1" style="font-size:.72rem;background:rgba(180,130,60,.12);color:#B5823C;"><i class="fas fa-clock"></i> Pendiente</span>
+                    {% endif %}
+                </div>
+                <a href="{% url 'logistics_stop_assign' sale_pk=sale.pk stop_pk=stop.pk %}" class="btn btn-sm {% if stop.assigned_vehicle %}btn-outline-secondary{% else %}btn-gc-teal{% endif %} py-1 px-3">
+                    <i class="fas fa-route me-1"></i>{% if stop.assigned_vehicle %}Reasignar{% else %}Asignar Vehículo{% endif %}
+                </a>
+            </div>
+            <div class="row g-2" style="font-size:.88rem;">
+                <div class="col-md-4">
+                    <label class="gc-label">Vehículo</label>
+                    {% if stop.assigned_vehicle %}
+                    <div class="fw-semibold"><i class="fas fa-truck me-1" style="color:var(--gc-teal);"></i>{{ stop.assigned_vehicle.plate }} — {{ stop.assigned_vehicle.owner_company }}</div>
+                    <div class="text-muted small">Cap: {{ stop.assigned_vehicle.capacity }} pax</div>
+                    {% else %}
+                    <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Sin asignar</span>
+                    {% endif %}
+                </div>
+                <div class="col-md-2">
+                    <label class="gc-label">Hora Recogida</label>
+                    <div class="fw-bold" style="color:var(--gc-gold);font-size:1.05rem;">
+                        {% if stop.pickup_time %}<i class="fas fa-clock me-1"></i>{{ stop.pickup_time|time:"H:i" }}{% else %}<span class="text-muted">—</span>{% endif %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="gc-label">Asignado por</label>
+                    {% if stop.vehicle_assigned_at %}
+                    <div class="text-muted small">{{ stop.vehicle_assigned_at|date:"d/m/Y H:i" }}</div>
+                    {% if stop.vehicle_assigned_by %}<div class="small">{{ stop.vehicle_assigned_by.get_full_name|default:stop.vehicle_assigned_by.username }}</div>{% endif %}
+                    {% else %}
+                    <span class="text-muted small">—</span>
+                    {% endif %}
+                </div>
+                {% if stop.logistics_notes %}
+                <div class="col-md-3">
+                    <label class="gc-label">Notas</label>
+                    <div class="text-muted small" style="font-size:.82rem;">{{ stop.logistics_notes|truncatechars:80 }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-3 text-muted text-center small">Sin stops registrados.</div>
+        {% endfor %}
+    </div>
+</div>
+{% empty %}
+<div class="gc-card p-5 text-center">
+    <i class="fas fa-route fa-3x mb-3" style="color:var(--gc-teal);opacity:.25;"></i>
+    <p class="text-muted">No hay ventas activas con los filtros seleccionados.</p>
+</div>
+{% endfor %}
+
+{% endblock %}

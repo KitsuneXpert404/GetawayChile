@@ -1,0 +1,384 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inicio | Getaway Chile{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --gc-teal: #2C6E7A;
+        --gc-teal-dark: #1e4f5a;
+        --gc-gold: #B5823C;
+        --gc-gold-lite: #d4a05a;
+    }
+
+    .hero-section {
+        background: linear-gradient(rgba(10, 25, 30, 0.8), rgba(44, 110, 122, 0.7)),
+        url("{% static 'img/hero.jpg' %}");
+        background-size: cover;
+        background-position: center;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        color: white;
+    }
+
+    .service-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .logo-hdr {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        display: inline-block;
+        background: white;
+    }
+
+    .btn-gold {
+        background: linear-gradient(135deg, #B5823C, #d4a05a);
+        color: white !important;
+        border: none;
+        box-shadow: 0 6px 15px rgba(181, 130, 60, 0.4);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-gold:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 25px rgba(181, 130, 60, 0.6);
+        background: linear-gradient(135deg, #d4a05a, #e8b96a);
+    }
+
+    .delay-1 {
+        animation-delay: 0.2s;
+    }
+
+    .delay-2 {
+        animation-delay: 0.4s;
+    }
+
+    .delay-3 {
+        animation-delay: 0.6s;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Splash (Authenticated Users) -->
+{% if user.is_authenticated %}
+<div id="loadingSplash" style="
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(145deg, #1e4f5a 0%, #2C6E7A 45%, #1a3a44 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+">
+    <!-- Animated background particles -->
+    <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
+        <div class="splash-particle" style="width:300px;height:300px;top:-80px;left:-80px;animation-delay:0s;"></div>
+        <div class="splash-particle" style="width:200px;height:200px;bottom:-60px;right:-60px;animation-delay:1.2s;">
+        </div>
+        <div class="splash-particle" style="width:150px;height:150px;top:30%;right:10%;animation-delay:0.6s;"></div>
+    </div>
+
+    <!-- Logo -->
+    <div style="position:relative;z-index:1;text-align:center;animation:splashFadeUp .6s ease both;">
+        <div
+            style="display:inline-block; border-radius:15px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.1);">
+            <img src="{% static 'img/Logo_oficial.jpg' %}" alt="Getaway Chile"
+                style="height:80px;width:auto;display:block;" onerror="this.style.display='none'">
+        </div>
+    </div>
+
+    <!-- Welcome text -->
+    <div
+        style="position:relative;z-index:1;text-align:center;margin-top:2rem;animation:splashFadeUp .7s .15s ease both;">
+        <div
+            style="font-size:.8rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:.5rem;">
+            Panel de Acceso
+        </div>
+        <h1
+            style="font-size:clamp(1.6rem,4vw,2.5rem);font-weight:800;color:#fff;margin:0;font-family:'Poppins',sans-serif;text-shadow:0 2px 12px rgba(0,0,0,.3);">
+            ¡Bienvenido, {{ user.first_name }}!
+        </h1>
+        <div style="margin-top:.75rem;">
+            <span
+                style="background:rgba(181,130,60,.25);border:1px solid rgba(181,130,60,.5);color:#e8b96a;padding:.3rem 1.2rem;border-radius:20px;font-size:.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+                {{ user.get_role_display|default:"Colaborador" }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div
+        style="position:relative;z-index:1;text-align:center;margin-top:3rem;animation:splashFadeUp .7s .3s ease both;">
+        <!-- Dots loader -->
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:1.5rem;">
+            <div class="splash-dot" style="animation-delay:0s;"></div>
+            <div class="splash-dot" style="animation-delay:.18s;"></div>
+            <div class="splash-dot" style="animation-delay:.36s;"></div>
+        </div>
+        <!-- Progress bar -->
+        <div
+            style="width:220px;height:3px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden;margin:0 auto;">
+            <div id="splashProgress"
+                style="height:100%;width:0%;background:linear-gradient(90deg,#B5823C,#e8b96a);border-radius:3px;transition:width 3.6s cubic-bezier(.4,0,.2,1);">
+            </div>
+        </div>
+        <p style="color:rgba(255,255,255,.5);font-size:.75rem;margin-top:.75rem;letter-spacing:.5px;">
+            Cargando tu panel...
+        </p>
+    </div>
+</div>
+
+<style>
+    .splash-particle {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .04);
+        animation: splashPulse 4s ease-in-out infinite;
+    }
+
+    .splash-dot {
+        width: 10px;
+        height: 10px;
+        background: #B5823C;
+        border-radius: 50%;
+        animation: splashBounce .9s ease-in-out infinite;
+        opacity: .85;
+    }
+
+    @keyframes splashFadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes splashPulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: .04;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: .07;
+        }
+    }
+
+    @keyframes splashBounce {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-8px);
+        }
+    }
+
+    @keyframes splashFadeOut {
+        to {
+            opacity: 0;
+            transform: scale(1.04);
+            pointer-events: none;
+        }
+    }
+</style>
+
+<script>
+    (function () {
+        var dashUrl = "{% url 'dashboard' %}";
+        // Start progress bar
+        setTimeout(function () {
+            document.getElementById('splashProgress').style.width = '100%';
+        }, 80);
+        // Redirect after 4 seconds
+        setTimeout(function () {
+            var splash = document.getElementById('loadingSplash');
+            splash.style.animation = 'splashFadeOut .5s ease forwards';
+            setTimeout(function () {
+                window.location.href = dashUrl;
+            }, 450);
+        }, 4000);
+    })();
+</script>
+
+{% else %}
+<!-- Public Landing (Guest Users) -->
+<section class="hero-section text-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Logo -->
+                <div class="animate__animated animate__zoomIn">
+                    <div class="logo-hdr mb-4">
+                        <img src="{% static 'img/Logo_oficial.jpg' %}" alt="Getaway Chile"
+                            style="height: 120px; display: block;"
+                            onerror="this.outerHTML='<h1 class=\'text-white fw-bold\'>Getaway Chile</h1>'">
+                    </div>
+                </div>
+
+                <h1 class="display-3 fw-bold mb-3 animate__animated animate__fadeInUp delay-1"
+                    style="text-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    Descubre Chile con Expertos
+                </h1>
+
+                <p class="lead mb-5 text-white-50 animate__animated animate__fadeInUp delay-2"
+                    style="text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+                    Transporte ejecutivo y tours privados de clase mundial. <br>Gestionamos tu experiencia de principio
+                    a fin.
+                </p>
+
+                <div class="animate__animated animate__fadeInUp delay-3">
+                    <a href="{% url 'login' %}" class="btn btn-gold btn-lg px-5 py-3 rounded-pill fw-bold hover-scale">
+                        <i class="fas fa-user-lock me-2"></i> Acceso Intranet
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mini Tutorial Section -->
+<section class="py-5 bg-light" id="tutorial">
+    <div class="container py-4">
+        <div class="text-center mb-5 animate__animated animate__fadeIn">
+            <span class="badge text-uppercase mb-2" style="background-color: var(--gc-teal, #2C6E7A);">Tutorial de
+                Acceso</span>
+            <h2 class="fw-bold" style="color: var(--gc-teal, #2C6E7A);">¿Cómo ingresar a tu Dashboard?</h2>
+            <p class="text-muted w-75 mx-auto">Sigue estos simples pasos para acceder a tus herramientas de trabajo
+                según tu rol administrativo.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <!-- Step 1 -->
+            <div class="col-md-4 animate__animated animate__fadeInUp">
+                <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden hover-scale">
+                    <div class="position-absolute top-0 start-0 text-white px-3 py-1 rounded-bottom-end fw-bold"
+                        style="background-color: var(--gc-teal, #2C6E7A);">
+                        1</div>
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-id-card fa-3x opacity-50" style="color: var(--gc-teal, #2C6E7A);"></i>
+                        </div>
+                        <h5 class="fw-bold">Credenciales</h5>
+                        <p class="small text-muted mb-0">Utiliza tu <strong>Correo Corporativo</strong> o <strong>Nombre
+                                de Usuario</strong> asignado por RRHH. Tu contraseña inicial es temporal.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="col-md-4 animate__animated animate__fadeInUp delay-1">
+                <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden hover-scale">
+                    <div class="position-absolute top-0 start-0 text-white px-3 py-1 rounded-bottom-end fw-bold"
+                        style="background-color: var(--gc-teal, #2C6E7A);">
+                        2</div>
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-user-tag fa-3x opacity-50" style="color: var(--gc-teal, #2C6E7A);"></i>
+                        </div>
+                        <h5 class="fw-bold">Identificación de Rol</h5>
+                        <p class="small text-muted mb-0">El sistema detectará automáticamente tu perfil:</p>
+                        <ul class="list-unstyled small text-muted mt-2">
+                            <li><i class="fas fa-check me-1" style="color: var(--gc-gold, #B5823C);"></i> Admin /
+                                Logística</li>
+                            <li><i class="fas fa-check me-1" style="color: var(--gc-gold, #B5823C);"></i> Vendedores
+                            </li>
+                            <li><i class="fas fa-check me-1" style="color: var(--gc-gold, #B5823C);"></i> Conductores
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="col-md-4 animate__animated animate__fadeInUp delay-2">
+                <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden hover-scale">
+                    <div class="position-absolute top-0 start-0 text-white px-3 py-1 rounded-bottom-end fw-bold"
+                        style="background-color: var(--gc-teal, #2C6E7A);">
+                        3</div>
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-tachometer-alt fa-3x opacity-50"
+                                style="color: var(--gc-teal, #2C6E7A);"></i>
+                        </div>
+                        <h5 class="fw-bold">Gestión</h5>
+                        <p class="small text-muted mb-0">Una vez dentro, serás redirigido a tu <strong>Panel de
+                                Control</strong> específico para gestionar ventas, rutas o usuarios.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="{% url 'login' %}" class="btn btn-gold btn-lg px-5 shadow rounded-pill hover-scale">
+                <i class="fas fa-sign-in-alt me-2"></i> Ir al Login
+            </a>
+            <p class="mt-3 small text-muted"><i class="fas fa-info-circle me-1"></i> Si olvidaste tu clave, usa la
+                opción "Recuperar Contraseña" en el login.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Services Preview -->
+<section class="py-5 bg-white">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="fw-bold text-uppercase small ls-2" style="color: var(--gc-gold, #B5823C);">Nuestros
+                Servicios</span>
+            <h2 class="fw-bold mt-2" style="color: var(--gc-teal, #2C6E7A);">¿Por qué elegir Getaway Chile?</h2>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm service-card p-4 text-center">
+                    <div class="mb-3" style="color: var(--gc-teal, #2C6E7A);">
+                        <i class="fas fa-car-side fa-3x"></i>
+                    </div>
+                    <h5 class="fw-bold">Transporte Privado</h5>
+                    <p class="text-muted small">Flota moderna y conductores profesionales para traslados seguros y
+                        cómodos en todo el país.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm service-card p-4 text-center">
+                    <div class="mb-3" style="color: var(--gc-gold, #B5823C);">
+                        <i class="fas fa-map-marked-alt fa-3x"></i>
+                    </div>
+                    <h5 class="fw-bold">Tours Exclusivos</h5>
+                    <p class="text-muted small">Experiencias personalizadas a viñas, costa y cordillera. Guías expertos
+                        bilingües.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm service-card p-4 text-center">
+                    <div class="mb-3" style="color: var(--gc-teal, #2C6E7A);">
+                        <i class="fas fa-concierge-bell fa-3x"></i>
+                    </div>
+                    <h5 class="fw-bold">Atención 24/7</h5>
+                    <p class="text-muted small">Equipo de logística monitoreando cada servicio para garantizar
+                        puntualidad y excelencia.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

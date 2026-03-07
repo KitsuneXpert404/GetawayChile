@@ -1,0 +1,659 @@
+{% extends role_base_template %}
+{% load humanize %}
+
+{% block title %}Venta #{{ sale.id }} | Getaway Chile{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .action-btn {
+        min-width: 140px;
+        text-align: center;
+    }
+
+    .timeline-dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .75rem;
+        flex-shrink: 0;
+    }
+
+    .logistics-panel {
+        background: rgba(44, 110, 122, .04);
+        border: 1px solid rgba(44, 110, 122, .15);
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{# Title Bar #}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-file-invoice-dollar me-2" style="color:var(--gc-gold);"></i>
+            Venta <span style="color:var(--gc-gold);">#{{ sale.id }}</span>
+        </h1>
+        <p class="gc-page-sub mb-0">
+            {% if sale.is_private %}<span class="gc-badge gc-badge-gold"><i class="fas fa-star"></i> Tour Privado</span>
+            {% else %}<span class="gc-badge gc-badge-teal"><i class="fas fa-ticket-alt"></i> Tour Regular</span>{% endif %}
+            &nbsp;·&nbsp; Registrado el {{ sale.created_at|date:"d/m/Y H:i" }}
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'sales:list' %}" class="btn-gc-outline"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+</div>
+
+{# ===== ADMIN ACTION BAR ===== #}
+{% if request.user.role == 'ADMIN' or request.user.role == 'LOGISTICA' %}
+{% with stop_count=sale.tour_stops.count %}
+<div class="gc-card mb-4" style="border-left: 4px solid var(--gc-gold);">
+    <div class="p-3 d-flex flex-wrap gap-2 align-items-center">
+        <span class="fw-bold text-muted me-2" style="font-size:.85rem;"><i class="fas fa-bolt me-1" style="color:var(--gc-gold);"></i> Acciones:</span>
+
+        {% if sale.status == 'PENDIENTE' %}
+        <form method="post" action="{% url 'sales:confirm' sale.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-sm px-3 action-btn">
+                <i class="fas fa-check me-1"></i> Confirmar Venta
+            </button>
+        </form>
+        {% endif %}
+
+        {# Cancel button - disabled if PAGADO+CONFIRMADA and tour within 2 days #}
+        {% if sale.status != 'CANCELADA' %}
+        {% if sale.payment_status == 'PAGADO' and sale.status == 'CONFIRMADA' and days_to_tour is not None and days_to_tour < 2 %}
+        <button type="button" class="btn btn-outline-danger btn-sm px-3 action-btn" disabled title="No se puede cancelar: la venta está pagada y el tour es en menos de 2 días">
+            <i class="fas fa-lock me-1"></i> Cancelar (bloqueado)
+        </button>
+        {% else %}
+        <button type="button" class="btn btn-outline-danger btn-sm px-3 action-btn" data-bs-toggle="modal" data-bs-target="#cancelModal">
+            <i class="fas fa-times me-1"></i> Cancelar Venta
+        </button>
+        {% endif %}
+        {% endif %}
+
+        {# Asignar Logística: single-stop goes to the form directly; multi-stop is disabled #}
+        {% if stop_count <= 1 %}
+        {% with first_stop=sale.tour_stops.first %}
+        {% if first_stop %}
+        <a href="{% url 'logistics_stop_assign' sale_pk=sale.pk stop_pk=first_stop.pk %}" class="btn btn-outline-primary btn-sm px-3 action-btn">
+            <i class="fas fa-truck me-1"></i> Asignar Logística
+        </a>
+        {% endif %}
+        {% endwith %}
+        {% else %}
+        <button type="button" class="btn btn-outline-secondary btn-sm px-3 action-btn" disabled title="Usa los botones de asignación por stop en el panel de Logística de abajo">
+            <i class="fas fa-truck me-1"></i> Asignar Logística ↓
+        </button>
+        {% endif %}
+
+        {% if sale.status == 'CONFIRMADA' %}{% if sale.client_email or sale.client_phone %}
+        <button type="button" class="btn btn-sm px-3 action-btn {% if sale.client_notified %}btn-outline-secondary{% else %}btn-gc-gold{% endif %}" data-bs-toggle="modal" data-bs-target="#notifyModal">
+            <i class="fas fa-paper-plane me-1"></i>
+            {% if sale.client_notified %}Re-notificar Cliente{% else %}Notificar Cliente{% endif %}
+        </button>
+        {% endif %}{% endif %}
+    </div>
+</div>
+{% endwith %}
+{% endif %}
+
+
+<div class="row g-4">
+    {# ===== LEFT COLUMN ===== #}
+    <div class="col-lg-8">
+
+        {# Client info #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header"><i class="fas fa-user"></i> Datos del Cliente</div>
+            <div class="p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="gc-label">Nombre Completo</label>
+                        <div class="fw-semibold">{{ sale.client_first_name }} {{ sale.client_last_name }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="gc-label">RUT / Pasaporte</label>
+                        <div>{{ sale.client_rut_passport }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="gc-label">Email</label>
+                        <div>
+                            {% if sale.client_email %}
+                            <a href="mailto:{{ sale.client_email }}">{{ sale.client_email }}</a>
+                            {% else %}—{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="gc-label">Teléfono</label>
+                        <div>{{ sale.client_phone|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="gc-label">Nacionalidad</label>
+                        <div>{{ sale.get_client_nationality_display }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="gc-label">Hotel / Dirección de Recogida</label>
+                        <div>{{ sale.hotel_address|default:"—" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Tour stops #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header"><i class="fas fa-map-marked-alt"></i> Destinos y Fechas</div>
+            <div class="table-responsive">
+                <table class="gc-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Tour</th>
+                            <th>Fecha</th>
+                            <th>Idioma</th>
+                            <th>Adultos</th>
+                            <th>Infantes</th>
+                            <th>Estado</th>
+                            <th class="pe-4 text-end">Subtotal</th>
+                            {% if request.user.role == 'ADMIN' or request.user.role == 'LOGISTICA' %}<th class="pe-4 text-end">Acciones</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stop in sale.tour_stops.all %}
+                        <tr>
+                            <td class="ps-4">
+                                {% if stop.is_private %}<span class="gc-badge gc-badge-gold me-1"><i class="fas fa-star"></i></span>{% endif %}
+                                {{ stop.tour.name|default:"Tour Privado a Medida" }}
+                            </td>
+                            <td>{{ stop.tour_date|date:"d/m/Y"|default:"—" }}</td>
+                            <td>{{ stop.get_tour_language_display }}</td>
+                            <td>{{ stop.pax_adults }} pax @ ${{ stop.price_adult|intcomma }}</td>
+                            <td>{{ stop.pax_infants }} pax @ ${{ stop.price_infant|intcomma }}</td>
+                            <td>
+                                {% if stop.stop_status == 'CONFIRMADA' %}<span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>Confirmada</span>
+                                {% elif stop.stop_status == 'CANCELADA' %}<span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>Cancelada</span>
+                                {% else %}<span class="gc-badge" style="background:rgba(255,193,7,.15);color:#856404;"><i class="fas fa-clock me-1"></i>Pendiente</span>{% endif %}
+                                {% if stop.stop_confirmed_at %}<div class="text-muted" style="font-size:.72rem;margin-top:2px;">{{ stop.stop_confirmed_at|date:"d/m/Y H:i" }}</div>{% endif %}
+                                {% if stop.stop_cancellation_reason %}<div class="text-danger" style="font-size:.72rem;margin-top:2px;">{{ stop.stop_cancellation_reason }}</div>{% endif %}
+                            </td>
+                            <td class="text-end pe-4 fw-semibold" style="color:var(--gc-teal);">${{ stop.subtotal|intcomma }}</td>
+                            {% if request.user.role == 'ADMIN' or request.user.role == 'LOGISTICA' %}
+                            <td class="text-end pe-3">
+                                <div class="d-flex gap-1 justify-content-end">
+                                    {% if stop.stop_status != 'CONFIRMADA' and stop.stop_status != 'CANCELADA' %}
+                                    <form method="post" action="{% url 'sales:stop_confirm' sale_pk=sale.pk stop_pk=stop.pk %}" class="d-inline">{% csrf_token %}<button type="submit" class="btn btn-success btn-sm px-2 py-1" title="Confirmar este stop"><i class="fas fa-check"></i></button></form>
+                                    {% endif %}
+                                    {% if stop.stop_status != 'CANCELADA' %}
+                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" title="Cancelar este stop" data-bs-toggle="modal" data-bs-target="#stopCancelModal{{ stop.pk }}"><i class="fas fa-times"></i></button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-3 text-end border-top" style="background:rgba(44,110,122,0.03);">
+                <span class="text-muted me-3">Pasajeros totales:</span>
+                <span class="fw-bold" style="color:var(--gc-teal);">{{ sale.passengers_count }} Pax</span>
+            </div>
+        </div>
+
+        {# Stop-cancel modals (one per stop) #}
+        {% if request.user.role == 'ADMIN' or request.user.role == 'LOGISTICA' %}
+        {% for stop in sale.tour_stops.all %}
+        <div class="modal fade" id="stopCancelModal{{ stop.pk }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h6 class="modal-title"><i class="fas fa-times-circle me-2"></i>Cancelar: {{ stop.tour.name|default:"Tour" }} — {{ stop.tour_date|date:"d/m/Y" }}</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="post" action="{% url 'sales:stop_cancel' sale_pk=sale.pk stop_pk=stop.pk %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <p class="text-muted small mb-3">Este stop quedará como <strong>CANCELADO</strong> independientemente del resto de los tours de la venta.</p>
+                            <label class="gc-label">Motivo de cancelación (opcional)</label>
+                            <textarea name="stop_cancel_reason" class="gc-input" rows="2" placeholder="Ej: Problema técnico, clima, solicitud del cliente..."></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-gc-outline" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger px-4"><i class="fas fa-times me-1"></i> Cancelar Stop</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+
+        {# Private details #}
+        {% if sale.is_private and sale.private_trip_description %}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header" style="background:linear-gradient(135deg,var(--gc-gold),var(--gc-gold-lite));">
+                <i class="fas fa-star"></i> Detalles del Viaje Privado
+            </div>
+            <div class="p-4">
+                <label class="gc-label">Descripción</label>
+                <p>{{ sale.private_trip_description|linebreaksbr }}</p>
+                {% if sale.private_trip_observations %}
+                <hr class="gc-section-divider">
+                <label class="gc-label">Observaciones</label>
+                <p>{{ sale.private_trip_observations|linebreaksbr }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Logistics panel #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header" style="background:linear-gradient(135deg,#1a4a55,var(--gc-teal));"><i class="fas fa-truck"></i> Logística de Operación</div>
+            <div class="p-0">
+                {% for stop in sale.tour_stops.all %}
+                <div class="py-3 px-4 {% if not forloop.last %}border-bottom{% endif %}">
+                    {# Stop header #}
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <div>
+                            <span class="fw-bold text-gc-teal" style="font-size:.95rem;">{{ stop.tour.name|default:"Tour Privado" }}</span>
+                            <span class="badge bg-light text-dark border ms-2 small">{{ stop.tour_date|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                    {# Stop logistics data #}
+                    <div class="row g-3" style="font-size:.9rem;">
+                        <div class="col-md-4">
+                            <label class="gc-label">Vehículo Asignado</label>
+                            <div class="fw-semibold">
+                                {% if stop.assigned_vehicle %}
+                                <i class="fas fa-truck me-1" style="color:var(--gc-teal);"></i>{{ stop.assigned_vehicle.plate }} — {{ stop.assigned_vehicle.owner_company }}
+                                {% else %}<span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Sin asignar</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="gc-label">Capacidad</label>
+                            <div>{% if stop.assigned_vehicle %}{{ stop.assigned_vehicle.capacity }} pax{% else %}—{% endif %}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="gc-label">Hora de Recogida</label>
+                            <div class="fw-semibold" style="color:var(--gc-gold);">
+                                {% if stop.pickup_time %}<i class="fas fa-clock me-1"></i>{{ stop.pickup_time|time:"H:i" }}
+                                {% else %}<span class="text-muted">Sin definir</span>{% endif %}
+                            </div>
+                        </div>
+                        {% if stop.vehicle_assigned_at %}
+                        <div class="col-md-3">
+                            <label class="gc-label">Asignado</label>
+                            <div class="text-muted small">{{ stop.vehicle_assigned_at|date:"d/m/Y H:i" }}{% if stop.vehicle_assigned_by %} — {{ stop.vehicle_assigned_by.get_full_name|default:stop.vehicle_assigned_by.username }}{% endif %}</div>
+                        </div>
+                        {% endif %}
+                        {% if stop.logistics_notes %}
+                        <div class="col-12">
+                            <label class="gc-label">Notas Internas (este stop)</label>
+                            <div class="text-muted">{{ stop.logistics_notes|linebreaksbr }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-4 text-muted text-center small">No hay stops de tour registrados.</div>
+                {% endfor %}
+
+                {% if sale.cancellation_reason %}
+                <div class="mx-4 mb-3 alert alert-danger">
+                    <strong><i class="fas fa-ban me-1"></i> Motivo de Cancelación:</strong> {{ sale.cancellation_reason }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Passengers #}
+        <div class="gc-card">
+            <div class="gc-card-header"><i class="fas fa-users"></i> Pasajeros</div>
+            {% if sale.passengers.exists %}
+            <div class="table-responsive">
+                <table class="gc-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Nombres</th>
+                            <th>Apellidos</th>
+                            <th>RUT / Pasaporte</th>
+                            <th class="pe-4">Nacionalidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in sale.passengers.all %}
+                        <tr>
+                            <td class="ps-4 text-muted">{{ forloop.counter }}</td>
+                            <td>{{ p.first_name }}</td>
+                            <td>{{ p.last_name }}</td>
+                            <td>{{ p.rut_passport|default:"—" }}</td>
+                            <td class="pe-4">{{ p.get_nationality_display }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted small">
+                <i class="fas fa-users d-block mb-1 fa-lg" style="color:var(--gc-teal);opacity:.3;"></i>
+                No hay pasajeros acompañantes registrados.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ===== RIGHT COLUMN ===== #}
+    <div class="col-lg-4">
+
+        {# Status & payment #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header" style="background:linear-gradient(135deg,var(--gc-teal-dark),var(--gc-teal));">
+                <i class="fas fa-credit-card"></i> Estado y Pagos
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <label class="gc-label">Estado de la Venta</label>
+                    {% if sale.status == 'CONFIRMADA' %}<span class="gc-badge gc-badge-green"><i
+                            class="fas fa-check-circle"></i> Confirmada</span>
+                    {% elif sale.status == 'PENDIENTE' %}<span class="gc-badge gc-badge-gold"><i
+                            class="fas fa-clock"></i> Pendiente Aprobación</span>
+                    {% else %}<span class="gc-badge gc-badge-red"><i class="fas fa-times-circle"></i> Cancelada</span>{% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="gc-label">Estado de Pago</label>
+                    {% if sale.payment_status == 'PAGADO' %}<span class="gc-badge gc-badge-green"><i
+                            class="fas fa-check-circle"></i> Pagado</span>
+                    {% elif sale.payment_status == 'ABONADO' %}<span class="gc-badge gc-badge-gold"><i
+                            class="fas fa-coins"></i> Abonado</span>
+                    {% else %}<span class="gc-badge gc-badge-red"><i class="fas fa-hourglass-half"></i>
+                        Pendiente</span>{% endif %}
+                </div>
+                <hr class="gc-section-divider">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Moneda</span>
+                    <span class="fw-semibold">{{ sale.currency }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Monto Pagado</span>
+                    <span class="fw-semibold" style="color:var(--gc-teal);">
+                        {% if sale.currency == 'USD' %}US$ {{ sale.amount_paid }}{% elif sale.currency == 'BRL' %}R$ {{ sale.amount_paid }}{% else %}${{ sale.amount_paid|intcomma }}{% endif %}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between pt-2 border-top mt-2">
+                    <span class="fw-bold">Total a Pagar</span>
+                    <span class="fw-bold fs-5" style="color:var(--gc-gold);">
+                        {% if sale.currency == 'USD' %}US$ {{ sale.total_amount }}{% elif sale.currency == 'BRL' %}R$ {{ sale.total_amount }}{% else %}${{ sale.total_amount|intcomma }}{% endif %}
+                    </span>
+                </div>
+                {# Vouchers #}
+                {% if sale.voucher_image or sale.voucher_image_2 or sale.voucher_image_3 %}
+                <hr class="gc-section-divider">
+                <label class="gc-label">Comprobantes</label>
+                <div class="d-flex flex-column gap-2">
+                    {% if sale.voucher_image %}<a href="{{ sale.voucher_image.url }}" target="_blank"
+                        class="btn-gc-outline" style="font-size:.8rem;"><i class="fas fa-file-image"></i> Voucher
+                        1</a>{% endif %}
+                    {% if sale.voucher_image_2 %}<a href="{{ sale.voucher_image_2.url }}" target="_blank"
+                        class="btn-gc-outline" style="font-size:.8rem;"><i class="fas fa-file-image"></i> Voucher
+                        2</a>{% endif %}
+                    {% if sale.voucher_image_3 %}<a href="{{ sale.voucher_image_3.url }}" target="_blank"
+                        class="btn-gc-outline" style="font-size:.8rem;"><i class="fas fa-file-image"></i> Voucher
+                        3</a>{% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Timeline / traceability #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header"><i class="fas fa-history"></i> Trazabilidad</div>
+            <div class="p-4">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="timeline-dot" style="background:rgba(44,110,122,.15);color:var(--gc-teal);"><i
+                            class="fas fa-plus"></i></div>
+                    <div>
+                        <div class="fw-semibold" style="font-size:.85rem;">Venta Creada</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ sale.created_at|date:"d/m/Y H:i" }} — por
+                            {{ sale.seller|default:"Sistema" }}</div>
+                    </div>
+                </div>
+                {% if sale.confirmed_at %}
+                <div class="d-flex gap-3 mb-3">
+                    <div class="timeline-dot" style="background:rgba(25,135,84,.15);color:#198754;"><i
+                            class="fas fa-check"></i></div>
+                    <div>
+                        <div class="fw-semibold" style="font-size:.85rem;">Confirmada</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ sale.confirmed_at|date:"d/m/Y H:i" }} — por
+                            {{ sale.confirmed_by|default:"—" }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if sale.assigned_vehicle %}
+                <div class="d-flex gap-3 mb-3">
+                    <div class="timeline-dot" style="background:rgba(13,110,253,.1);color:#0d6efd;"><i
+                            class="fas fa-truck"></i></div>
+                    <div>
+                        <div class="fw-semibold" style="font-size:.85rem;">Vehículo Asignado</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ sale.assigned_vehicle.plate }} — {{ sale.assigned_vehicle.owner_company }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if sale.client_notified_at %}
+                <div class="d-flex gap-3 mb-3">
+                    <div class="timeline-dot" style="background:rgba(111,66,193,.1);color:#6f42c1;"><i
+                            class="fas fa-envelope"></i></div>
+                    <div>
+                        <div class="fw-semibold" style="font-size:.85rem;">Cliente Notificado</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ sale.client_notified_at|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if sale.status == 'CANCELADA' %}
+                <div class="d-flex gap-3">
+                    <div class="timeline-dot" style="background:rgba(220,53,69,.15);color:#dc3545;"><i
+                            class="fas fa-times"></i></div>
+                    <div>
+                        <div class="fw-semibold" style="font-size:.85rem;">Cancelada</div>
+                        {% if sale.cancellation_reason %}
+                        <div class="text-muted" style="font-size:.78rem;">{{ sale.cancellation_reason }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Metadata #}
+        <div class="gc-card">
+            <div class="gc-card-header"><i class="fas fa-info-circle"></i> Información</div>
+            <div class="p-4 small">
+                <div class="mb-2">
+                    <label class="gc-label">Vendedor</label>
+                    <div class="fw-semibold">{{ sale.seller|default:"Sistema" }}</div>
+                </div>
+                <div class="mb-2">
+                    <label class="gc-label">Canal de Origen</label>
+                    <div>{{ sale.get_origin_channel_display|default:"—" }}</div>
+                </div>
+                {% if sale.agency %}
+                <div class="mb-2">
+                    <label class="gc-label">Agencia</label>
+                    <div>{{ sale.agency.name }}</div>
+                </div>
+                {% endif %}
+                <div>
+                    <label class="gc-label">Fecha de Creación</label>
+                    <div>{{ sale.created_at|date:"d/m/Y H:i" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ============================================================ #}
+{# MODALS #}
+{# ============================================================ #}
+
+{# Notify Modal #}
+<div class="modal fade" id="notifyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1a4a55,#2C6E7A);color:#fff;">
+                <h5 class="modal-title"><i class="fas fa-paper-plane me-2"></i>Notificar Cliente — Venta #{{ sale.id }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'sales:notify_client' sale.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+
+                    {# Contact info preview #}
+                    <div class="d-flex gap-3 mb-3 flex-wrap">
+                        {% if sale.client_email %}<span class="badge bg-light text-dark border"><i class="fas fa-envelope me-1 text-primary"></i>{{ sale.client_email }}</span>{% endif %}
+                        {% if sale.client_phone %}<span class="badge bg-light text-dark border"><i class="fab fa-whatsapp me-1 text-success"></i>{{ sale.client_phone }}</span>{% endif %}
+                    </div>
+
+                    {# ── Stop selection (for multi-stop sales) ── #}
+                    {% if sale.tour_stops.count > 1 %}
+                    <div class="mb-4">
+                        <div class="section-title" style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#2C6E7A;padding-bottom:8px;border-bottom:2px solid #e0eef0;margin-bottom:10px;">🗺️ ¿Para cuál viaje es esta notificación?</div>
+                        <div class="d-flex flex-column gap-2">
+                            {% for stop in sale.tour_stops.all %}
+                            <label class="d-flex align-items-center gap-3 p-3 border rounded-3" style="cursor:pointer;background:#f7fafa;">
+                                <input type="radio" name="stop_id" value="{{ stop.pk }}" class="form-check-input flex-shrink-0" {% if forloop.first %}checked{% endif %} style="width:1.1rem;height:1.1rem;">
+                                <div>
+                                    <div class="fw-bold" style="color:#1a4a55;">{{ stop.tour.name|default:"Tour Privado" }}</div>
+                                    <div class="small text-muted">📅 {{ stop.tour_date|date:"d/m/Y"|default:"Sin fecha" }} &nbsp;·&nbsp; 🗣️ {{ stop.get_tour_language_display }} &nbsp;·&nbsp; 👥 {{ stop.pax_adults }} adulto{{ stop.pax_adults|pluralize:"s" }}{% if stop.pax_infants %} + {{ stop.pax_infants }} infante{{ stop.pax_infants|pluralize:"s" }}{% endif %}</div>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Channel selection ── #}
+                    <div class="mb-2" style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#2C6E7A;padding-bottom:8px;border-bottom:2px solid #e0eef0;margin-bottom:10px;">📤 ¿Por qué medio?</div>
+                    <div class="d-flex flex-column gap-2">
+                        {% if sale.client_email %}
+                        <label class="d-flex align-items-center gap-3 p-3 border rounded-3" style="cursor:pointer;">
+                            <input type="radio" name="send_via" value="email" class="form-check-input flex-shrink-0" {% if not sale.client_phone %}checked{% endif %} style="width:1.1rem;height:1.1rem;">
+                            <div>
+                                <div class="fw-bold"><i class="fas fa-envelope me-2" style="color:#0d6efd;"></i>Solo Email</div>
+                                <div class="small text-muted">Envía el email HTML de confirmación al cliente.</div>
+                            </div>
+                        </label>
+                        {% endif %}
+
+                        {% if sale.client_phone %}
+                        <label class="d-flex align-items-center gap-3 p-3 border rounded-3" style="cursor:pointer;">
+                            <input type="radio" name="send_via" value="whatsapp" class="form-check-input flex-shrink-0" {% if not sale.client_email %}checked{% endif %} style="width:1.1rem;height:1.1rem;">
+                            <div>
+                                <div class="fw-bold"><i class="fab fa-whatsapp me-2" style="color:#25D366;"></i>Solo WhatsApp</div>
+                                <div class="small text-muted">Envía el mensaje de WhatsApp en el idioma del cliente.</div>
+                            </div>
+                        </label>
+                        {% endif %}
+
+                        {% if sale.client_email and sale.client_phone %}
+                        <label class="d-flex align-items-center gap-3 p-3 border rounded-3" style="cursor:pointer;border-color:var(--gc-gold) !important;background:rgba(181,130,60,.05);">
+                            <input type="radio" name="send_via" value="both" class="form-check-input flex-shrink-0" checked style="width:1.1rem;height:1.1rem;">
+                            <div>
+                                <div class="fw-bold"><i class="fas fa-paper-plane me-2" style="color:var(--gc-gold);"></i>Ambos canales <span class="badge" style="background:var(--gc-gold);font-size:.7rem;">Recomendado</span></div>
+                                <div class="small text-muted">Email + WhatsApp al mismo tiempo.</div>
+                            </div>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-gc-outline" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn-gc-primary px-4"><i class="fas fa-paper-plane me-1"></i> Enviar Notificación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{# Cancel Modal #}
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:var(--gc-teal);color:#fff;">
+                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Cancelar Venta #{{ sale.id }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'sales:cancel' sale.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Esta acción marcará la venta como <strong>CANCELADA</strong>. Ingresa el
+                        motivo para el registro interno.</p>
+                    <label class="gc-label">Motivo de Cancelación</label>
+                    <textarea name="cancellation_reason" class="gc-input" rows="3"
+                        placeholder="Ej: Cliente solicitó cancelación, cambio de fecha..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-gc-outline" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="fas fa-times me-1"></i> Sí, Cancelar Venta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# Logistics Modal #}
+<div class="modal fade" id="logisticsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:var(--gc-teal);color:#fff;">
+                <h5 class="modal-title"><i class="fas fa-truck me-2"></i>Asignar Logística — Venta #{{ sale.id }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'sales:assign_logistics' sale.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label class="gc-label">Vehículo / Agencia Transportista</label>
+                            <select name="assigned_vehicle" class="gc-input form-select">
+                                <option value="">— Sin asignar —</option>
+                                {% for v in vehicle_options %}
+                                <option value="{{ v.pk }}" {% if v.is_selected %}selected{% endif %}>{{ v.label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="gc-label">Hora de Recogida</label>
+                            <input type="time" name="pickup_time" class="gc-input"
+                                value="{% if sale.pickup_time %}{{ sale.pickup_time|time:'H:i' }}{% endif %}">
+                        </div>
+                        <div class="col-12">
+                            <label class="gc-label">Notas de Logística (Internas)</label>
+                            <textarea name="logistics_notes" class="gc-input" rows="3"
+                                placeholder="Ej: Recoger en puerta principal del hotel...">{{ sale.logistics_notes }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-gc-outline" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn-gc-gold px-4">
+                        <i class="fas fa-save me-1"></i> Guardar Logística
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends role_base_template %}
+{% load static %}
+
+{% block title %}Eliminar Agencia | Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="gc-page-title mb-0 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Eliminar Agencia</h1>
+        <p class="gc-page-sub mb-0">Esta acción no se puede deshacer.</p>
+    </div>
+    <a href="{% url 'agency-list' %}" class="btn-gc-outline">
+        <i class="fas fa-arrow-left"></i> Volver al listado
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6 mt-4">
+        <div class="gc-card border-danger text-center p-5">
+            <h4 class="mb-4">¿Estás seguro de que deseas eliminar la agencia <strong>"{{ agency.name }}"</strong>?</h4>
+            <p class="text-muted mb-4">Al eliminar esta agencia, es posible que las ventas históricas asociadas a ella
+                pierdan la referencia en la base de datos.</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'agency-list' %}" class="btn btn-outline-secondary px-4 py-2"
+                        style="border-radius: 8px;">Cancelar</a>
+                    <button type="submit" class="btn btn-danger px-4 py-2"
+                        style="border-radius: 8px; font-weight: 500;">Sí, Eliminar Definitivamente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

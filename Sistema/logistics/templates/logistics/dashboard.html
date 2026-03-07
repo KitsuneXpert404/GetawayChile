@@ -1,0 +1,323 @@
+{% extends role_base_template %}
+{% load static %}
+
+{% block title %}Centro de Operaciones | Getaway Chile{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+/* ── KPI Cards ─────────────────────────────── */
+.kpi-card {
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    border: none;
+    border-left: 4px solid transparent;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    transition: transform .15s, box-shadow .15s;
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.kpi-card .kpi-num { font-size: 2rem; font-weight: 800; line-height: 1; }
+.kpi-card .kpi-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; margin-top: 4px; }
+.kpi-card.kpi-warning { border-left-color: #f59e0b; }
+.kpi-card.kpi-success { border-left-color: #10b981; }
+.kpi-card.kpi-danger  { border-left-color: #ef4444; }
+.kpi-card.kpi-info    { border-left-color: #3b82f6; }
+
+/* ── Weekly ribbon ─────────────────────────── */
+.week-ribbon { display: flex; gap: 6px; border-radius: 14px; background: #fff; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+.ribbon-day-btn {
+    flex: 1; border: none; border-radius: 10px; padding: 8px 4px;
+    background: transparent; cursor: pointer; transition: all .2s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.ribbon-day-btn:hover { background: rgba(44,110,122,.08); }
+.ribbon-day-btn.is-selected { background: linear-gradient(135deg, var(--gc-teal-dark), var(--gc-teal-lite)); color: #fff !important; }
+.ribbon-day-btn.is-today:not(.is-selected) { border: 2px solid var(--gc-gold,#B5823C); }
+.ribbon-day-name { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: inherit; }
+.ribbon-day-num { font-size: 1.3rem; font-weight: 800; line-height: 1; color: inherit; }
+.ribbon-badge { font-size: .6rem; border-radius: 20px; padding: 1px 7px; color: #fff; }
+.is-selected .ribbon-badge { background: rgba(255,255,255,.25); }
+
+/* ── Day table ─────────────────────────────── */
+.tour-divider { background: rgba(44,110,122,.05); border-top: 2px solid var(--gc-teal); }
+
+/* ── Management table ──────────────────────── */
+.ops-row-confirmed { border-left: 3px solid #28a745; }
+.ops-row-pending   { border-left: 3px solid #ffc107; }
+.ops-row-cancelled { border-left: 3px solid #dc3545; opacity: .6; }
+.mgmt-table td, .mgmt-table th { vertical-align: middle; }
+.gc-badge-green { background: #d4edda; color: #155724; border-radius: 6px; padding: 2px 8px; font-size: .75rem; font-weight: 600; }
+.gc-badge-gold  { background: #fff3cd; color: #856404; border-radius: 6px; padding: 2px 8px; font-size: .75rem; font-weight: 600; }
+.gc-badge-red   { background: #f8d7da; color: #721c24; border-radius: 6px; padding: 2px 8px; font-size: .75rem; font-weight: 600; }
+
+/* ── Search bar ─────────────────────────────── */
+.search-bar input:focus, .search-bar select:focus { box-shadow: 0 0 0 3px rgba(44,110,122,.2); border-color: var(--gc-teal); }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<!-- ── PAGE HEADER ──────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-route me-2" style="color:var(--gc-gold);"></i>Centro de Operaciones
+        </h1>
+        <p class="gc-page-sub mb-0">Semana del <strong>{{ week_start|date:"d \d\e F" }}</strong> al <strong>{{ week_end|date:"d \d\e F \d\e Y" }}</strong></p>
+    </div>
+    <!-- Date navigation -->
+    <div class="d-flex align-items-center gap-2 bg-white rounded shadow-sm px-3 py-2">
+        <a href="?date={{ prev_date }}" class="btn btn-sm btn-gc-outline"><i class="fas fa-chevron-left"></i></a>
+        <form method="get" class="d-flex align-items-center">
+            <input type="date" name="date" class="form-control form-control-sm text-center fw-bold"
+                value="{{ selected_date }}" onchange="this.form.submit()" style="width:145px;">
+        </form>
+        <a href="?date={{ next_date }}" class="btn btn-sm btn-gc-outline"><i class="fas fa-chevron-right"></i></a>
+        <a href="?date={% now "Y-m-d" %}" class="btn btn-sm btn-outline-secondary ms-1" title="Hoy"><i class="fas fa-calendar-day"></i></a>
+    </div>
+</div>
+
+<!-- ── KPI STRIP ────────────────────────────────────────── -->
+<div class="row gx-3 mb-4">
+    <div class="col-6 col-md-3 mb-2">
+        <div class="kpi-card kpi-warning h-100">
+            <div class="kpi-num" style="color:#d97706;">{{ count_pending }}</div>
+            <div class="kpi-label">Pendientes de aprobar</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-2">
+        <div class="kpi-card kpi-success h-100">
+            <div class="kpi-num" style="color:#059669;">{{ count_confirmed }}</div>
+            <div class="kpi-label">Confirmadas</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-2">
+        <div class="kpi-card kpi-danger h-100">
+            <div class="kpi-num" style="color:#dc2626;">{{ count_without_vehicle }}</div>
+            <div class="kpi-label">Sin vehículo asignado</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-2">
+        <div class="kpi-card kpi-info h-100">
+            <div class="kpi-num" style="color:#2563eb;">{{ count_not_notified }}</div>
+            <div class="kpi-label">Sin notificar al cliente</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── WEEKLY RIBBON ─────────────────────────────────────── -->
+<div class="week-ribbon mb-4" id="weekRibbon">
+    {% for day in weekly_summary %}
+    <a href="?date={{ day.date_str }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}"
+       class="ribbon-day-btn {% if day.is_selected %}is-selected shadow-sm{% endif %} {% if day.is_today %}is-today{% endif %} text-decoration-none"
+       style="{% if not day.is_selected %}color:#333;{% endif %}">
+        <span class="ribbon-day-name">{{ day.short_day }}</span>
+        <span class="ribbon-day-num">{{ day.day_num }}</span>
+        {% if day.sales_count > 0 %}
+        <span class="ribbon-badge shadow-sm" style="{% if day.is_selected %}background:var(--gc-teal-dark);{% else %}background:var(--gc-teal);{% endif %}">
+            {{ day.sales_count }} viaje{{ day.sales_count|pluralize:"s" }}
+        </span>
+        <span class="ribbon-badge mt-1 shadow-sm" style="background:var(--gc-gold,#B5823C);">
+            {{ day.pax }} pax
+        </span>
+        {% else %}
+        <span class="ribbon-badge" style="background:#9ca3af;">Sin viajes</span>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- ── DAILY VIEW ─────────────────────────────────────────── -->
+<div class="gc-card mb-5">
+    <div class="gc-card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-calendar-alt me-2" style="color:var(--gc-gold);"></i>
+            {% for date_str, day_data in grouped_sales.items %}{% if day_data.is_selected %}{{ day_data.title_str }}{% endif %}{% endfor %}
+        </span>
+        <span class="badge bg-light text-dark border">
+            {% for date_str, day_data in grouped_sales.items %}{% if day_data.is_selected %}{{ day_data.tours|length }} tour{{ day_data.tours|length|pluralize:"s" }}{% endif %}{% endfor %}
+        </span>
+    </div>
+    {% for date_str, day_data in grouped_sales.items %}
+    {% if day_data.is_selected %}
+        {% if not day_data.tours %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-bed fa-2x mb-2"></i><br>
+            <h6>No hay viajes programados para este día.</h6>
+        </div>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table align-middle mb-0" style="font-size:.88rem;">
+                <thead class="table-light text-secondary">
+                    <tr>
+                        <th class="ps-4" style="width:90px;">Hora / ID</th>
+                        <th style="width:22%;">Cliente / Hotel</th>
+                        <th class="text-center" style="width:60px;">Pax</th>
+                        <th style="width:18%;">Vehículo</th>
+                        <th style="width:14%;">Estado</th>
+                        <th style="width:14%;">Pago</th>
+                        <th class="text-end pe-4" style="width:110px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tour_name, data in day_data.tours.items %}
+                    <tr class="tour-divider">
+                        <td colspan="7" class="ps-4 py-2">
+                            <span class="fw-bold" style="color:var(--gc-teal);font-size:1rem;">{{ tour_name }}</span>
+                            <span class="badge ms-2" style="background:var(--gc-teal);">{{ data.total_pax }} Pax total</span>
+                            {% if data.cupo_disponible is not None %}
+                            <span class="badge ms-1 {% if data.cupo_disponible > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                Cupos disp: {{ data.cupo_disponible }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% for stop in data.sales %}{% with sale=stop.sale_obj %}
+                    <tr class="bg-white">
+                        <td class="ps-4">
+                            {% if sale.pickup_time %}<div class="fw-bold fs-6">{{ sale.pickup_time|time:"H:i" }}</div>{% else %}<div class="text-muted fw-bold">–</div>{% endif %}
+                            <small class="text-muted">#{{ sale.id }}</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ stop.client_full_name }}</div>
+                            <div class="small text-muted"><i class="fas fa-map-marker-alt text-danger me-1"></i>{{ sale.hotel_address|default:"No especificado" }}</div>
+                        </td>
+                        <td class="text-center fw-bold fs-6" style="color:var(--gc-teal);">
+                            {{ stop.pax_adults }}{% if stop.pax_infants %}+{{ stop.pax_infants }}{% endif %}
+                        </td>
+                        <td>
+                            {% if stop.assigned_vehicle %}
+                            <span class="badge bg-light text-dark border px-2 py-1"><i class="fas fa-car me-1" style="color:var(--gc-teal);"></i>{{ stop.assigned_vehicle.plate }}</span>
+                            {% elif sale.assigned_vehicle %}
+                            <span class="badge bg-light text-dark border px-2 py-1"><i class="fas fa-car me-1" style="color:var(--gc-teal);"></i>{{ sale.assigned_vehicle.plate }}</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark px-2 py-1 shadow-sm"><i class="fas fa-exclamation-triangle me-1"></i>Sin asignar</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sale.status == 'CONFIRMADA' %}<span class="badge bg-success px-2 shadow-sm">Confirmada</span>
+                            {% elif sale.status == 'PENDIENTE' %}<span class="badge bg-secondary px-2 shadow-sm">Pendiente</span>
+                            {% else %}<span class="badge bg-danger px-2 shadow-sm">{{ sale.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sale.payment_status == 'PAGADO' %}<span class="badge bg-success px-2 shadow-sm">Pagado</span>
+                            {% elif sale.payment_status == 'ABONADO' %}<span class="badge bg-warning text-dark px-2 shadow-sm">Abonado</span>
+                            {% else %}<span class="badge bg-secondary px-2 shadow-sm">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/dashboard/logistics/venta/{{ sale.id }}/" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Ver"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'logistics_stop_assign' sale.id stop.pk %}" class="btn btn-sm btn-gc-primary py-1 px-2 ms-1" title="Asignar Logística"><i class="fas fa-route"></i></a>
+                        </td>
+                    </tr>
+                    {% endwith %}{% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- ── MANAGEMENT TABLE ───────────────────────────────────── -->
+<div class="gc-card mb-5">
+    <div class="gc-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span><i class="fas fa-table me-2" style="color:var(--gc-gold);"></i>
+            Gestión de Ventas
+            <small class="ms-2 opacity-75 fw-normal" style="font-size:.78em;">({{ sales_count }} resultado{{ sales_count|pluralize:"s" }})</small>
+        </span>
+    </div>
+
+    <!-- Filters -->
+    <div class="p-3 border-bottom bg-light">
+        <form method="get" class="row g-2 align-items-end search-bar">
+            <input type="hidden" name="date" value="{{ selected_date }}">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold mb-1">Buscar cliente</label>
+                <input type="text" name="q" class="form-control form-control-sm" placeholder="Nombre, RUT, email, teléfono…" value="{{ search_q }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Filtrar por fecha</label>
+                <input type="date" name="fdate" class="form-control form-control-sm" value="{{ date_filter }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Estado</label>
+                <select name="status" class="form-select form-select-sm">
+                    {% for opt in status_options %}
+                    <option value="{{ opt.value }}" {% if opt.selected %}selected{% endif %}>{{ opt.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-gc-primary flex-fill">
+                    <i class="fas fa-search me-1"></i>Buscar
+                </button>
+                <a href="?date={{ selected_date }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    {% if sales_rows %}
+    <div class="table-responsive">
+        <table class="table mgmt-table table-hover mb-0 align-middle" style="font-size:.85rem;">
+            <thead class="table-light text-secondary">
+                <tr>
+                    <th class="ps-3">#</th>
+                    <th>Cliente</th>
+                    <th>Tour(s) / Fecha(s)</th>
+                    <th class="text-center">Pax</th>
+                    <th>Estado</th>
+                    <th>Pago</th>
+                    <th>Total</th>
+                    <th class="text-end pe-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in sales_rows %}
+                <tr class="{{ row.row_class|default:'' }}">
+                    <td class="ps-3 fw-bold text-muted">#{{ row.obj.id }}</td>
+                    <td>
+                        <div class="fw-bold text-dark">{{ row.client_full_name }}</div>
+                        <div class="small text-muted">{{ row.client_phone }}</div>
+                    </td>
+                    <td>
+                        <div class="fw-bold" style="font-size:.8rem;">{{ row.tour_display }}</div>
+                        <div class="small text-muted">{{ row.stops_summary }}</div>
+                    </td>
+                    <td class="text-center fw-bold" style="color:var(--gc-teal);">{{ row.pax_display }}</td>
+                    <td>
+                        <span class="{{ row.status_class }} shadow-sm">
+                            <i class="fas {{ row.status_icon }} me-1"></i>{{ row.status_label }}
+                        </span>
+                    </td>
+                    <td><span class="{{ row.pay_class }} shadow-sm">{{ row.pay_label }}</span></td>
+                    <td class="fw-bold">{{ row.cur_sym }} {{ row.obj.total_amount|floatformat:0 }}</td>
+                    <td class="text-end pe-3">
+                        <div class="d-flex gap-1 justify-content-end">
+                            <a href="{{ row.detail_url }}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Ver información (solo lectura)">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ row.manage_url }}" class="btn btn-sm py-1 px-3 btn-gc-primary" title="Gestionar: confirmar, cancelar, asignar, notificar">
+                                <i class="fas fa-sliders-h me-1"></i> Gestionar
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-search fa-2x mb-3 opacity-50"></i>
+        <p>No se encontraron ventas con los filtros actuales.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

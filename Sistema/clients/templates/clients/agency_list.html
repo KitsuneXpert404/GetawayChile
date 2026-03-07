@@ -1,0 +1,93 @@
+{% extends role_base_template %}
+{% load static %}
+
+{% block title %}Agencias | Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="gc-page-title mb-0"><i class="fas fa-building me-2" style="color:var(--gc-gold);"></i>Agencias</h1>
+        <p class="gc-page-sub mb-0">Gestión de Agencias externas para las reservas</p>
+    </div>
+    <a href="{% url 'agency-create' %}" class="btn-gc-gold">
+        <i class="fas fa-plus"></i> Nueva Agencia
+    </a>
+</div>
+
+
+
+<div class="gc-card">
+    <div class="gc-card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-table me-1"></i> Listado de Agencias</span>
+        <form method="get" class="d-flex" style="width: 250px;">
+            <div class="input-group input-group-sm">
+                <input type="text" name="q" class="form-control" placeholder="Buscar..." value="{{ request.GET.q }}">
+                <button class="btn btn-outline-secondary" type="submit" style="background:#fff;border-color:#dee2e6;"><i
+                        class="fas fa-search text-muted"></i></button>
+            </div>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="gc-table">
+            <thead>
+                <tr>
+                    <th class="ps-4">Nombre de la Agencia</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Persona de Contacto</th>
+                    <th class="text-end pe-4">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for agency in agencies %}
+                <tr>
+                    <td class="ps-4 fw-bold" style="color:var(--gc-teal);">{{ agency.name }}</td>
+                    <td>
+                        <a href="mailto:{{ agency.email }}" class="text-decoration-none text-muted">
+                            {% if agency.email %}
+                            {{ agency.email }}
+                            {% else %}
+                            <span class="text-muted opacity-50">—</span>
+                            {% endif %}
+                        </a>
+                    </td>
+                    <td>
+                        {% if agency.phone %}
+                        {{ agency.phone }}
+                        {% else %}
+                        <span class="text-muted opacity-50">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if agency.contact_name %}
+                        {{ agency.contact_name }}
+                        {% else %}
+                        <span class="text-muted opacity-50">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{% url 'agency-update' agency.id %}"
+                            class="btn btn-sm btn-outline-primary gc-btn-action" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'agency-delete' agency.id %}"
+                            class="btn btn-sm btn-outline-danger gc-btn-action ms-1" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-5">
+                        <i class="fas fa-building fa-3x mb-3" style="opacity: 0.2;"></i>
+                        <p class="mb-0">No hay agencias registradas en el sistema.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

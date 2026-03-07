@@ -1,0 +1,912 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* ================================================
+       GETAWAY CHILE — VENDEDOR BASE THEME
+       Brand palette:
+         · Teal    #2C6E7A  (primary)
+         · Gold    #B5823C  (accent)
+         · Smoke   #F2F2F2  (background)
+    ================================================ */
+    :root {
+        --gc-teal: #2C6E7A;
+        --gc-teal-dark: #1e4f5a;
+        --gc-teal-lite: #3d8a99;
+        --gc-gold: #B5823C;
+        --gc-gold-lite: #d4a05a;
+        --gc-smoke: #F2F2F2;
+        --gc-white: #ffffff;
+        --gc-text: #1a2e34;
+        --gc-muted: #6b8088;
+    }
+
+    /* --- Base layout --- */
+    html,
+    body {
+        height: 100%;
+        background-color: var(--gc-smoke);
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        color: var(--gc-text);
+    }
+
+    /* --- Navbar --- */
+    .gc-navbar {
+        background: var(--gc-teal);
+        box-shadow: 0 2px 16px rgba(44, 110, 122, 0.25);
+        padding: 0 2rem;
+        height: 72px;
+    }
+
+    .gc-navbar .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0;
+    }
+
+    .gc-navbar .brand-logo {
+        height: 36px;
+        width: auto;
+    }
+
+    .gc-navbar .brand-text {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: #fff;
+        letter-spacing: 0.3px;
+        line-height: 1.1;
+    }
+
+    .gc-navbar .brand-text span {
+        display: block;
+        font-size: 0.62rem;
+        font-weight: 500;
+        color: var(--gc-gold-lite);
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+    }
+
+    /* Nav links */
+    .gc-navbar .nav-link {
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 0.55rem 1rem;
+        border-radius: 7px;
+        margin: 0 2px;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .gc-navbar .nav-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.13);
+    }
+
+    .gc-navbar .nav-link.active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.18);
+        border-bottom: 2px solid var(--gc-gold);
+        border-radius: 7px 7px 0 0;
+    }
+
+    /* Icon avatar button */
+    .gc-avatar-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.78rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        cursor: pointer;
+    }
+
+    .gc-avatar-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Bell icon button */
+    .gc-bell-btn {
+        position: relative;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 0;
+        color: rgba(255, 255, 255, .85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .gc-bell-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .gc-bell-btn .badge-dot {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 8px;
+        background: var(--gc-gold);
+        font-size: 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        padding: 0 3px;
+    }
+
+    /* --- Notification dropdown --- */
+    .gc-dropdown-menu {
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(44, 110, 122, 0.15);
+        overflow: hidden;
+        min-width: 340px;
+        padding: 0;
+    }
+
+    .gc-dropdown-menu .dd-heading {
+        background: var(--gc-teal);
+        color: #fff;
+        padding: 0.9rem 1.2rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .gc-dropdown-menu .dd-heading .badge {
+        background: var(--gc-gold);
+        color: #fff;
+        font-size: 0.65rem;
+        border-radius: 20px;
+        padding: 2px 7px;
+    }
+
+    .gc-notif-item {
+        display: flex;
+        padding: 0.85rem 1.2rem;
+        gap: 0.75rem;
+        border-bottom: 1px solid #f0f0f0;
+        text-decoration: none;
+        color: var(--gc-text);
+        transition: background 0.15s;
+        align-items: flex-start;
+    }
+
+    .gc-notif-item:hover {
+        background: #f0f7f9;
+    }
+
+    .gc-notif-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(44, 110, 122, 0.1);
+        color: var(--gc-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.8rem;
+    }
+
+    .gc-dropdown-footer {
+        padding: 0.6rem 1rem;
+        text-align: center;
+        background: #f7fafb;
+        border-top: 1px solid #eee;
+    }
+
+    .gc-dropdown-footer a {
+        color: var(--gc-teal);
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .gc-dropdown-footer a:hover {
+        color: var(--gc-gold);
+    }
+
+    /* User dropdown menu */
+    .gc-user-dropdown {
+        border: 0;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(44, 110, 122, 0.15);
+        overflow: hidden;
+        min-width: 200px;
+        padding: 0;
+    }
+
+    .gc-user-dropdown .ud-header {
+        background: linear-gradient(135deg, var(--gc-teal), var(--gc-teal-dark));
+        color: #fff;
+        padding: 0.9rem 1.2rem;
+    }
+
+    .gc-user-dropdown .ud-header .role-badge {
+        font-size: 0.6rem;
+        background: var(--gc-gold);
+        color: #fff;
+        padding: 2px 7px;
+        border-radius: 10px;
+        margin-top: 4px;
+        display: inline-block;
+    }
+
+    .gc-user-dropdown .dropdown-item {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--gc-text);
+        transition: background 0.15s;
+    }
+
+    .gc-user-dropdown .dropdown-item:hover {
+        background: #f0f7f9;
+        color: var(--gc-teal);
+    }
+
+    .gc-user-dropdown .dropdown-item.danger {
+        color: #c0392b;
+    }
+
+    .gc-user-dropdown .dropdown-item.danger:hover {
+        background: #fdf3f2;
+        color: #c0392b;
+    }
+
+    /* --- Sub-header action bar --- */
+    .gc-subheader {
+        background: var(--gc-white);
+        border-bottom: 1px solid rgba(44, 110, 122, 0.1);
+        padding: 0.9rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(44, 110, 122, 0.05);
+    }
+
+    .gc-subheader .greeting-name {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--gc-teal);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .gc-subheader .greeting-sub {
+        font-size: 0.78rem;
+        color: var(--gc-muted);
+        margin-top: 1px;
+    }
+
+    .gc-subheader .user-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(44, 110, 122, 0.1);
+        color: var(--gc-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    /* --- Primary CTA Button --- */
+    .btn-gc-primary {
+        background: var(--gc-teal);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        letter-spacing: 0.2px;
+        transition: all 0.2s ease;
+        box-shadow: 0 3px 12px rgba(44, 110, 122, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+
+    .btn-gc-primary:hover {
+        background: var(--gc-teal-dark);
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 5px 18px rgba(44, 110, 122, 0.35);
+    }
+
+    .btn-gc-primary:active {
+        transform: translateY(0);
+    }
+
+    .btn-gc-gold {
+        background: var(--gc-gold);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 3px 12px rgba(181, 130, 60, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+
+    .btn-gc-gold:hover {
+        background: #9a6e30;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .btn-gc-outline {
+        background: transparent;
+        color: var(--gc-teal);
+        border: 1.5px solid var(--gc-teal);
+        border-radius: 8px;
+        padding: 0.45rem 1.1rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+
+    .btn-gc-outline:hover {
+        background: var(--gc-teal);
+        color: #fff;
+    }
+
+    /* --- Main content wrapper --- */
+    .gc-content-wrapper {
+        min-height: calc(100vh - 62px);
+        background: var(--gc-smoke);
+    }
+
+    /* --- Branded cards --- */
+    .gc-card {
+        background: var(--gc-white);
+        border-radius: 12px;
+        border: 1px solid rgba(44, 110, 122, 0.08);
+        box-shadow: 0 2px 16px rgba(44, 110, 122, 0.05);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        overflow: hidden;
+    }
+
+    .gc-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 28px rgba(44, 110, 122, 0.10);
+    }
+
+    .gc-card-header {
+        background: linear-gradient(135deg, var(--gc-teal), var(--gc-teal-lite));
+        color: #fff;
+        padding: 0.9rem 1.2rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* --- KPI stat cards --- */
+    .gc-stat {
+        background: var(--gc-white);
+        border-radius: 12px;
+        border: 1px solid rgba(44, 110, 122, 0.08);
+        box-shadow: 0 2px 12px rgba(44, 110, 122, 0.05);
+        padding: 1.25rem 1.5rem;
+        transition: transform 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .gc-stat::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--gc-teal);
+        border-radius: 4px 0 0 4px;
+    }
+
+    .gc-stat.gold::before {
+        background: var(--gc-gold);
+    }
+
+    .gc-stat:hover {
+        transform: translateY(-3px);
+    }
+
+    .gc-stat .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--gc-muted);
+    }
+
+    .gc-stat .stat-value {
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--gc-teal);
+        font-family: 'Poppins', sans-serif;
+        line-height: 1.2;
+    }
+
+    .gc-stat.gold .stat-value {
+        color: var(--gc-gold);
+    }
+
+    .gc-stat .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(44, 110, 122, 0.1);
+        color: var(--gc-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .gc-stat.gold .stat-icon {
+        background: rgba(181, 130, 60, 0.1);
+        color: var(--gc-gold);
+    }
+
+    /* --- Tables --- */
+    .gc-table {
+        font-size: 0.875rem;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .gc-table thead th {
+        background: rgba(44, 110, 122, 0.06);
+        color: var(--gc-teal);
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 0.75rem 1rem;
+        border-bottom: 2px solid rgba(44, 110, 122, 0.15);
+    }
+
+    .gc-table tbody tr {
+        transition: background 0.15s;
+    }
+
+    .gc-table tbody tr:hover {
+        background: rgba(44, 110, 122, 0.03);
+    }
+
+    .gc-table tbody td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f0f3f4;
+        color: var(--gc-text);
+        vertical-align: middle;
+    }
+
+    /* --- Badges --- */
+    .gc-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .gc-badge-teal {
+        background: rgba(44, 110, 122, 0.12);
+        color: var(--gc-teal);
+    }
+
+    .gc-badge-gold {
+        background: rgba(181, 130, 60, 0.12);
+        color: var(--gc-gold);
+    }
+
+    .gc-badge-green {
+        background: rgba(34, 153, 84, 0.1);
+        color: #1e8449;
+    }
+
+    .gc-badge-red {
+        background: rgba(192, 57, 43, 0.1);
+        color: #c0392b;
+    }
+
+    .gc-badge-gray {
+        background: rgba(100, 100, 100, 0.1);
+        color: #555;
+    }
+
+    /* --- Form controls --- */
+    .gc-input {
+        border: 1.5px solid #dde6e9;
+        border-radius: 8px;
+        padding: 0.5rem 0.85rem;
+        font-size: 0.9rem;
+        color: var(--gc-text);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: #fff;
+        width: 100%;
+    }
+
+    .gc-input:focus {
+        outline: none;
+        border-color: var(--gc-teal);
+        box-shadow: 0 0 0 3px rgba(44, 110, 122, 0.12);
+    }
+
+    .gc-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gc-muted);
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    /* --- Divider --- */
+    .gc-section-divider {
+        border: 0;
+        border-top: 1px solid rgba(44, 110, 122, 0.12);
+        margin: 1.5rem 0;
+    }
+
+    /* --- Page container --- */
+    .gc-page {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 2rem 2rem;
+        animation: gcFadeIn 0.4s ease;
+    }
+
+    @keyframes gcFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    /* --- Page title bar --- */
+    .gc-page-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--gc-teal);
+    }
+
+    .gc-page-sub {
+        font-size: 0.82rem;
+        color: var(--gc-muted);
+    }
+
+    /* --- Alert overrides --- */
+    .gc-alert {
+        border-radius: 10px;
+        border: 0;
+        border-left: 4px solid transparent;
+        padding: 0.85rem 1.2rem;
+        font-size: 0.875rem;
+    }
+
+    /* Scroll */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f0f0f0;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(44, 110, 122, 0.3);
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}
+{# ===== TOP NAVBAR ===== #}
+<nav class="gc-navbar navbar navbar-expand-lg sticky-top">
+    <div class="container-fluid px-0">
+
+        {# Brand #}
+        <a class="navbar-brand gc-navbar-brand" href="{% url 'home' %}">
+            <img class="brand-logo" src="{% static 'img/logo_white.png' %}" alt="Getaway Chile"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="brand-text" style="display:none;">
+                GetawayChile
+                <span>Turismo &amp; Transporte</span>
+            </div>
+        </a>
+
+        <button class="navbar-toggler border-0 ms-auto me-2" type="button" data-bs-toggle="collapse"
+            data-bs-target="#gcNav">
+            <i class="fas fa-bars text-white"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="gcNav">
+            {# Left links #}
+            <ul class="navbar-nav me-auto ms-4 gap-1">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+                        href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i> Mi Panel
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'sales/create' in request.path %}active{% endif %}"
+                        href="{% url 'sales:create' %}">
+                        <i class="fas fa-plus-circle"></i> Nueva Venta
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/sales/' %}active{% endif %}"
+                        href="{% url 'sales:list' %}">
+                        <i class="fas fa-list-alt"></i> Mis Ventas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'gestion-cupos' in request.path %}active{% endif %}"
+                        href="{% url 'logistics_quotas_manager' %}">
+                        <i class="fas fa-calendar-check"></i> Disponibilidad
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'tickets' in request.path %}active{% endif %}"
+                        href="{% url 'tickets:list' %}">
+                        <i class="fas fa-headset"></i> Soporte / Tickets
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="sistemaDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-cogs"></i> Sistema
+                    </a>
+                    <ul class="dropdown-menu shadow border-0" aria-labelledby="sistemaDropdown" style="border-radius:10px;">
+                        <li><a class="dropdown-item py-2" href="{% url 'user_profile' %}"><i class="fas fa-user-edit me-2 text-gc-teal"></i> Mi Perfil</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            </ul>
+
+            {# Right side #}
+            <ul class="navbar-nav align-items-center gap-2 me-1">
+                {# Live Clock #}
+                <li class="nav-item d-none d-md-block me-3">
+                    <div class="d-flex align-items-center text-white" style="opacity: 0.9;">
+                        <i class="far fa-clock me-2"></i>
+                        <span id="gc-live-clock" class="small fw-medium" style="letter-spacing: 0.5px;">-</span>
+                    </div>
+                </li>
+
+                {# Notifications #}
+                <li class="nav-item dropdown">
+                    <a class="gc-bell-btn" href="#" data-bs-toggle="dropdown" role="button">
+                        <i class="fas fa-bell fa-sm"></i>
+                        {% if unread_notifications_count %}
+                        <span class="badge-dot">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
+                    <div class="dropdown-menu gc-dropdown-menu dropdown-menu-end mt-2">
+                        <div class="dd-heading">
+                            <i class="fas fa-bell"></i>
+                            Notificaciones
+                            {% if unread_notifications_count %}
+                            <span class="badge ms-auto">{{ unread_notifications_count }} nuevas</span>
+                            {% endif %}
+                        </div>
+                        {% if unread_notifications_count %}
+                        <div class="px-3 py-2 border-bottom d-flex justify-content-end">
+                            <form method="post" action="{% url 'notifications:mark_all_read' %}">
+                                {% csrf_token %}
+                                <button class="btn btn-link btn-sm p-0 text-muted" style="font-size:.75rem;">
+                                    Marcar todas como leídas
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                        {% for notif in recent_notifications %}
+                        <a class="gc-notif-item"
+                            href="{% url 'notifications:mark_read' notif.pk %}?next={{ notif.link }}">
+                            <div class="gc-notif-icon"><i class="fas fa-bell"></i></div>
+                            <div>
+                                <div class="small fw-semibold" style="line-height:1.3;">{{
+                                    notif.message|truncatechars:75 }}</div>
+                                <div class="text-muted mt-1" style="font-size:.7rem;">{{ notif.created_at|timesince }}
+                                    atrás</div>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="text-center py-4 text-muted small">
+                            <i class="fas fa-check-circle d-block mb-1 text-success fa-lg"></i>
+                            Sin notificaciones nuevas
+                        </div>
+                        {% endfor %}
+                        <div class="gc-dropdown-footer">
+                            <a href="{% url 'notifications:list' %}">Ver todas <i
+                                    class="fas fa-arrow-right ms-1"></i></a>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- Tooltips and Live Clock Init -->
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl)
+                        });
+
+                        // Live Clock Logic
+                        function updateClock() {
+                            const now = new Date();
+                            const options = { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+                            const formatted = now.toLocaleDateString('es-CL', options).replace(',', '');
+                            const clockEl = document.getElementById('gc-live-clock');
+                            if (clockEl) {
+                                // Capitalize first letter
+                                clockEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+                            }
+                        }
+                        updateClock();
+                        setInterval(updateClock, 10000); // Update every 10 seconds
+                    });
+                </script>
+
+                {# User menu #}
+                <li class="nav-item dropdown">
+                    <button class="gc-avatar-btn" data-bs-toggle="dropdown">
+                        {{ user_initials }}
+                    </button>
+                    <div class="dropdown-menu gc-user-dropdown dropdown-menu-end mt-2">
+                        <div class="ud-header">
+                            <div class="fw-bold small">{{ user_display_name }}</div>
+                            <div style="font-size:.7rem;opacity:.8;">{{ user.email }}</div>
+                            {% if user_role_label %}
+                            <span class="role-badge">{{ user_role_label }}</span>
+                            {% endif %}
+                        </div>
+                        <a class="dropdown-item" href="{% url 'user_profile' %}">
+                            <i class="fas fa-id-card me-2 text-muted"></i>Mi Perfil
+                        </a>
+                        <div class="dropdown-divider my-0"></div>
+                        <form action="{% url 'logout' %}" method="post" class="m-0">
+                            {% csrf_token %}
+                            <button class="dropdown-item danger w-100 text-start">
+                                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                            </button>
+                        </form>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+{# ===== SUB-HEADER ===== #}
+<div class="gc-subheader">
+    <div class="d-flex align-items-center gap-3">
+        <div class="user-icon">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div>
+            <div class="greeting-name">Hola, {{ user_display_name }}</div>
+            <div class="greeting-sub">Panel de Vendedor · Getaway Chile Turismo &amp; Transporte</div>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'sales:create' %}" class="btn-gc-gold">
+            <i class="fas fa-plus"></i> Registrar Venta
+        </a>
+    </div>
+</div>
+
+{# ===== MAIN CONTENT ===== #}
+<div class="gc-content-wrapper">
+    <div class="gc-page">
+        {# Messages #}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="gc-alert alert alert-{{ message.tags }} alert-dismissible mb-3" role="alert"
+            style="{% if message.tags == 'success' %}border-color:var(--gc-teal);background:#f0f9f8;color:var(--gc-teal);{% elif message.tags == 'error' or message.tags == 'danger' %}border-color:#c0392b;background:#fdf3f2;color:#c0392b;{% else %}border-color:var(--gc-gold);background:#fdf8f0;color:var(--gc-gold);{% endif %}">
+            <div class="d-flex align-items-center gap-2">
+                {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>{% elif message.tags == 'error' or
+                message.tags == 'danger' %}<i class="fas fa-exclamation-circle"></i>{% else %}<i
+                    class="fas fa-info-circle"></i>{% endif %}
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {# Page view slot #}
+        {% block dashboard_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer
+    style="background:var(--gc-teal-dark,#1e4f5a);border-top:3px solid var(--gc-gold,#B5823C);padding:1.25rem 2rem;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <img src="{% static 'img/logo_white.png' %}" alt="Getaway Chile" style="height:30px;opacity:.92;"
+                onerror="this.style.display='none'">
+            <div>
+                <div style="font-weight:700;color:#fff;font-size:.9rem;font-family:'Poppins',sans-serif;">Getaway Chile
+                </div>
+                <div style="font-size:.68rem;color:rgba(255,255,255,.6);letter-spacing:1.5px;text-transform:uppercase;">
+                    Panel de Vendedor</div>
+            </div>
+        </div>
+        <div style="color:rgba(255,255,255,.5);font-size:.78rem;">
+            &copy; {% now "Y" %} Getaway Chile Turismo &amp; Transporte &mdash; Todos los derechos reservados.
+        </div>
+        <div class="d-flex gap-3">
+            <a href="https://www.instagram.com/getawaychile" target="_blank"
+                style="color:rgba(255,255,255,.6);font-size:1.1rem;transition:color .2s;"
+                onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.6)'"><i
+                    class="fab fa-instagram"></i></a>
+            <a href="#" style="color:rgba(255,255,255,.6);font-size:1.1rem;transition:color .2s;"
+                onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.6)'"><i
+                    class="fab fa-facebook"></i></a>
+            <a href="https://wa.me/56994155655" target="_blank"
+                style="color:rgba(255,255,255,.6);font-size:1.1rem;transition:color .2s;"
+                onmouseover="this.style.color='#25d366'" onmouseout="this.style.color='rgba(255,255,255,.6)'"><i
+                    class="fab fa-whatsapp"></i></a>
+        </div>
+    </div>
+</footer>
+
+{% include 'core/includes/welcome_modal.html' %}
+
+{% endblock %}

@@ -1,0 +1,193 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="{% if lang == 'PT' %}pt{% elif lang == 'EN' %}en{% else %}es{% endif %}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if lang == 'EN' %}Booking Confirmed{% elif lang == 'PT' %}Reserva Confirmada{% else %}Confirmación de Reserva{% endif %} — Getaway Chile</title>
+  <style>
+    body { margin:0; padding:0; background:#eef2f5; font-family:'Segoe UI',Arial,sans-serif; }
+    .wrapper { max-width:640px; margin:32px auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 10px 50px rgba(0,0,0,.12); }
+    .header { background:linear-gradient(135deg,#1a4a55 0%,#2C6E7A 60%,#3a8a99 100%); padding:40px 36px 28px; text-align:center; }
+    .logo-text { display:inline-block; font-size:1.6rem; font-weight:900; color:#fff; letter-spacing:.02em; }
+    .logo-text span { color:#d4a558; }
+    .tagline { font-size:.82rem; color:rgba(255,255,255,.65); letter-spacing:.08em; text-transform:uppercase; margin-top:4px; }
+    .header h1 { color:#fff; margin:18px 0 6px; font-size:1.4rem; font-weight:700; }
+    .booking-ref { display:inline-block; background:rgba(255,255,255,.15); padding:5px 20px; border-radius:20px; font-size:.85rem; color:rgba(255,255,255,.9); margin-top:6px; }
+    .body { padding:36px 36px 28px; }
+    .greeting { font-size:1.08rem; color:#333; margin-bottom:22px; line-height:1.6; }
+    .badge-confirmed { display:inline-block; background:rgba(25,135,84,.12); color:#198754; border:1px solid rgba(25,135,84,.25); padding:3px 12px; border-radius:20px; font-size:.8rem; font-weight:700; }
+    .section-title { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:#2C6E7A; margin:28px 0 10px; padding-bottom:8px; border-bottom:2px solid #e0eef0; }
+    .info-table { width:100%; border-collapse:collapse; }
+    .info-table td { padding:9px 4px; border-bottom:1px solid #f0f3f4; font-size:.92rem; }
+    .info-table td:first-child { color:#888; width:42%; }
+    .info-table td:last-child { font-weight:600; color:#222; }
+    .pickup-box { background:linear-gradient(135deg,#2C6E7A,#1a4a55); color:#fff; border-radius:12px; padding:20px 24px; text-align:center; margin:24px 0; }
+    .pickup-box .label { font-size:.75rem; opacity:.8; text-transform:uppercase; letter-spacing:.08em; }
+    .pickup-box .time { font-size:2.4rem; font-weight:900; margin:4px 0; }
+    .pickup-box .sublabel { font-size:.82rem; opacity:.75; }
+    .tour-card { background:#f7fafa; border:1.5px solid #d4eaed; border-radius:12px; padding:18px 20px; margin-bottom:12px; }
+    .tour-name { font-weight:700; color:#1a4a55; font-size:.98rem; margin-bottom:8px; }
+    .meta-chip { display:inline-block; background:#e8f4f6; color:#2C6E7A; border-radius:6px; padding:2px 8px; font-size:.8rem; font-weight:600; margin:2px 2px 0 0; }
+    .pax-table { width:100%; border-collapse:collapse; margin-top:4px; }
+    .pax-table th { background:#f0f6f7; color:#2C6E7A; text-align:left; padding:8px 10px; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; border-bottom:2px solid #d4eaed; }
+    .pax-table td { padding:8px 10px; font-size:.88rem; border-bottom:1px solid #f0f3f4; }
+    .pax-table tr:last-child td { border-bottom:none; }
+    .pax-table .pax-num { color:#2C6E7A; font-weight:700; text-align:center; width:32px; }
+    .payment-box { background:linear-gradient(135deg,#B5823C,#d4a558); color:#fff; border-radius:12px; padding:18px 24px; margin:24px 0; }
+    .reminder-box { background:#fff8ec; border:1.5px solid #f5d78e; border-radius:10px; padding:18px 20px; font-size:.88rem; color:#7a5a10; margin-top:20px; }
+    .reminder-box ul { margin:8px 0 0; padding-left:18px; line-height:1.9; }
+    .issued-by { background:#f7fafa; border:1px solid #e8eef0; border-radius:10px; padding:14px 18px; margin-top:24px; display:flex; align-items:center; gap:14px; }
+    .issued-avatar { background:#2C6E7A; color:#fff; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.05rem; font-weight:700; flex-shrink:0; }
+    .issued-info { font-size:.85rem; }
+    .issued-info strong { display:block; color:#1a4a55; font-size:.93rem; }
+    .issued-info span { color:#888; }
+    .footer { background:#f0f4f5; text-align:center; padding:24px 32px; font-size:.8rem; color:#aaa; border-top:1px solid #e4eaeb; }
+    .footer .footer-logo { font-size:1.1rem; font-weight:900; color:#2C6E7A; margin-bottom:6px; }
+    .footer .footer-logo span { color:#d4a558; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-text">Getaway<span>Chile</span></div>
+    <div class="tagline">{% if lang == 'EN' %}Adventure Tourism & Experiences{% elif lang == 'PT' %}Turismo de Aventura e Experiências{% else %}Turismo de Aventura y Experiencias{% endif %}</div>
+    <h1>{% if lang == 'EN' %}✈️ Your Booking is Confirmed!{% elif lang == 'PT' %}✈️ Sua Reserva foi Confirmada!{% else %}✈️ ¡Tu Reserva está Confirmada!{% endif %}</h1>
+    <div class="booking-ref">Booking #{{ sale.pk }} &nbsp;·&nbsp; {{ sale.created_at|date:"d/m/Y" }}</div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+    <p class="greeting">
+      {% if lang == 'EN' %}Hello, <strong>{{ sale.client_first_name }} {{ sale.client_last_name }}</strong> 👋<br>We are pleased to inform you that your booking has been <span class="badge-confirmed">✓ CONFIRMED</span>. Here are all the details of your experience.{% elif lang == 'PT' %}Olá, <strong>{{ sale.client_first_name }} {{ sale.client_last_name }}</strong> 👋<br>Temos o prazer de informar que sua reserva foi <span class="badge-confirmed">✓ CONFIRMADA</span>. Abaixo estão todos os detalhes da sua experiência.{% else %}Hola, <strong>{{ sale.client_first_name }} {{ sale.client_last_name }}</strong> 👋<br>Nos complace informarte que tu reserva ha sido <span class="badge-confirmed">✓ CONFIRMADA</span>. A continuación encontrarás todos los detalles de tu experiencia.{% endif %}
+    </p>
+
+    <!-- Client data -->
+    <div class="section-title">{% if lang == 'EN' %}📋 Your Details{% elif lang == 'PT' %}📋 Seus Dados{% else %}📋 Tus Datos{% endif %}</div>
+    <table class="info-table">
+      <tr>
+        <td>{% if lang == 'EN' %}Full name{% elif lang == 'PT' %}Nome completo{% else %}Nombre completo{% endif %}</td>
+        <td>{{ sale.client_first_name }} {{ sale.client_last_name }}</td>
+      </tr>
+      <tr>
+        <td>{% if lang == 'EN' %}Booking No.{% elif lang == 'PT' %}N.º de Reserva{% else %}N.º de Reserva{% endif %}</td>
+        <td>#{{ sale.pk }}</td>
+      </tr>
+      <tr>
+        <td>{% if lang == 'EN' %}Pick-up address{% elif lang == 'PT' %}Endereço de coleta{% else %}Hotel / Dirección de Recogida{% endif %}</td>
+        <td>{{ sale.hotel_address|default:"—" }}</td>
+      </tr>
+      <tr>
+        <td>{% if lang == 'EN' %}Passengers{% elif lang == 'PT' %}Passageiros{% else %}Pasajeros{% endif %}</td>
+        <td>{{ sale.passengers_count }}</td>
+      </tr>
+      <tr>
+        <td>{% if lang == 'EN' %}Booking date{% elif lang == 'PT' %}Data da reserva{% else %}Fecha de reserva{% endif %}</td>
+        <td>{{ sale.created_at|date:"d/m/Y H:i" }}</td>
+      </tr>
+    </table>
+
+
+
+    <!-- Itinerary -->
+    <div class="section-title" style="margin-top:28px;">{% if lang == 'EN' %}🗺️ Your Itinerary{% elif lang == 'PT' %}🗺️ Seu Itinerário{% else %}🗺️ Tu Itinerario{% endif %}</div>
+    {% for stop in stops %}<div class="tour-card">
+      <div class="tour-name">{{ stop.tour.name|default:"Tour Privado a Medida" }}</div>
+      <div>
+        <span class="meta-chip">📅 {{ stop.tour_date|date:"d/m/Y"|default:"—" }}</span>
+        <span class="meta-chip">🗣️ {{ stop.get_tour_language_display }}</span>
+        <span class="meta-chip">👥 {{ stop.pax_adults }} {% if lang == 'EN' %}adult{{ stop.pax_adults|pluralize }}{% elif lang == 'PT' %}adulto{{ stop.pax_adults|pluralize:"s" }}{% else %}adulto{{ stop.pax_adults|pluralize:"s" }}{% endif %}</span>
+        {% if stop.pax_infants %}<span class="meta-chip">👶 {{ stop.pax_infants }} {% if lang == 'EN' %}infant{{ stop.pax_infants|pluralize }}{% elif lang == 'PT' %}infante{{ stop.pax_infants|pluralize:"s" }}{% else %}infante{{ stop.pax_infants|pluralize:"s" }}{% endif %}</span>{% endif %}
+        {% if stop.is_private %}<span class="meta-chip" style="background:#fdf2e2;color:#B5823C;">⭐ {% if lang == 'EN' %}Private Tour{% elif lang == 'PT' %}Tour Privado{% else %}Tour Privado{% endif %}</span>{% endif %}
+      </div>
+      {% if stop.pickup_time %}
+      <div class="pickup-box" style="margin-top:14px;">
+        <div class="label">{% if lang == 'EN' %}⏰ Pick-up Time{% elif lang == 'PT' %}⏰ Horário de Coleta{% else %}⏰ Hora de Recogida{% endif %}</div>
+        <div class="time">{{ stop.pickup_time|time:"H:i" }}</div>
+        <div class="sublabel">{% if lang == 'EN' %}Please be ready 10 minutes early{% elif lang == 'PT' %}Por favor esteja pronto 10 minutos antes{% else %}Por favor estar listo 10 minutos antes{% endif %}</div>
+      </div>
+      {% endif %}
+    </div>{% endfor %}
+
+    <!-- Passenger list -->
+    {% if passengers %}<div class="section-title">{% if lang == 'EN' %}👥 Passenger List{% elif lang == 'PT' %}👥 Lista de Passageiros{% else %}👥 Lista de Pasajeros{% endif %}</div>
+    <table class="pax-table">
+      <tr>
+        <th class="pax-num">#</th>
+        <th>{% if lang == 'EN' %}Full Name{% elif lang == 'PT' %}Nome Completo{% else %}Nombre Completo{% endif %}</th>
+        <th>{% if lang == 'EN' %}Document{% elif lang == 'PT' %}Documento{% else %}Documento{% endif %}</th>
+        <th>{% if lang == 'EN' %}Nationality{% elif lang == 'PT' %}Nacionalidade{% else %}Nacionalidad{% endif %}</th>
+      </tr>
+      {% for p in passengers %}<tr>
+        <td class="pax-num">{{ forloop.counter }}</td>
+        <td>{{ p.first_name }} {{ p.last_name }}</td>
+        <td>{{ p.rut_passport|default:"—" }}</td>
+        <td>{{ p.nationality }}</td>
+      </tr>{% endfor %}
+    </table>{% endif %}
+
+    <!-- Payment -->
+    <div class="section-title">{% if lang == 'EN' %}💳 Payment Details{% elif lang == 'PT' %}💳 Detalhes do Pagamento{% else %}💳 Información de Pago{% endif %}</div>
+    <table class="info-table">
+      <tr>
+        <td>{% if lang == 'EN' %}Payment status{% elif lang == 'PT' %}Status do pagamento{% else %}Estado de Pago{% endif %}</td>
+        <td>{% if sale.payment_status == 'PAGADO' %}{% if lang == 'EN' %}✅ Paid in full{% elif lang == 'PT' %}✅ Pago integralmente{% else %}✅ Pagado en su totalidad{% endif %}{% elif sale.payment_status == 'ABONADO' %}{% if lang == 'EN' %}⚠️ Partially paid{% elif lang == 'PT' %}⚠️ Pago parcial{% else %}⚠️ Abonado (saldo pendiente){% endif %}{% else %}{% if lang == 'EN' %}🔴 Pending{% elif lang == 'PT' %}🔴 Pendente{% else %}🔴 Pendiente{% endif %}{% endif %}</td>
+      </tr>
+      <tr>
+        <td>{% if lang == 'EN' %}Currency{% elif lang == 'PT' %}Moeda{% else %}Moneda{% endif %}</td>
+        <td>{{ sale.currency }}</td>
+      </tr>
+      <tr>
+        <td>{% if lang == 'EN' %}Amount paid{% elif lang == 'PT' %}Valor pago{% else %}Monto Pagado{% endif %}</td>
+        <td>{% if sale.currency == 'USD' %}US$ {{ sale.amount_paid }}{% elif sale.currency == 'BRL' %}R$ {{ sale.amount_paid }}{% else %}${{ sale.amount_paid|intcomma }}{% endif %}</td>
+      </tr>
+      <tr>
+        <td><strong>{% if lang == 'EN' %}Total{% elif lang == 'PT' %}Total{% else %}Total{% endif %}</strong></td>
+        <td><strong>{% if sale.currency == 'USD' %}US$ {{ sale.total_amount }}{% elif sale.currency == 'BRL' %}R$ {{ sale.total_amount }}{% else %}${{ sale.total_amount|intcomma }}{% endif %}</strong></td>
+      </tr>
+    </table>
+
+    <!-- Reminders -->
+    <div class="reminder-box">
+      <strong>⚠️ {% if lang == 'EN' %}Important Reminders:{% elif lang == 'PT' %}Lembretes Importantes:{% else %}Recordatorios Importantes:{% endif %}</strong>
+      <ul>
+        {% if lang == 'EN' %}
+        <li>Please be at the pick-up location <strong>10 minutes before</strong> the scheduled time.</li>
+        <li>Bring a valid <strong>ID or passport</strong>.</li>
+        <li>Wear <strong>comfortable clothing and footwear</strong> suitable for the activity.</li>
+        <li>For changes or queries, contact us immediately through our official channels.</li>
+        {% elif lang == 'PT' %}
+        <li>Por favor esteja no local de coleta <strong>10 minutos antes</strong> do horário marcado.</li>
+        <li>Leve um <strong>documento de identidade ou passaporte</strong> válido.</li>
+        <li>Vista <strong>roupas e calçados confortáveis</strong> adequados à atividade.</li>
+        <li>Para alterações ou dúvidas, entre em contato conosco imediatamente pelos canais oficiais.</li>
+        {% else %}
+        <li>Por favor espera en el lugar indicado <strong>10 minutos antes</strong> de la hora de recogida.</li>
+        <li>Lleva <strong>documento de identidad o pasaporte</strong> vigente.</li>
+        <li>Viste ropa y calzado <strong>cómodo</strong> acorde a la actividad.</li>
+        <li>Para cambios o consultas contáctanos de inmediato a través de nuestros canales oficiales.</li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <!-- Issued by -->
+    <div class="issued-by" style="display:flex;align-items:center;gap:14px;">
+      <div class="issued-avatar">{% if sale.seller %}{{ sale.seller.first_name|slice:":1" }}{{ sale.seller.last_name|slice:":1" }}{% else %}GC{% endif %}</div>
+      <div class="issued-info">
+        <strong>{% if lang == 'EN' %}Notified by{% elif lang == 'PT' %}Notificado por{% else %}Notificado por{% endif %}: {% if sale.seller %}{{ sale.seller.first_name }} {{ sale.seller.last_name }}{% else %}Getaway Chile{% endif %}</strong>
+        <span>{% if lang == 'EN' %}Getaway Chile team{% elif lang == 'PT' %}Equipe Getaway Chile{% else %}Equipo Getaway Chile{% endif %} &nbsp;·&nbsp; {{ sale.client_notified_at|date:"d/m/Y H:i"|default:"-" }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-logo">Getaway<span style="color:#d4a558;">Chile</span></div>
+    {% if lang == 'EN' %}<strong>Adventure Tourism & Experiences</strong><br>This email was automatically generated — please do not reply directly. For assistance, contact us through our official channels.{% elif lang == 'PT' %}<strong>Turismo de Aventura e Experiências</strong><br>Este e-mail foi gerado automaticamente — por favor não responda diretamente. Para assistência, entre em contato pelos canais oficiais.{% else %}<strong>Turismo de Aventura y Experiencias</strong><br>Este email fue generado automáticamente — por favor no respondas directamente. Para asistencia, contáctanos por los canales oficiales de Getaway Chile.{% endif %}
+  </div>
+
+</div>
+</body>
+</html>

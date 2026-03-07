@@ -1,0 +1,200 @@
+"""
+notifications/whatsapp.py
+Sends WhatsApp messages via Twilio.
+Language auto-detected from client's nationality.
+"""
+import logging
+import re
+import os
+
+logger = logging.getLogger(__name__)
+
+# ── Nationality → Language map ─────────────────────────────────────
+_NATIONALITY_LANG = {
+    'Brasileña': 'PT',
+    'Estadounidense': 'EN',
+}
+_ENGLISH_SPEAKING = {'Estadounidense', 'Otra'}
+
+
+def get_language_for_nationality(nationality: str) -> str:
+    """Return 'PT', 'EN', or 'ES' based on the client's nationality."""
+    if nationality == 'Brasileña':
+        return 'PT'
+    if nationality in _ENGLISH_SPEAKING:
+        return 'EN'
+    return 'ES'
+
+
+# ── Message templates ──────────────────────────────────────────────
+def _build_message(sale, lang: str, stops=None) -> str:
+    """Build WhatsApp message. `stops` is an iterable of SaleTour objects.
+    If None, all stops of the sale are used."""
+    name = f"{sale.client_first_name} {sale.client_last_name}".strip()
+    booking = sale.pk
+    hotel = sale.hotel_address or ('Sin especificar' if lang == 'ES' else ('Not specified' if lang == 'EN' else 'Não especificado'))
+    pax = sale.passengers_count
+
+    # Build tour summary — include per-stop pickup time
+    if stops is None:
+        stops = list(sale.tour_stops.select_related('tour').all())
+    else:
+        stops = list(stops)
+
+    if stops:
+        tour_lines = []
+        for s in stops:
+            tour_name = s.tour.name if s.tour else ('Tour Privado' if lang == 'ES' else ('Private Tour' if lang == 'EN' else 'Tour Privado'))
+            date_str = s.tour_date.strftime('%d/%m/%Y') if s.tour_date else '---'
+            # Use stop-level pickup time, fall back to sale-level
+            stop_pickup = s.pickup_time or sale.pickup_time
+            if stop_pickup:
+                tour_lines.append(f"  • {tour_name} — {date_str} | ⏰ {stop_pickup.strftime('%H:%M')}")
+            else:
+                tour_lines.append(f"  • {tour_name} — {date_str}")
+        tour_text = '\n'.join(tour_lines)
+    else:
+        tour_text = '  • A confirmar'
+
+
+    # Build passenger list
+    passengers = list(sale.passengers.all())
+    if passengers:
+        if lang == 'PT':
+            pax_header = "👥 *Passageiros:*"
+        elif lang == 'EN':
+            pax_header = "👥 *Passengers:*"
+        else:
+            pax_header = "👥 *Pasajeros:*"
+        pax_lines = [pax_header]
+        for i, p in enumerate(passengers, 1):
+            doc = f" | {p.rut_passport}" if p.rut_passport else ""
+            pax_lines.append(f"  {i}. {p.first_name} {p.last_name}{doc}")
+        pax_text = '\n'.join(pax_lines) + '\n'
+    else:
+        if lang == 'PT':
+            pax_text = f"👥 *Passageiros:* {pax}\n"
+        elif lang == 'EN':
+            pax_text = f"👥 *Passengers:* {pax}\n"
+        else:
+            pax_text = f"👥 *Pasajeros:* {pax}\n"
+
+    if lang == 'PT':
+        return (
+            f"✈️ *Reserva Confirmada!* — Getaway Chile\n\n"
+            f"Olá *{name}*, sua reserva *#{booking}* foi CONFIRMADA com sucesso! 🎉\n\n"
+            f"📋 *Detalhes da sua reserva:*\n"
+            f"{tour_text}\n"
+            f"📍 *Endereço de coleta:* {hotel}\n"
+            f"{pax_text}\n"
+            f"Por favor, esteja no local *10 minutos antes* do horário indicado.\n"
+            f"Leve documento de identidade ou passaporte válido.\n\n"
+            f"Até logo! 🌄\n"
+            f"*Getaway Chile* — Turismo de Aventura"
+        )
+    elif lang == 'EN':
+        return (
+            f"✈️ *Booking Confirmed!* — Getaway Chile\n\n"
+            f"Hello *{name}*, your booking *#{booking}* is CONFIRMED! 🎉\n\n"
+            f"📋 *Booking details:*\n"
+            f"{tour_text}\n"
+            f"📍 *Pick-up address:* {hotel}\n"
+            f"{pax_text}\n"
+            f"Please be ready at the pick-up location *10 minutes early*.\n"
+            f"Bring a valid ID or passport.\n\n"
+            f"See you soon! 🌄\n"
+            f"*Getaway Chile* — Adventure & Experiences"
+        )
+    else:  # ES
+        return (
+            f"✈️ *¡Reserva Confirmada!* — Getaway Chile\n\n"
+            f"Hola *{name}*, tu reserva *#{booking}* está CONFIRMADA. 🎉\n\n"
+            f"📋 *Detalles de tu reserva:*\n"
+            f"{tour_text}\n"
+            f"📍 *Dirección de recogida:* {hotel}\n"
+            f"{pax_text}\n"
+            f"Por favor, espera en el lugar indicado *10 minutos antes* de la hora.\n"
+            f"Lleva documento de identidad o pasaporte vigente.\n\n"
+            f"¡Nos vemos pronto! 🌄\n"
+            f"*Getaway Chile* — Turismo de Aventura y Experiencias"
+        )
+
+
+# ── Phone normalization ────────────────────────────────────────────
+def _normalize_phone(phone: str, nationality: str) -> str | None:
+    """
+    Return E.164 format (+XXXXXXXXXXX) or None if unparseable.
+    If no country code, infer from nationality.
+    """
+    if not phone:
+        return None
+    # Strip everything except digits and leading +
+    digits_only = re.sub(r'[^\d+]', '', phone.strip())
+    if digits_only.startswith('+'):
+        return digits_only  # already has country code
+    # Infer country code from nationality
+    _country_codes = {
+        'Chilena': '56',
+        'Argentina': '54',
+        'Peruana': '51',
+        'Boliviana': '591',
+        'Colombiana': '57',
+        'Uruguaya': '598',
+        'Paraguaya': '595',
+        'Brasileña': '55',
+        'Estadounidense': '1',
+    }
+    code = _country_codes.get(nationality, '56')  # default Chile
+    # Remove leading zeros if any
+    digits_only = digits_only.lstrip('0')
+    return f"+{code}{digits_only}"
+
+
+# ── Main send functions ──────────────────────────────────────────────
+def _twilio_send(sale, to_phone: str, body: str, lang: str) -> tuple[bool, str]:
+    """Low-level Twilio send. Returns (success, message)."""
+    account_sid = os.environ.get('TWILIO_ACCOUNT_SID', '')
+    auth_token = os.environ.get('TWILIO_AUTH_TOKEN', '')
+    from_number = os.environ.get('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886')
+    if not account_sid or not auth_token:
+        return False, 'Twilio no configurado (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN vacíos)'
+    try:
+        from twilio.rest import Client
+        client = Client(account_sid, auth_token)
+        message = client.messages.create(
+            body=body,
+            from_=from_number,
+            to=f'whatsapp:{to_phone}',
+        )
+        lang_name = 'Español' if lang == 'ES' else ('Inglés' if lang == 'EN' else 'Portugués')
+        logger.info(f'WhatsApp sent to {to_phone} (SID: {message.sid}) — lang={lang}')
+        return True, f'WhatsApp enviado a {to_phone} en {lang_name}'
+    except Exception as exc:
+        logger.error(f'WhatsApp send failed for sale #{sale.pk}: {exc}')
+        return False, str(exc)
+
+
+def send_whatsapp_notification(sale) -> tuple[bool, str]:
+    """Legacy helper: send WA for all stops of a sale."""
+    if not sale.client_phone:
+        return False, 'El cliente no tiene número de teléfono registrado'
+    to_phone = _normalize_phone(sale.client_phone, sale.client_nationality)
+    if not to_phone:
+        return False, f'Número de teléfono inválido: {sale.client_phone}'
+    lang = get_language_for_nationality(sale.client_nationality)
+    body = _build_message(sale, lang)
+    return _twilio_send(sale, to_phone, body, lang)
+
+
+def send_whatsapp_notification_for_stops(sale, stops, lang: str) -> tuple[bool, str]:
+    """
+    Send WhatsApp notification for a specific list of SaleTour stops.
+    Used when the user selects a particular tour stop to notify about.
+    """
+    if not sale.client_phone:
+        return False, 'El cliente no tiene número de teléfono registrado'
+    to_phone = _normalize_phone(sale.client_phone, sale.client_nationality)
+    if not to_phone:
+        return False, f'Número de teléfono inválido: {sale.client_phone}'
+    body = _build_message(sale, lang, stops=stops)
+    return _twilio_send(sale, to_phone, body, lang)

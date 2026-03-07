@@ -1,0 +1,36 @@
+{% extends 'core/base_logistica.html' %}
+
+{% block title %}Eliminar Vehículo | Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow border-left-danger">
+            <div class="card-body p-5 text-center">
+                <div class="text-danger mb-4">
+                    <i class="fas fa-exclamation-triangle fa-4x"></i>
+                </div>
+
+                <h2 class="h4 font-weight-bold text-gray-800 mb-3">¿Eliminar Vehículo Permanente?</h2>
+
+                <p class="text-muted mb-4 text-center">
+                    Estás a punto de eliminar el vehículo <strong>{{ object.plate }}</strong> asociado a <strong>{{
+                        object.owner_company }}</strong>.<br>
+                    Esta acción no se puede deshacer. Las ventas históricas asociadas a este vehículo podrían perder la
+                    referencia. Se recomienda editarlo para ponerlo "Inactivo" en su lugar.
+                </p>
+
+                <form method="post" class="d-flex justify-content-center gap-3">
+                    {% csrf_token %}
+                    <a href="{% url 'logistics_vehicle_list' %}" class="btn btn-secondary px-4">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger px-4 fw-bold">
+                        <i class="fas fa-trash me-2"></i>Sí, Eliminar Definitivamente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,350 @@
+{% extends 'core/base_dashboard.html' %}
+{% load humanize %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4 text-white p-4 rounded-3 shadow-sm" style="background: linear-gradient(135deg, var(--gc-teal-dark), var(--gc-teal));">
+    <div>
+        <h1 class="h3 mb-1 text-white fw-bold"><i class="fas fa-chart-line me-2 text-warning"></i> Reporte de Rendimiento General</h1>
+        <p class="mb-0 text-white-50 small">Visualiza las métricas clave de tus ventas, tickets y desempeño del equipo para el periodo: <strong>{{ period_label }}</strong></p>
+    </div>
+    
+    <div class="d-flex gap-2">
+        <!-- Rango Botones -->
+        <div class="btn-group shadow-sm" role="group">
+            <a href="?period=week" class="btn btn-sm btn-outline-light {% if period == 'week' %}active fw-bold{% endif %}">Esta Semana</a>
+            <a href="?period=month" class="btn btn-sm btn-outline-light {% if period == 'month' %}active fw-bold{% endif %}">Este Mes</a>
+            <a href="?period=year" class="btn btn-sm btn-outline-light {% if period == 'year' %}active fw-bold{% endif %}">Este Año</a>
+            <a href="?period=all" class="btn btn-sm btn-outline-light {% if period == 'all' %}active fw-bold{% endif %}">Histórico</a>
+        </div>
+        
+        <!-- Descargar / Enviar -->
+        <div class="dropdown">
+            <button class="btn btn-warning shadow-sm fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-download me-1"></i> Exportar
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                <li><a class="dropdown-item py-2" href="{% url 'report_generate_pdf' %}?period={{ period }}&download=true"><i class="fas fa-file-pdf me-2 text-danger"></i> Descargar Reporte PDF</a></li>
+                <li><a class="dropdown-item py-2" target="_blank" href="{% url 'report_generate_pdf' %}?period={{ period }}&download=false"><i class="fas fa-eye me-2 text-gc-teal"></i> Ver Preview del PDF</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item py-2 text-muted" href="#" data-bs-toggle="modal" data-bs-target="#emailReportModal"><i class="fas fa-envelope-open-text me-2"></i> Enviar a otro Correo...</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal fade" id="emailReportModal" tabindex="-1" aria-labelledby="emailReportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+      <form action="{% url 'report_email_pdf' %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="period" value="{{ period }}">
+        <div class="modal-header text-white" style="background: var(--gc-teal); border-bottom: none;">
+          <h5 class="modal-title fw-bold" id="emailReportModalLabel"><i class="fas fa-paper-plane me-2 text-warning"></i> Enviar Reporte por Correo</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+            <p class="text-muted small mb-3">Se generará el reporte PDF del periodo <strong>{{ period_label }}</strong> y se adjuntará automáticamente al correo.</p>
+            <div class="mb-3">
+                <label for="email_dest" class="form-label fw-bold" style="color: var(--gc-teal);">Correo Electrónico de Destino</label>
+                <input type="email" class="form-control" id="email_dest" name="email_dest" placeholder="ejemplo@empresa.com" required style="border: 1px solid var(--gc-teal); border-radius: 8px;">
+            </div>
+        </div>
+        <div class="modal-footer border-0 pb-4 pt-0 d-flex justify-content-center">
+          <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn text-white rounded-3 px-4" style="background: var(--gc-teal);"><i class="fas fa-paper-plane me-2"></i> Enviar Reporte</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= -->
+<!-- STAT CARDS (KPIs)       -->
+<!-- ======================= -->
+<div class="row g-4 mb-4">
+    <!-- Ganancias Totales -->
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-stat gold border-0 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-md-center">
+                <div>
+                    <div class="stat-label mb-1">Ganancias Brutas Generadas</div>
+                    <div class="stat-value text-dark">${{ total_earnings|floatformat:"0"|intcomma }}</div>
+                </div>
+                <div class="stat-icon bg-warning text-dark bg-opacity-25 rounded"><i class="fas fa-dollar-sign"></i></div>
+            </div>
+            <div class="mt-3 text-muted" style="font-size: 0.75rem;"><i class="fas fa-info-circle text-primary"></i> Monto de todas las reservas</div>
+        </div>
+    </div>
+
+    <!-- Tickets Vendidos -->
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-stat border-0 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-md-center">
+                <div>
+                    <div class="stat-label mb-1">Reservas Concretadas</div>
+                    <div class="stat-value text-dark">{{ total_sales_count }}</div>
+                </div>
+                <div class="stat-icon bg-primary text-primary bg-opacity-10 rounded"><i class="fas fa-ticket-alt"></i></div>
+            </div>
+            <div class="mt-3 text-muted" style="font-size: 0.75rem;"><i class="fas fa-info-circle text-primary"></i> Total de folios / tickets emitidos</div>
+        </div>
+    </div>
+
+    <!-- Pasajeros Movilizados -->
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-stat border-0 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-md-center">
+                <div>
+                    <div class="stat-label mb-1">Pax. Movilizados</div>
+                    <div class="stat-value text-dark">{{ total_passengers }}</div>
+                </div>
+                <div class="stat-icon bg-info text-info bg-opacity-10 rounded"><i class="fas fa-users"></i></div>
+            </div>
+            <div class="mt-3 text-muted" style="font-size: 0.75rem;"><i class="fas fa-info-circle text-primary"></i> Total de turistas transportados</div>
+        </div>
+    </div>
+
+    <!-- Ticket Promedio -->
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-stat border-0 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-md-center">
+                <div>
+                    <div class="stat-label mb-1">Gasto por Reserva (Promedio)</div>
+                    <div class="stat-value text-dark">${{ average_ticket|floatformat:"0"|intcomma }}</div>
+                </div>
+                <div class="stat-icon bg-success text-success bg-opacity-10 rounded"><i class="fas fa-chart-pie"></i></div>
+            </div>
+            <div class="mt-3 text-muted" style="font-size: 0.75rem;"><i class="fas fa-info-circle text-primary"></i> Valor medio por ticket/folio</div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================= -->
+<!-- GRAFICOS PRINCIPALES    -->
+<!-- ======================= -->
+<div class="row g-4 mb-4">
+    <!-- Gráfico de Tendencia -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-chart-area me-2 text-primary"></i> Evolución de Ingresos</h5>
+                <p class="text-muted small">Tendencia de generación de ganancias a lo largo de este periodo.</p>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de Dona -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-chart-pie me-2 text-success"></i> Canales de Origen</h5>
+                <p class="text-muted small">Distribución de reservas según su fuente.</p>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="channelChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- ======================= -->
+    <!-- RANKING DE VENDEDORES -->
+    <!-- ======================= -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-medal me-2 text-warning"></i> Mejores Vendedores</h5>
+                <p class="text-muted small">Top 5 asesores con más ingresos generados en este periodo.</p>
+            </div>
+            <div class="card-body">
+                {% if top_sellers %}
+                    {% for seller in top_sellers %}
+                        <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                            <div class="p-3 bg-light rounded-circle fw-bold text-center border mr-3 me-3" style="width: 50px; height: 50px; line-height: 20px;">
+                                {% if forloop.counter == 1 %}<i class="fas fa-trophy text-warning"></i>
+                                {% elif forloop.counter == 2 %}<i class="fas fa-medal text-secondary"></i>
+                                {% elif forloop.counter == 3 %}<i class="fas fa-medal" style="color: #cd7f32;"></i>
+                                {% else %}<span class="text-muted">{{ forloop.counter }}</span>{% endif %}
+                            </div>
+                            
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold text-dark">{{ seller.seller__first_name }} {{ seller.seller__last_name }}</h6>
+                                <div class="text-muted small">{{ seller.sales_count }} ventas hechas en este periodo</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-success" style="font-size:1.1rem;">${{ seller.total_amount|floatformat:"0"|intcomma }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-store-slash fa-3x text-muted opacity-25 mb-3"></i>
+                        <h6 class="text-muted">No hay registros de ventas en este espacio de tiempo.</h6>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================= -->
+    <!-- TOURS MAS BUSCADOS    -->
+    <!-- ======================= -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-map-marked-alt me-2 text-info"></i> Desempeño por Tour</h5>
+                <p class="text-muted small">Tours o Paquetes con mayor volumen de solicitudes.</p>
+            </div>
+            <div class="card-body">
+                {% if top_tours %}
+                    {% for t in top_tours %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-end mb-1">
+                                <span class="fw-bold small text-dark">{{ t.tour__name|default:"Servicio Específico"|truncatechars:35 }}</span>
+                                <span class="fw-bold small text-gc-teal">${{ t.total_amount|floatformat:"0"|intcomma }}</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar {% if forloop.counter == 1 %}bg-success{% elif forloop.counter == 2 %}bg-info{% else %}bg-secondary{% endif %}" role="progressbar" 
+                                style="width: {% widthratio t.sales_count total_sales_count 100 %}%;" 
+                                aria-valuenow="{% widthratio t.sales_count total_sales_count 100 %}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="text-muted" style="font-size: 0.65rem; margin-top:2px;">{{ t.sales_count }} pasajes vendidos (aprox {% widthratio t.sales_count total_sales_count 100 %}%)</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-folder-open fa-3x text-muted opacity-25 mb-3"></i>
+                        <h6 class="text-muted">No encontramos data suficiente.</h6>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Data From View
+        const rawChartDates = '{{ chart_dates_json|escapejs }}';
+        const rawChartRevenues = '{{ chart_revenues_json|escapejs }}';
+        const rawChannelLabels = '{{ channel_labels_json|escapejs }}';
+        const rawChannelValues = '{{ channel_values_json|escapejs }}';
+        
+        // Parse or fallback to empty arrays
+        const chartDates = rawChartDates ? JSON.parse(rawChartDates) : [];
+        const chartRevenues = rawChartRevenues ? JSON.parse(rawChartRevenues) : [];
+        const channelLabels = rawChannelLabels ? JSON.parse(rawChannelLabels) : [];
+        const channelValues = rawChannelValues ? JSON.parse(rawChannelValues) : [];
+
+        // 1. Revenue Evolution Chart
+        const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+        
+        let gradientFill = ctxRevenue.createLinearGradient(0, 0, 0, 300);
+        gradientFill.addColorStop(0, 'rgba(44, 110, 122, 0.4)'); // gc-teal semi-transparent
+        gradientFill.addColorStop(1, 'rgba(44, 110, 122, 0.0)');
+
+        new Chart(ctxRevenue, {
+            type: 'line',
+            data: {
+                labels: chartDates.length ? chartDates : ['Sin data'],
+                datasets: [{
+                    label: 'Ingresos ($)',
+                    data: chartRevenues.length ? chartRevenues : [0],
+                    borderColor: '#2C6E7A',
+                    backgroundColor: gradientFill,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#B5823C', // gold
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#B5823C',
+                    fill: 'start',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) { return '$' + value.toLocaleString('es-CL'); }
+                        },
+                        grid: { borderDash: [5, 5], color: '#e0e0e0' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 2. Origin Channels Chart
+        const ctxChannel = document.getElementById('channelChart').getContext('2d');
+        new Chart(ctxChannel, {
+            type: 'doughnut',
+            data: {
+                labels: channelLabels.length ? channelLabels : ['Sin data'],
+                datasets: [{
+                    data: channelValues.length ? channelValues : [1],
+                    backgroundColor: [
+                        '#2C6E7A', '#B5823C', '#4A90E2', '#50E3C2', '#F5A623', '#D0021B'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 20 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed !== null) {
+                                    label += new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(context.parsed);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Ventas por Versión - {{ historic_record.name }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin-top: 2cm;
+            margin-bottom: 2cm;
+            margin-left: 1.5cm;
+            margin-right: 1.5cm;
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                left: 1.5cm; width: 18cm; top: 1cm; height: 1.5cm;
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 1.5cm; width: 18cm; bottom: 0.5cm; height: 1cm;
+            }
+        }
+        body { font-family: Helvetica, sans-serif; font-size: 11px; color: #333; line-height: 1.4; }
+        h1 { color: #1a4a55; font-size: 20px; margin-bottom: 5px; border-bottom: 1px solid #1a4a55; padding-bottom: 5px; }
+        h2 { color: #2c6e7a; font-size: 14px; margin-top: 20px; margin-bottom: 10px; }
+        .details-box { background-color: #f8fbfc; border: 1px solid #dde6e9; padding: 12px; margin-bottom: 20px; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background-color: #2c6e7a; color: white; padding: 8px; text-align: left; }
+        td { border-bottom: 1px solid #e0e0e0; padding: 8px; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .success { color: #27ae60; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="header_content">
+        <h1>Getaway Chile - Reporte de Auditoría de Versión</h1>
+    </div>
+
+    <div id="footer_content" class="text-right" style="font-size: 9px; color: #7f8c8d; border-top: 1px solid #eee; padding-top: 5px;">
+        Generado automáticamente por Getaway Chile RMS | Página <pdf:pagenumber> de <pdf:pagecount>
+    </div>
+
+    <div>
+        <h2>Ventas Asociadas al Tour: {{ historic_record.name }}</h2>
+        <div class="details-box">
+            <b>Período de Vigencia Creada:</b> {{ start_date|date:"d/m/Y H:i" }} — 
+            {% if end_date != start_date %}{{ end_date|date:"d/m/Y H:i" }}{% else %}PRESENTE{% endif %}<br>
+            <b>ID Versión (Histórica):</b> #{{ historic_record.history_id }}<br>
+            <b>Referencia del Tour Original:</b> #{{ historic_record.id }}<br>
+            <br>
+            <b>Precios Base que estaban configurados en esta versión:</b><br>
+            CLP ${{ historic_record.precio_clp|default:"0" }} | 
+            USD ${{ historic_record.precio_usd|default:"0" }} | 
+            BRL R${{ historic_record.precio_brl|default:"0" }}
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha Reserva</th>
+                    <th>ID Venta</th>
+                    <th>Cliente</th>
+                    <th>Fecha Operativa</th>
+                    <th>ID Asignación</th>
+                    <th>Distribución Pasajeros</th>
+                    <th class="text-right">Total en CLP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for st in sales_tours %}
+                <tr>
+                    <td>{{ st.sale.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>#{{ st.sale.id }}</td>
+                    <td>{{ st.sale.client_name }}</td>
+                    <td>{{ st.tour_date|date:"d/m/Y" }}</td>
+                    <td>#{{ st.id }}</td>
+                    <td>
+                        {{ st.adults|default:"0" }} Adultos
+                        {% if st.infants %}, {{ st.infants }} Infantes{% endif %}
+                        {% if st.infants_free %}<br><i style="font-size:9px;color:#7f8c8d;">+{{ st.infants_free }} Infantes Gratis</i>{% endif %}
+                    </td>
+                    <td class="text-right success">${{ st.sale.total_amount|default:"0" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center" style="padding: 20px; color: #7f8c8d; background-color: #fcfcfc;">
+                        No se encontraron ventas que hayan sido creadas bajo la vigencia de esta configuración.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

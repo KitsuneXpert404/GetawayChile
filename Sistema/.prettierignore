@@ -1,0 +1,4 @@
+# Exclude all Django HTML templates from Prettier formatting
+# Prettier reformats Django template tags across multiple lines which breaks them.
+**/templates/**/*.html
+*.html

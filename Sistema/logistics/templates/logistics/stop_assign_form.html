@@ -1,0 +1,71 @@
+{% extends 'core/base_dashboard.html' %}
+
+{% block title %}Asignar Logística — {{ stop.tour.name|default:"Tour Privado" }} {{ stop.tour_date|date:"d/m/Y" }} | Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-7">
+        <div class="gc-card">
+            <div class="gc-card-header" style="background:linear-gradient(135deg,#1a4a55,#2C6E7A);">
+                <i class="fas fa-route me-2"></i>Asignar Logística — Stop #{{ stop.pk }}
+            </div>
+            <div class="p-4">
+                {# Stop summary box #}
+                <div class="p-3 rounded mb-4" style="background:rgba(44,110,122,.07);border-left:4px solid var(--gc-teal);">
+                    <div class="row g-2" style="font-size:.9rem;">
+                        <div class="col-md-6">
+                            <span class="gc-label">Tour</span>
+                            <div class="fw-bold">{{ stop.tour.name|default:"Tour Privado" }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="gc-label">Fecha</span>
+                            <div class="fw-bold">{{ stop.tour_date|date:"d/m/Y" }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="gc-label">Pasajeros</span>
+                            <div class="fw-bold">{{ stop.pax_adults }} adultos{% if stop.pax_infants %} + {{ stop.pax_infants }} infantes{% endif %}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="gc-label">Cliente</span>
+                            <div>{{ sale.client_first_name }} {{ sale.client_last_name }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="gc-label">Hotel / Recogida</span>
+                            <div>{{ sale.hotel_address|default:"No especificado" }}</div>
+                        </div>
+                    </div>
+                    {% if stop.is_private %}
+                    <div class="mt-2 fw-bold" style="color:var(--gc-gold);"><i class="fas fa-star me-1"></i>TOUR PRIVADO</div>
+                    {% endif %}
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            <label class="gc-label">{{ form.assigned_vehicle.label }}</label>
+                            {{ form.assigned_vehicle }}
+                            <small class="text-muted">¿A qué vehículo/agencia va este stop?</small>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="gc-label">{{ form.pickup_time.label }}</label>
+                            {{ form.pickup_time }}
+                            <small class="text-muted">Hora estimada de recogida en el hotel.</small>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="gc-label">{{ form.logistics_notes.label }}</label>
+                        {{ form.logistics_notes }}
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'sales:detail' sale.pk %}" class="btn-gc-outline">Cancelar</a>
+                        <button type="submit" class="btn-gc-primary px-5">
+                            <i class="fas fa-save me-2"></i>Guardar Asignación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

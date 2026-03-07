@@ -1,0 +1,196 @@
+{% extends 'core/base_dashboard.html' %}
+{% load humanize %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-map-marked-alt me-2" style="color:var(--gc-gold);"></i> {{ tour.name }}
+        </h1>
+        <p class="gc-page-sub mb-0">{{ tour.destination }} — {{ tour.region }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'tour_list' %}" class="btn-gc-outline py-2 px-3">
+            <i class="fas fa-arrow-left me-1"></i> Catálogo
+        </a>
+        <a href="{% url 'tour_update' tour.pk %}" class="btn-gc-gold py-2 px-3">
+            <i class="fas fa-edit me-1"></i> Editar Tour
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {# ── LEFT COLUMN ──────────────────────── #}
+    <div class="col-lg-8">
+        
+        {# Main Info Card #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header bg-white border-bottom">
+                <i class="fas fa-info-circle" style="color:var(--gc-teal);"></i> Detalles Generales
+            </div>
+            <div class="gc-card-body p-4">
+                <div class="d-flex gap-2 mb-4">
+                    {% if tour.active %}
+                    <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle"></i> Activo</span>
+                    {% else %}
+                    <span class="gc-badge gc-badge-gray"><i class="fas fa-minus-circle"></i> Inactivo</span>
+                    {% endif %}
+                    <span class="gc-badge" style="background:rgba(44,110,122,.1);color:var(--gc-teal);">
+                        {{ tour.get_tour_type_display }}
+                    </span>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <small class="text-muted fw-bold small text-uppercase" style="letter-spacing:.05em;">Destino</small>
+                        <div class="fw-semibold mt-1" style="font-size:1.05rem;">{{ tour.destination }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted fw-bold small text-uppercase" style="letter-spacing:.05em;">Región</small>
+                        <div class="fw-semibold mt-1" style="font-size:1.05rem;">{{ tour.region }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted fw-bold small text-uppercase" style="letter-spacing:.05em;">Duración</small>
+                        <div class="fw-semibold mt-1" style="font-size:1.05rem;">{{ tour.duration }}</div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <small class="text-muted fw-bold small text-uppercase" style="letter-spacing:.05em;">Descripción Interna</small>
+                    <p class="mt-2 text-muted" style="line-height:1.6;">{{ tour.description|linebreaksbr }}</p>
+                </div>
+            </div>
+        </div>
+
+        {# Items Card (Includes/Not) #}
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="gc-card h-100" style="border-top:3px solid #10b981;">
+                    <div class="p-4">
+                        <h6 class="fw-bold mb-3" style="color:#10b981;"><i class="fas fa-check-circle me-2"></i>Incluye</h6>
+                        <div class="text-muted small" style="line-height:1.6;">
+                            {{ tour.includes|linebreaksbr }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="gc-card h-100" style="border-top:3px solid #ef4444;">
+                    <div class="p-4">
+                        <h6 class="fw-bold mb-3" style="color:#ef4444;"><i class="fas fa-times-circle me-2"></i>No Incluye</h6>
+                        <div class="text-muted small" style="line-height:1.6;">
+                            {{ tour.not_includes|linebreaksbr }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Policies Card #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header bg-white border-bottom">
+                <i class="fas fa-shield-alt" style="color:var(--gc-teal);"></i> Políticas de Cancelación
+            </div>
+            <div class="p-4">
+                <p class="mb-0 text-muted fst-italic" style="line-height:1.6;">
+                    {{ tour.cancellation_policy|default:"No especificadas"|linebreaksbr }}
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    {# ── RIGHT COLUMN ─────────────────────── #}
+    <div class="col-lg-4">
+        
+        {# Pricing #}
+        <div class="gc-card mb-4 shadow-sm" style="border:1px solid rgba(44,110,122,.15);">
+            <div class="gc-card-header text-white" style="background:linear-gradient(135deg,#1a4a55,var(--gc-teal)); border-radius:11px 11px 0 0;">
+                <i class="fas fa-tags me-1"></i> Precios Base
+            </div>
+            <div class="p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted fw-semibold">CLP (Pesos)</span>
+                    <span class="fw-bold fs-4" style="color:var(--gc-teal);">${{ tour.precio_clp|intcomma }}</span>
+                </div>
+                <hr class="my-2" style="opacity:.1;">
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted small">USD (Dólares)</span>
+                    <span class="fw-semibold">US$ {{ tour.precio_usd|default:"0.00" }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted small">BRL (Reales)</span>
+                    <span class="fw-semibold">R$ {{ tour.precio_brl|default:"0.00" }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# Operations #}
+        <div class="gc-card mb-4">
+            <div class="p-4">
+                <div class="mb-4">
+                    <small class="text-muted fw-bold small text-uppercase d-block mb-2" style="letter-spacing:.05em;">Cupo Diario Máximo</small>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-users" style="color:var(--gc-gold);font-size:1.2rem;"></i>
+                        <span class="fw-bold fs-5">{{ tour.cupo_maximo_diario }} pax</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <small class="text-muted fw-bold small text-uppercase d-block mb-2" style="letter-spacing:.05em;">Días Operativos</small>
+                    <div class="d-flex gap-1 flex-wrap">
+                        {% if tour.dias_operativos %}
+                        {% if '1' in tour.dias_operativos %}<span class="gc-badge" style="background:#e2e8f0;color:#334155;">Lunes</span>{% endif %}
+                        {% if '2' in tour.dias_operativos %}<span class="gc-badge" style="background:#e2e8f0;color:#334155;">Martes</span>{% endif %}
+                        {% if '3' in tour.dias_operativos %}<span class="gc-badge" style="background:#e2e8f0;color:#334155;">Miércoles</span>{% endif %}
+                        {% if '4' in tour.dias_operativos %}<span class="gc-badge" style="background:#e2e8f0;color:#334155;">Jueves</span>{% endif %}
+                        {% if '5' in tour.dias_operativos %}<span class="gc-badge" style="background:#e2e8f0;color:#334155;">Viernes</span>{% endif %}
+                        {% if '6' in tour.dias_operativos %}<span class="gc-badge" style="background:#e2e8f0;color:#334155;">Sábado</span>{% endif %}
+                        {% if '0' in tour.dias_operativos %}<span class="gc-badge" style="background:#e2e8f0;color:#334155;">Domingo</span>{% endif %}
+                        {% else %}
+                        <span class="text-danger small"><i class="fas fa-exclamation-triangle"></i> No definidos</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <small class="text-muted fw-bold small text-uppercase d-block mb-2" style="letter-spacing:.05em;">Idiomas</small>
+                    <span class="fw-semibold text-dark">{{ tour.languages|default:"-" }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# Multimedia #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header bg-white border-bottom">
+                <i class="fas fa-images"></i> Galería
+            </div>
+            <div class="p-3">
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1 ms-1">Principal</small>
+                    {% if tour.image_1 %}
+                    <img src="{{ tour.image_1.url }}" class="img-fluid rounded w-100" style="object-fit:cover; aspect-ratio:16/9; box-shadow:0 2px 8px rgba(0,0,0,.1);">
+                    {% else %}
+                    <div class="rounded w-100 d-flex flex-column justify-content-center align-items-center text-muted" style="aspect-ratio:16/9;background:rgba(44,110,122,.05);">
+                        <i class="fas fa-image fa-2x mb-2 opacity-25"></i>
+                        <span class="small">Sin imagen 1</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <small class="text-muted d-block mb-1 ms-1">Secundaria</small>
+                    {% if tour.image_2 %}
+                    <img src="{{ tour.image_2.url }}" class="img-fluid rounded w-100" style="object-fit:cover; aspect-ratio:16/9; box-shadow:0 2px 8px rgba(0,0,0,.1);">
+                    {% else %}
+                    <div class="rounded w-100 d-flex flex-column justify-content-center align-items-center text-muted" style="aspect-ratio:16/9;background:rgba(44,110,122,.05);">
+                        <i class="fas fa-image fa-2x mb-2 opacity-25"></i>
+                        <span class="small">Sin imagen 2</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1133 @@
+{% extends role_base_template %}
+{% load static %}
+
+{% block title %}
+{% if object %}Editar Venta #{{ object.pk }}{% else %}Nueva Venta{% endif %} | Getaway Chile
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .tour-stop-row {
+        background: #f9fafb;
+        border: 1px solid rgba(44, 110, 122, 0.18);
+        border-radius: 10px;
+        padding: 14px 14px 10px;
+        margin-bottom: 12px;
+        position: relative;
+        transition: box-shadow .15s;
+    }
+
+    .tour-stop-row:hover {
+        box-shadow: 0 3px 10px rgba(44, 110, 122, .1);
+    }
+
+    .stop-num {
+        position: absolute;
+        top: -10px;
+        left: 12px;
+        background: var(--gc-teal, #2C6E7A);
+        color: #fff;
+        font-size: .7rem;
+        font-weight: 700;
+        border-radius: 20px;
+        padding: 2px 10px;
+        letter-spacing: .04em;
+    }
+
+    .remove-stop-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+    }
+
+    #addStopBtn {
+        border-style: dashed;
+        border-color: var(--gc-teal, #2C6E7A);
+        color: var(--gc-teal, #2C6E7A);
+    }
+
+    #addStopBtn:hover {
+        background: var(--gc-teal, #2C6E7A);
+        color: #fff;
+    }
+
+    .pax-badge {
+        background: rgba(44, 110, 122, .1);
+        border: 1px solid rgba(44, 110, 122, .25);
+        border-radius: 6px;
+        padding: 3px 10px;
+        font-weight: 700;
+        color: var(--gc-teal, #2C6E7A);
+    }
+
+    .total-row {
+        background: rgba(44, 110, 122, .05);
+        border: 1px solid rgba(44, 110, 122, .2);
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 4px;
+    }
+
+    /* Hide number input spinners for readonly total amount */
+    input[type=number]#id_total_amount::-webkit-inner-spin-button,
+    input[type=number]#id_total_amount::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number]#id_total_amount {
+        -moz-appearance: textfield;
+        background-color: rgba(44, 110, 122, .04) !important;
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-{% if object %}pen{% else %}plus-circle{% endif %} me-2" style="color:var(--gc-gold);"></i>
+            {% if object %}Editar Venta <span style="color:var(--gc-gold);">#{{ object.pk }}</span>{% else %}Nueva
+            Venta{% endif %}
+        </h1>
+        <p class="gc-page-sub mb-0">Completa todos los datos del cliente y el tour</p>
+    </div>
+    <a href="{% url 'sales:list' %}" class="btn-gc-outline">
+        <i class="fas fa-arrow-left"></i> Volver
+    </a>
+</div>
+
+<form method="post" enctype="multipart/form-data" novalidate id="saleForm">
+    {% csrf_token %}
+    <input type="hidden" id="tour_stops_json" name="tour_stops_json" value="[]">
+    <input type="hidden" name="passengers_count" id="id_passengers_count" value="1">
+
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <strong>Por favor corrija los errores:</strong>
+        <ul class="mb-0">
+            {% for field in form %}
+            {% if field.errors %}
+            <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+            {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="row">
+
+        <!-- LEFT COLUMN -->
+        <div class="col-lg-8">
+
+            <!-- Configuración / Origen -->
+            <div class="gc-card mb-4" id="configCard">
+                <div class="gc-card-header" style="background: linear-gradient(135deg, #1f2937, #374151);">
+                    <i class="fas fa-cog text-light"></i> Configuración de la Cotización
+                </div>
+                <div class="p-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold mb-1">Origen de la Reserva</label>
+                            {{ form.origin_channel }}
+                        </div>
+                        <div class="col-md-7 d-none" id="agencySelectDiv">
+                            <label class="form-label fw-bold text-success mb-1"><i class="fas fa-building ms-1"></i>
+                                Agencia Asociada</label>
+                            {{ form.agency }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Data -->
+            <div class="gc-card mb-4">
+                <div class="gc-card-header">
+                    <i class="fas fa-user"></i> Datos del Cliente
+                </div>
+                <div class="p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Nombres</label>
+                            {{ form.client_first_name }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Apellidos</label>
+                            {{ form.client_last_name }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Nacionalidad</label>
+                            {{ form.client_nationality }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" id="rutLabel">RUT / Pasaporte</label>
+                            {{ form.client_rut_passport }}
+                            <small class="text-muted">
+                                Chilena: formato 12.345.678-9 &bull; Otro: número libre
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email</label>
+                            {{ form.client_email }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Teléfono</label>
+                            {{ form.client_phone }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Dirección / Hotel de Recogida</label>
+                            {{ form.hotel_address }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tour Stops -->
+            <div class="gc-card mb-4">
+                <div class="gc-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-map-marked-alt"></i> Destinos del Viaje</span>
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="color:rgba(255,255,255,.85);font-size:.82rem;">Pasajeros: <span class="pax-badge"
+                                id="paxBadge"
+                                style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;">1</span></span>
+                        <span id="tripTypeBadge" class="gc-badge gc-badge-teal"
+                            style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.25);">Destino
+                            Unico</span>
+                    </div>
+                </div>
+                <div class="p-3">
+                    <div id="tourStopsContainer"></div>
+                    <button type="button" class="btn btn-sm w-100 mt-2" id="addStopBtn"
+                        style="border:2px dashed var(--gc-teal);color:var(--gc-teal);border-radius:8px;padding:.5rem;background:transparent;">
+                        <i class="fas fa-plus me-1"></i>Agregar Otro Destino / Dia
+                    </button>
+                </div>
+            </div>
+
+            <!-- Passengers Formset -->
+            <div class="gc-card mb-4">
+                <div class="gc-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-users"></i> Lista de Pasajeros <small
+                            style="opacity:.75;font-weight:400;font-size:.78em;">(se actualiza
+                            automaticamente)</small></span>
+                    <button type="button"
+                        style="font-size:.75rem;padding:.25rem .7rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;cursor:pointer;"
+                        id="copyClientBtn">
+                        <i class="fas fa-copy me-1"></i>Copiar Cliente
+                    </button>
+                </div>
+                <div class="p-3">
+                    {{ passengers.management_form }}
+                    <div id="passengers-container">
+                        {% for p_form in passengers %}
+                        <div class="passenger-row row g-2 mb-2 align-items-center border-bottom pb-2">
+                            {{ p_form.id }}
+                            <div class="col-md-3">{{ p_form.first_name }}</div>
+                            <div class="col-md-3">{{ p_form.last_name }}</div>
+                            <div class="col-md-2">{{ p_form.nationality }}</div>
+                            <div class="col-md-3">{{ p_form.rut_passport }}</div>
+                            <div class="col-md-1 text-end">
+                                {% if passengers.can_delete %}
+                                <div class="d-none">
+                                    {{ p_form.DELETE }}
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-existing-passenger"
+                                    title="Eliminar Pasajero">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 text-center">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="addPassengerBtn">
+                            <i class="fas fa-user-plus me-1"></i>Añadir Otro Pasajero
+                        </button>
+                    </div>
+                    <!-- Empty Form Template for JS cloning -->
+                    <div id="empty-form" class="d-none">
+                        <div class="passenger-row row g-2 mb-2 align-items-center border-bottom pb-2">
+                            {{ passengers.empty_form.id }}
+                            <div class="col-md-3">{{ passengers.empty_form.first_name }}</div>
+                            <div class="col-md-3">{{ passengers.empty_form.last_name }}</div>
+                            <div class="col-md-2">{{ passengers.empty_form.nationality }}</div>
+                            <div class="col-md-3">{{ passengers.empty_form.rut_passport }}</div>
+                            <div class="col-md-1 text-end">
+                                <button type="button" class="btn btn-sm btn-danger remove-form-row">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Payment & Summary -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 70px;">
+                <!-- Availability Summary -->
+                <div class="gc-card mb-3">
+                    <div class="gc-card-header" style="font-size:.85rem;">
+                        <i class="fas fa-bus-alt"></i> Estado de Cupos (En Vivo)
+                    </div>
+                    <div class="p-1" style="max-height: 200px; overflow-y: auto; background:rgba(44,110,122,.03);">
+                        <ul class="list-group list-group-flush small" id="tripSummaryList">
+                            <li class="list-group-item text-muted text-center py-3 border-0 bg-transparent"
+                                id="tripSummaryEmpty">
+                                <i class="fas fa-map-marker-alt fa-2x mb-2 text-gray-300"></i><br>Agrega destinos para
+                                ver su disponibilidad aquí.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Payment Card -->
+                <div class="gc-card mb-3">
+                    <div class="gc-card-header">
+                        <i class="fas fa-credit-card"></i> Datos de Pago
+                    </div>
+                    <div class="p-3">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Moneda</label>
+                            {{ form.currency }}
+                        </div>
+
+                        <!-- Single total field, auto-filled but editable -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Total a Pagar
+                                <span class="badge bg-light border text-muted fw-normal ms-1" id="autoTotalBadge"
+                                    style="font-size:.65rem;">auto</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text currency-symbol">$</span>
+                                {{ form.total_amount }}
+                            </div>
+                            <small class="text-success" id="totalBreakdown"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Monto Pagado / Abono</label>
+                            <div class="input-group">
+                                <span class="input-group-text currency-symbol">$</span>
+                                {{ form.amount_paid }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Estado del Pago</label>
+                            {{ form.payment_status }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Comprobantes / Vouchers</label>
+
+                            <div class="mb-3 p-2 border rounded bg-light">
+                                <span class="d-block small fw-bold mb-1">Voucher 1</span>
+                                {% if object.voucher_image %}
+                                <div class="mb-2">
+                                    <a href="{{ object.voucher_image.url }}" target="_blank">
+                                        <img src="{{ object.voucher_image.url }}" alt="Voucher 1"
+                                            class="img-thumbnail shadow-sm" style="max-height: 120px;">
+                                    </a>
+                                </div>
+                                <small class="text-muted d-block mb-1">Subir nuevo para reemplazar:</small>
+                                {% endif %}
+                                {{ form.voucher_image }}
+                            </div>
+
+                            <div class="mb-3 p-2 border rounded bg-light">
+                                <span class="d-block small fw-bold mb-1">Voucher 2 (Opcional)</span>
+                                {% if object.voucher_image_2 %}
+                                <div class="mb-2">
+                                    <a href="{{ object.voucher_image_2.url }}" target="_blank">
+                                        <img src="{{ object.voucher_image_2.url }}" alt="Voucher 2"
+                                            class="img-thumbnail shadow-sm" style="max-height: 120px;">
+                                    </a>
+                                </div>
+                                <small class="text-muted d-block mb-1">Subir nuevo para reemplazar:</small>
+                                {% endif %}
+                                {{ form.voucher_image_2 }}
+                            </div>
+
+                            <div class="p-2 border rounded bg-light">
+                                <span class="d-block small fw-bold mb-1">Voucher 3 (Opcional)</span>
+                                {% if object.voucher_image_3 %}
+                                <div class="mb-2">
+                                    <a href="{{ object.voucher_image_3.url }}" target="_blank">
+                                        <img src="{{ object.voucher_image_3.url }}" alt="Voucher 3"
+                                            class="img-thumbnail shadow-sm" style="max-height: 120px;">
+                                    </a>
+                                </div>
+                                <small class="text-muted d-block mb-1">Subir nuevo para reemplazar:</small>
+                                {% endif %}
+                                {{ form.voucher_image_3 }}
+                            </div>
+                        </div>
+
+                        <!-- Private trip extra fields -->
+                        <div id="privateTourSection" class="d-none mb-3">
+                            <hr style="border-color:rgba(44,110,122,.2);">
+                            <div class="p-3 rounded"
+                                style="background:rgba(181,130,60,.07);border-left:4px solid var(--gc-gold);">
+                                <h6 class="fw-bold" style="color:var(--gc-gold);">
+                                    <i class="fas fa-star me-2"></i>Tour Privado
+                                </h6>
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold">Descripción del Viaje</label>
+                                    {{ form.private_trip_description }}
+                                </div>
+                                <div>
+                                    <label class="form-label fw-bold">Observaciones / Conductor</label>
+                                    {{ form.private_trip_observations }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr style="border-color:rgba(44,110,122,.2);">
+                        <div class="d-grid">
+                            <button type="submit" class="btn-gc-gold w-100 justify-content-center"
+                                style="font-size:1rem;padding:.75rem;border-radius:10px;">
+                                <i class="fas fa-check-circle me-1"></i>
+                                {% if object %}Guardar Cambios{% else %}Registrar Venta{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Tour choices pre-serialised in Python — NO Django tags inside script -->
+<script id="tourChoicesData" type="application/json">{{ tour_choices_json|safe }}</script>
+{% if existing_stops %}
+<script id="existingStopsData" type="application/json">{{ existing_stops|safe }}</script>
+{% endif %}
+
+<script>
+    (function () {
+        'use strict';
+
+        // ===== Data from Django (via JSON script tags — safe from Prettier) =====
+        var tourChoicesEl = document.getElementById('tourChoicesData');
+        var TOUR_CHOICES = tourChoicesEl ? JSON.parse(tourChoicesEl.textContent) : [];
+
+        var existingStopsEl = document.getElementById('existingStopsData');
+        var EXISTING_STOPS = existingStopsEl ? JSON.parse(existingStopsEl.textContent) : [];
+
+        // ===== State =====
+        var stops = [];
+        var paxCount = 1;
+        var isVendedor = {% if request.user.role == 'VENDEDOR' %}true{% else %} false{% endif %};
+
+        // Get local today's date in YYYY-MM-DD format
+        var todayObj = new Date();
+        todayObj.setMinutes(todayObj.getMinutes() - todayObj.getTimezoneOffset());
+        var todayStr = todayObj.toISOString().split('T')[0];
+
+    // ===== Element refs =====
+    var stopsContainer = document.getElementById('tourStopsContainer');
+    var addStopBtn = document.getElementById('addStopBtn');
+    var totalAmountInput = document.getElementById('id_total_amount');
+    var stopsJsonInput = document.getElementById('tour_stops_json');
+    var paxBadge = document.getElementById('paxBadge');
+    var paxInput = document.getElementById('id_passengers_count');
+    var tripTypeBadge = document.getElementById('tripTypeBadge');
+    var privateSec = document.getElementById('privateTourSection');
+    var totalBreakdown = document.getElementById('totalBreakdown');
+    var currencySelect = document.getElementById('id_currency');
+    var nationalityInput = document.getElementById('id_client_nationality');
+    var clientRutInput = document.getElementById('id_client_rut_passport');
+    var addPassBtn = document.getElementById('addPassengerBtn');
+    var paxContainer = document.getElementById('passengers-container');
+    var totalForms = document.getElementById('id_passengers-TOTAL_FORMS');
+    var copyBtn = document.getElementById('copyClientBtn');
+
+    // ===== Helpers =====
+    function getCurrency() {
+        return currencySelect ? currencySelect.value : 'CLP';
+    }
+    function getCurrencySym() {
+        var c = getCurrency();
+        return c === 'USD' ? 'US$' : c === 'BRL' ? 'R$' : '$';
+    }
+    function fmtNum(n) {
+        var c = getCurrency();
+        if (c === 'CLP') return new Intl.NumberFormat('es-CL').format(Math.round(n));
+        return parseFloat(n).toFixed(2);
+    }
+    function updateCurrencySymbols() {
+        var sym = getCurrencySym();
+        document.querySelectorAll('.currency-symbol').forEach(function (el) {
+            el.textContent = sym;
+        });
+    }
+    function getAdultPrice(stop) {
+        if (stop.is_private) return parseFloat(stop.price_adult) || 0;
+        var tour = TOUR_CHOICES.find(function (t) { return t.id === stop.tour_id; });
+        if (!tour) return 0;
+        var c = getCurrency();
+        if (c === 'USD') return parseFloat(tour.precio_adulto_usd) || parseFloat(tour.precio_usd) || 0;
+        if (c === 'BRL') return parseFloat(tour.precio_adulto_brl) || parseFloat(tour.precio_brl) || 0;
+        return parseFloat(tour.precio_adulto_clp) || parseFloat(tour.precio_clp) || 0;
+    }
+    function getInfantPrice(stop) {
+        if (stop.is_private) return parseFloat(stop.price_infant) || 0;
+        var tour = TOUR_CHOICES.find(function (t) { return t.id === stop.tour_id; });
+        if (!tour) return 0;
+        var c = getCurrency();
+        if (c === 'USD') return parseFloat(tour.precio_infante_usd) || 0;
+        if (c === 'BRL') return parseFloat(tour.precio_infante_brl) || 0;
+        return parseFloat(tour.precio_infante_clp) || 0;
+    }
+    // Keep legacy alias for any other callers
+    function getUnitPrice(stop) { return getAdultPrice(stop); }
+
+    // ===== Render one stop row =====
+    function buildStopHTML(idx) {
+        var stop = stops[idx];
+        var num = idx + 1;
+
+        var isLocked = isVendedor && stop._is_existing;
+        var lockAttr = isLocked ? ' disabled readonly' : '';
+
+        var tourOptions = '<option value="">-- Seleccionar tour --</option>';
+        TOUR_CHOICES.forEach(function (t) {
+            var sel = stop.tour_id === t.id ? ' selected' : '';
+            tourOptions += '<option value="' + t.id + '"' + sel + '>' + t.name + '</option>';
+        });
+
+        var langOptions = [
+            ['ES', 'Español'],
+            ['EN', 'Inglés'],
+            ['PT', 'Portugués']
+        ].map(function (pair) {
+            var sel = stop.tour_language === pair[0] ? ' selected' : '';
+            return '<option value="' + pair[0] + '"' + sel + '>' + pair[1] + '</option>';
+        }).join('');
+
+        // Auto-fill prices from tour when creating a new stop
+        var default_adult_price = getAdultPrice(stop);
+        var default_infant_price = getInfantPrice(stop);
+
+        if (stop.price_adult === undefined || stop.price_adult === null) stop.price_adult = default_adult_price;
+        if (stop.pax_adults === undefined || stop.pax_adults === null) stop.pax_adults = paxCount;
+        if (stop.pax_infants === undefined || stop.pax_infants === null) stop.pax_infants = 0;
+        if (stop.price_infant === undefined || stop.price_infant === null) stop.price_infant = default_infant_price;
+
+        var sub = (stop.pax_adults * stop.price_adult) + (stop.pax_infants * stop.price_infant);
+        stop.subtotal = sub;
+
+        var removeBtn = (stops.length > 1 && !isLocked)
+            ? '<button type="button" class="btn btn-sm btn-outline-danger remove-stop-btn" data-idx="' + idx + '"><i class="fas fa-times"></i></button>'
+            : '';
+
+        var tourSelectCol = !stop.is_private
+            ? '<div class="col-md-5">'
+            + '<label class="form-label small fw-bold text-primary mb-1">Tour</label>'
+            + '<select class="form-select form-select-sm stop-tour-select" data-idx="' + idx + '"' + lockAttr + '>' + tourOptions + '</select>'
+            + '<div class="mt-1 small" id="avail_badge_' + idx + '"></div>'
+            + '</div>'
+            : '<div class="col-md-5"><label class="form-label small fw-bold text-info mb-1">Tour Privado</label>'
+            + '<input type="text" class="form-control form-control-sm stop-private-desc" data-idx="' + idx + '" placeholder="Descripción del viaje privado..." value="' + (stop.private_description || '') + '"' + lockAttr + '>'
+            + '</div>';
+
+        var checked = stop.is_private ? ' checked' : '';
+
+        return '<div class="tour-stop-row" data-idx="' + idx + '">'
+            + '<span class="stop-num">Destino ' + num + (isLocked ? ' <i class="fas fa-lock text-muted ms-1" title="No modificable"></i>' : '') + '</span>'
+            + removeBtn
+            + '<div class="row g-2 mt-1 align-items-end">'
+            + tourSelectCol
+            + '<div class="col-md-4">'
+            + '<label class="form-label small fw-bold text-primary mb-1">Fecha</label>'
+            + '<input type="date" class="form-control form-control-sm stop-date" min="' + todayStr + '" data-idx="' + idx + '" value="' + (stop.tour_date || '') + '"' + lockAttr + '>'
+            + '</div>'
+            + '<div class="col-md-3">'
+            + '<label class="form-label small fw-bold text-primary mb-1">Idioma</label>'
+            + '<select class="form-select form-select-sm stop-lang" data-idx="' + idx + '"' + lockAttr + '>' + langOptions + '</select>'
+            + '</div>'
+
+            // PAX Row Layout
+            + '<div class="col-12 mt-3">'
+            + '<div class="p-2 rounded bg-white shadow-sm border border-light">'
+            + '<div class="row g-2 align-items-center">'
+
+            + '<div class="col-md-2 text-center">'
+            + '<label class="form-label small fw-bold text-muted mb-0">PAX Adultos</label>'
+            + '<input type="number" class="form-control form-control-sm stop-pax-adults text-center" min="1" data-idx="' + idx + '" value="' + stop.pax_adults + '"' + lockAttr + '>'
+            + '</div>'
+            + '<div class="col-md-3">'
+            + '<label class="form-label small fw-bold text-muted mb-0">Precio Adulto</label>'
+            + '<div class="input-group input-group-sm"><span class="input-group-text currency-symbol"></span>'
+            + '<input type="number" class="form-control stop-price-adult" step="0.01" data-idx="' + idx + '" value="' + stop.price_adult + '"' + lockAttr + '>'
+            + '</div></div>'
+
+            + '<div class="col-md-2 text-center border-start border-light">'
+            + '<label class="form-label small fw-bold text-muted mb-0">PAX Infantes</label>'
+            + '<input type="number" class="form-control form-control-sm stop-pax-infants text-center" min="0" data-idx="' + idx + '" value="' + stop.pax_infants + '"' + lockAttr + '>'
+            + '</div>'
+            + '<div class="col-md-3">'
+            + '<label class="form-label small fw-bold text-muted mb-0">Precio Infante</label>'
+            + '<div class="input-group input-group-sm"><span class="input-group-text currency-symbol"></span>'
+            + '<input type="number" class="form-control stop-price-infant" step="0.01" data-idx="' + idx + '" value="' + stop.price_infant + '"' + lockAttr + '>'
+            + '</div></div>'
+
+            + '<div class="col-md-2 text-end">'
+            + '<label class="form-label small fw-bold text-dark mb-0 d-block">Subtotal</label>'
+            + '<strong class="text-success" style="font-size:1.05rem;" id="sub_' + idx + '">' + getCurrencySym() + ' ' + fmtNum(sub) + '</strong>'
+            + '</div>'
+
+            + '</div></div></div>'
+
+            + '<div class="col-12 mt-2">'
+            + '<div class="form-check">'
+            + '<input class="form-check-input stop-is-private" type="checkbox" id="priv_' + idx + '" data-idx="' + idx + '"' + checked + lockAttr + '>'
+            + '<label class="form-check-label small text-info fw-bold" for="priv_' + idx + '">¿Viaje a la Medida / Tour Privado?</label>'
+            + '</div>'
+            + '</div>'
+            + '</div>'
+            + '</div>';
+    }
+
+    function rerenderStops() {
+        stopsContainer.innerHTML = '';
+        stops.forEach(function (_, idx) {
+            stopsContainer.insertAdjacentHTML('beforeend', buildStopHTML(idx));
+        });
+        bindStopEvents();
+        updateGrandTotal();
+        updateTripBadge();
+        updatePrivateSec();
+        serializeStops();
+        stops.forEach(function (_, idx) { checkAvailability(idx); });
+    }
+
+    function updateGrandTotal() {
+        var grand = 0;
+        var parts = [];
+        var total_pax = 0;
+        stops.forEach(function (stop, i) {
+
+            // if newly allocated and adult price is 0, auto update based on selected tour
+            if ((stop.price_adult === undefined || stop.price_adult === 0) && !stop.is_private) {
+                stop.price_adult = getUnitPrice(stop);
+            }
+
+            var sub = (stop.pax_adults * stop.price_adult) + (stop.pax_infants * stop.price_infant);
+            stop.subtotal = sub;
+            grand += sub;
+
+            total_pax += parseInt(stop.pax_adults) + parseInt(stop.pax_infants);
+
+            if (sub > 0) parts.push('D' + (i + 1) + ': ' + getCurrencySym() + ' ' + fmtNum(sub));
+            var el = document.getElementById('sub_' + i);
+            if (el) el.textContent = getCurrencySym() + ' ' + fmtNum(sub);
+        });
+
+        // El paxBadge debe reflejar el máximo de pasajeros en los tramos en el momento en general para no confundir. Lo ideal sería usar PaxCount
+        if (paxBadge) paxBadge.textContent = total_pax > 0 ? (total_pax / stops.length).toFixed(0) : 1;
+
+        // The Django model for total_amount has decimal_places=0, so we must ALWAYS send an integer
+        if (totalAmountInput) totalAmountInput.value = Math.round(grand);
+        if (totalBreakdown) totalBreakdown.textContent = parts.length > 1 ? parts.join(' + ') : '';
+    }
+
+    function updateTripBadge() {
+        if (!tripTypeBadge) return;
+        var multi = stops.length > 1;
+        tripTypeBadge.textContent = multi ? '🗺️ Multidestino' : '📍 Destino Único';
+        tripTypeBadge.className = multi ? 'gc-badge gc-badge-gold' : 'gc-badge gc-badge-teal';
+    }
+
+    function updatePrivateSec() {
+        if (!privateSec) return;
+        privateSec.classList.toggle('d-none', !stops.some(function (s) { return s.is_private; }));
+    }
+
+    function serializeStops() {
+        if (stopsJsonInput) {
+            stopsJsonInput.value = JSON.stringify(stops.map(function (s) {
+                return {
+                    tour_id: s.tour_id || '',
+                    tour_date: s.tour_date || '',
+                    tour_language: s.tour_language || 'ES',
+                    is_private: !!s.is_private,
+                    private_description: s.private_description || '',
+                    pax_adults: s.pax_adults || 1,
+                    pax_infants: s.pax_infants || 0,
+                    price_adult: s.price_adult || 0,
+                    price_infant: s.price_infant || 0,
+                    subtotal: s.subtotal || 0
+                };
+            }));
+        }
+    }
+
+    // ===== Scroll-safe rerenderStops =====
+    function rerenderStopsSafe() {
+        var sy = window.scrollY || window.pageYOffset;
+        rerenderStops();
+        window.scrollTo(0, sy);
+    }
+
+    function bindStopEvents() {
+        stopsContainer.querySelectorAll('.stop-tour-select').forEach(function (el) {
+            el.onchange = function () {
+                var idx = parseInt(this.dataset.idx, 10);
+                stops[idx].tour_id = this.value;
+                // FIX: also update infant price when tour changes
+                stops[idx].price_adult = getAdultPrice(stops[idx]);
+                stops[idx].price_infant = getInfantPrice(stops[idx]);
+                updateCurrencySymbols();
+                updateGrandTotal();
+                serializeStops();
+                rerenderStopsSafe(); // scroll-safe redraw
+                checkAvailability(idx);
+            };
+        });
+        stopsContainer.querySelectorAll('.stop-date').forEach(function (el) {
+            el.onchange = function () {
+                var idx = parseInt(this.dataset.idx, 10);
+                stops[idx].tour_date = this.value;
+                serializeStops();
+                checkAvailability(idx);
+            };
+        });
+        stopsContainer.querySelectorAll('.stop-lang').forEach(function (el) {
+            el.onchange = function () {
+                stops[parseInt(this.dataset.idx, 10)].tour_language = this.value;
+                serializeStops();
+            };
+        });
+        stopsContainer.querySelectorAll('.stop-is-private').forEach(function (el) {
+            el.onchange = function () {
+                stops[parseInt(this.dataset.idx, 10)].is_private = this.checked;
+                rerenderStopsSafe();
+            };
+        });
+        stopsContainer.querySelectorAll('.stop-private-desc').forEach(function (el) {
+            el.oninput = function () {
+                stops[parseInt(this.dataset.idx, 10)].private_description = this.value;
+                serializeStops();
+            };
+        });
+
+        // PAX & Pricing Changes — also auto-sync passenger rows on adult/infant change
+        ['.stop-pax-adults', '.stop-pax-infants', '.stop-price-adult', '.stop-price-infant'].forEach(function (selector) {
+            stopsContainer.querySelectorAll(selector).forEach(function (el) {
+                el.oninput = function () {
+                    var idx = parseInt(this.dataset.idx, 10);
+                    var v = parseFloat(this.value) || 0;
+
+                    if (this.classList.contains('stop-pax-adults')) { stops[idx].pax_adults = parseInt(v); autoSyncPassengers(); }
+                    if (this.classList.contains('stop-pax-infants')) { stops[idx].pax_infants = parseInt(v); autoSyncPassengers(); }
+                    if (this.classList.contains('stop-price-adult')) stops[idx].price_adult = v;
+                    if (this.classList.contains('stop-price-infant')) stops[idx].price_infant = v;
+
+                    updateGrandTotal();
+                    serializeStops();
+                };
+            });
+        });
+
+        stopsContainer.querySelectorAll('.remove-stop-btn').forEach(function (el) {
+            el.onclick = function () {
+                stops.splice(parseInt(this.dataset.idx, 10), 1);
+                rerenderStops();
+            };
+        });
+
+        // Reforzamiento de los símbolos de moneda al inyectar nuevos bloques
+        updateCurrencySymbols();
+    }
+
+    // ===== Auto-sync passenger rows to total pax count =====
+    function autoSyncPassengers() {
+        if (!paxContainer || !totalForms) return;
+        // Total pax = max(pax_adults+pax_infants) across all stops
+        var maxPax = 0;
+        stops.forEach(function (s) {
+            var n = (parseInt(s.pax_adults) || 0) + (parseInt(s.pax_infants) || 0);
+            if (n > maxPax) maxPax = n;
+        });
+        if (maxPax < 1) maxPax = 1;
+
+        var existingRows = paxContainer.querySelectorAll('.passenger-row:not(.deleted-row)');
+        var cur = existingRows.length;
+
+        // Add rows if needed
+        while (cur < maxPax) {
+            var n = parseInt(totalForms.value, 10);
+            var tmpl = document.getElementById('empty-form').innerHTML.replace(/__prefix__/g, n);
+            paxContainer.insertAdjacentHTML('beforeend', tmpl);
+            totalForms.value = n + 1;
+            // Attach RUT mask to new row
+            var rows = paxContainer.querySelectorAll('.passenger-row');
+            var last = rows[rows.length - 1];
+            if (last) {
+                var natEl = last.querySelector('select[id^="id_passengers-"]');
+                var rutEl = last.querySelector('input[id$="-rut_passport"]');
+                attachRutMask(natEl, rutEl);
+            }
+            cur++;
+        }
+        syncPaxCount();
+    }
+
+    // Add stop
+    if (addStopBtn) {
+        addStopBtn.addEventListener('click', function () {
+            stops.push({
+                tour_id: '', tour_date: '', tour_language: 'ES', is_private: false,
+                private_description: '', pax_adults: paxCount, pax_infants: 0,
+                price_adult: 0, price_infant: 0, subtotal: 0
+            });
+            rerenderStopsSafe();
+        });
+    }
+
+    // ===== Passenger count sync =====
+    function syncPaxCount() {
+        var rows = paxContainer ? paxContainer.querySelectorAll('.passenger-row:not(.deleted-row)') : [];
+        paxCount = rows.length || 1;
+        if (paxBadge) paxBadge.textContent = paxCount;
+        if (paxInput) paxInput.value = paxCount;
+        updateGrandTotal();
+        serializeStops();
+        stops.forEach(function (_, idx) { checkAvailability(idx); });
+    }
+
+    function updateTripSummary() {
+        var list = document.getElementById('tripSummaryList');
+        if (!list) return;
+
+        var hasStops = false;
+        var html = '';
+
+        stops.forEach(function (stop, i) {
+            if (stop.is_private) {
+                hasStops = true;
+                html += '<li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 border-bottom">'
+                    + '<div>'
+                    + '<div class="fw-bold text-dark text-truncate" style="max-width: 180px;">' + (stop.private_description || 'Tour Privado') + '</div>'
+                    + '<div class="small text-muted">' + (stop.tour_date || 'Sin fecha') + '</div>'
+                    + '</div>'
+                    + '<span class="badge bg-info rounded-pill px-2">Privado</span>'
+                    + '</li>';
+            } else if (stop.tour_id) {
+                hasStops = true;
+
+                var statusBadge = '<span class="badge bg-secondary rounded-pill px-2"><i class="fas fa-spinner fa-spin"></i></span>';
+                if (stop.avail_obj) {
+                    if (stop.avail_obj.error) {
+                        statusBadge = '<span class="badge bg-danger rounded-pill px-2" title="' + stop.avail_obj.error + '"><i class="fas fa-exclamation-triangle"></i></span>';
+                    } else if (stop.avail_obj.no_date) {
+                        statusBadge = '<span class="badge bg-primary rounded-pill px-2">' + stop.avail_obj.cupo_disponible + ' max</span>';
+                    } else if (stop.avail_obj.available) {
+                        statusBadge = '<span class="badge bg-success rounded-pill px-2">' + stop.avail_obj.cupo_disponible + ' desp</span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-danger rounded-pill px-2">Agotado</span>';
+                    }
+                }
+
+                // Retrieve tour name from select if possible
+                var tourName = 'Tour #' + stop.tour_id;
+                var selectEl = document.querySelector('.stop-tour-select[data-idx="' + i + '"]');
+                if (selectEl && selectEl.options[selectEl.selectedIndex]) {
+                    tourName = selectEl.options[selectEl.selectedIndex].text;
+                }
+
+                html += '<li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 border-bottom">'
+                    + '<div>'
+                    + '<div class="fw-bold text-dark text-truncate" style="max-width: 180px;" title="' + tourName + '">' + tourName + '</div>'
+                    + '<div class="small text-muted">' + (stop.tour_date || 'Sin fecha') + '</div>'
+                    + '</div>'
+                    + statusBadge
+                    + '</li>';
+            }
+        });
+
+        if (!hasStops) {
+            html = '<li class="list-group-item text-muted text-center py-3 border-0 bg-transparent" id="tripSummaryEmpty">'
+                + '<i class="fas fa-map-marker-alt fa-2x mb-2 text-gray-300"></i><br>Agrega destinos para ver su disponibilidad aquí.'
+                + '</li>';
+        }
+
+        list.innerHTML = html;
+    }
+
+    function checkAvailability(idx) {
+        var stop = stops[idx];
+        var badge = document.getElementById('avail_badge_' + idx);
+        if (!badge) return;
+
+        if (stop.is_private || !stop.tour_id) {
+            badge.innerHTML = '';
+            stop.avail_obj = null;
+            updateTripSummary();
+            return;
+        }
+
+        badge.innerHTML = '<span class="text-muted"><i class="fas fa-spinner fa-spin"></i> Consultando cupos...</span>';
+        stop.avail_obj = null;
+        updateTripSummary();
+
+        var url = '/dashboard/sales/api/check-availability/?tour_id=' + stop.tour_id + '&passengers=' + paxCount;
+        if (stop.tour_date) {
+            url += '&date=' + stop.tour_date;
+        }
+
+        fetch(url)
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                stop.avail_obj = data;
+                updateTripSummary();
+
+                if (data.error) {
+                    badge.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> ' + data.error + '</span>';
+                } else if (data.is_private) {
+                    badge.innerHTML = '';
+                } else if (data.no_date) {
+                    badge.innerHTML = '<span class="text-info fw-bold"><i class="fas fa-info-circle"></i> Cupo general: ' + data.cupo_disponible + ' disp.</span> <br><small class="text-muted" style="font-size:0.65rem;">(Seleccione fecha para ver el real)</small>';
+                } else {
+                    if (data.available) {
+                        badge.innerHTML = '<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> Hay cupo (' + data.cupo_disponible + ' disp.)</span>';
+                    } else {
+                        badge.innerHTML = '<span class="text-danger fw-bold"><i class="fas fa-times-circle"></i> Sin cupo (' + data.cupo_disponible + ' disp.)</span>';
+                    }
+                }
+            })
+            .catch(function (err) {
+                badge.innerHTML = '';
+                stop.avail_obj = { error: "Error de red" };
+                updateTripSummary();
+            });
+    }
+
+    if (addPassBtn) {
+        addPassBtn.addEventListener('click', function () {
+            if (isVendedor && paxCount >= 1 && totalForms.value < 2) {
+                alert('¡Atención! Al añadir un pasajero aumentará el valor total a pagar automáticamente.');
+            }
+            var n = parseInt(totalForms.value, 10);
+            var tmpl = document.getElementById('empty-form').innerHTML.replace(/__prefix__/g, n);
+            paxContainer.insertAdjacentHTML('beforeend', tmpl);
+            totalForms.value = n + 1;
+            // Attach RUT to new row
+            var rows = paxContainer.querySelectorAll('.passenger-row');
+            var last = rows[rows.length - 1];
+            if (last) {
+                var nat = last.querySelector('select[id^="id_passengers-"]');
+                var rut = last.querySelector('input[id$="-rut_passport"]');
+                attachRutMask(nat, rut);
+            }
+            syncPaxCount();
+        });
+    }
+    if (paxContainer) {
+        paxContainer.addEventListener('click', function (e) {
+            if (e.target.closest('.remove-form-row')) {
+                e.target.closest('.passenger-row').remove();
+                var n = parseInt(totalForms.value, 10);
+                if (n > 0) totalForms.value = n - 1;
+                syncPaxCount();
+            } else if (e.target.closest('.remove-existing-passenger')) {
+                var row = e.target.closest('.passenger-row');
+                var deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+                if (deleteCheckbox) {
+                    deleteCheckbox.checked = true;
+                }
+                row.style.display = 'none';
+                row.classList.add('deleted-row');
+                syncPaxCount();
+            }
+        });
+    }
+
+    // Copy client -> passenger 1
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            var fn = document.getElementById('id_client_first_name');
+            var ln = document.getElementById('id_client_last_name');
+            var rut = document.getElementById('id_client_rut_passport');
+            var nat = document.getElementById('id_client_nationality');
+            var p1fn = document.getElementById('id_passengers-0-first_name');
+            var p1ln = document.getElementById('id_passengers-0-last_name');
+            var p1rut = document.getElementById('id_passengers-0-rut_passport');
+            var p1nat = document.getElementById('id_passengers-0-nationality');
+            if (p1fn) p1fn.value = fn ? fn.value : '';
+            if (p1ln) p1ln.value = ln ? ln.value : '';
+            if (p1rut) p1rut.value = rut ? rut.value : '';
+            if (p1nat) p1nat.value = nat ? nat.value : '';
+        });
+    }
+
+    // ===== RUT auto-format =====
+    function formatRut(clean) {
+        // clean = digits + K only, uppercase
+        if (clean.length < 2) return clean;
+        var body = clean.slice(0, -1);
+        var dv = clean.slice(-1);
+        var fmt = '';
+        var cnt = 0;
+        for (var i = body.length - 1; i >= 0; i--) {
+            fmt = body[i] + fmt;
+            cnt++;
+            if (cnt % 3 === 0 && i !== 0) fmt = '.' + fmt;
+        }
+        return fmt + '-' + dv;
+    }
+
+    function isChilean(natSel) {
+        return !natSel || natSel.value === 'Chilena';
+    }
+
+    function attachRutMask(natSel, rutInput) {
+        if (!rutInput) return;
+
+        function apply() {
+            if (isChilean(natSel)) {
+                var raw = rutInput.value.replace(/[^0-9kK]/g, '').toUpperCase();
+                if (raw.length >= 2) rutInput.value = formatRut(raw);
+                rutInput.placeholder = '12.345.678-9';
+            } else {
+                rutInput.placeholder = 'Nº Pasaporte';
+            }
+        }
+
+        rutInput.addEventListener('input', apply);
+        if (natSel) {
+            natSel.addEventListener('change', function () {
+                if (!isChilean(natSel)) {
+                    // strip RUT formatting
+                    rutInput.value = rutInput.value.replace(/\./g, '').replace(/-/g, '');
+                    rutInput.placeholder = 'Nº Pasaporte';
+                } else {
+                    apply();
+                }
+            });
+        }
+    }
+
+    // Attach RUT mask to client fields
+    attachRutMask(nationalityInput, clientRutInput);
+
+    // Attach RUT mask to all existing passenger rows
+    if (paxContainer) {
+        paxContainer.querySelectorAll('.passenger-row').forEach(function (row) {
+            var nat = row.querySelector('select[id^="id_passengers-"]');
+            var rut = row.querySelector('input[id$="-rut_passport"]');
+            attachRutMask(nat, rut);
+        });
+    }
+
+    // Currency change
+    if (currencySelect) {
+        currencySelect.addEventListener('change', function () {
+            updateCurrencySymbols();
+            rerenderStopsSafe();
+        });
+    }
+
+    // Serialize and validate before submit
+    document.getElementById('saleForm').addEventListener('submit', function (e) {
+        syncPaxCount();
+        serializeStops();
+
+        // Voucher validation: if amount_paid > 0 OR status != PENDIENTE, require at least 1 voucher
+        var amountPaidEl = document.getElementById('id_amount_paid');
+        var payStatusEl = document.getElementById('id_payment_status');
+        var voucher1 = document.getElementById('id_voucher_image');
+        var voucher1HasFile = voucher1 && voucher1.value;
+        // Check if there's already an uploaded voucher (edit mode)
+        var existingVoucher = {% if object and object.voucher_image %}true{% else %}false{% endif %};
+
+        if (amountPaidEl && payStatusEl) {
+            var paid = parseFloat(amountPaidEl.value) || 0;
+            var status = payStatusEl.value;
+            var needsVoucher = paid > 0 || status !== 'PENDIENTE';
+            if (needsVoucher && !voucher1HasFile && !existingVoucher) {
+                e.preventDefault();
+                // Show error message
+                var errDiv = document.getElementById('voucherError');
+                if (!errDiv) {
+                    errDiv = document.createElement('div');
+                    errDiv.id = 'voucherError';
+                    errDiv.className = 'alert alert-danger mt-2 mb-0';
+                    errDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i><strong>Voucher requerido:</strong> Debes subir al menos un comprobante de pago cuando el monto pagado es mayor a 0 o el estado no es Pendiente.';
+                    voucher1.closest('.mb-3').appendChild(errDiv);
+                } else {
+                    errDiv.style.display = 'block';
+                }
+                voucher1.closest('.gc-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+
+    // ===== INIT =====
+    // Load existing stops (edit mode)
+    if (EXISTING_STOPS.length) {
+        EXISTING_STOPS.forEach(function (s) {
+            stops.push({
+                _is_existing: true,
+                tour_id: s.tour_id ? String(s.tour_id) : '',
+                tour_date: s.tour_date || '',
+                tour_language: s.tour_language || 'ES',
+                is_private: !!s.is_private,
+                private_description: s.private_description || '',
+                pax_adults: parseInt(s.pax_adults) || 1,
+                pax_infants: parseInt(s.pax_infants) || 0,
+                price_adult: parseFloat(s.price_adult) || 0,
+                price_infant: parseFloat(s.price_infant) || 0,
+                subtotal: parseFloat(s.subtotal) || 0
+            });
+        });
+    } else {
+        // New sale: one empty stop
+        stops.push({
+            tour_id: '', tour_date: '', tour_language: 'ES', is_private: false,
+            private_description: '', pax_adults: paxCount, pax_infants: 0,
+            price_adult: 0, price_infant: 0, subtotal: 0
+        });
+    }
+
+    // ===== Origin & Agency Logic =====
+    var originSelect = document.getElementById('id_origin_channel');
+    var agencyDiv = document.getElementById('agencySelectDiv');
+
+    function toggleAgency() {
+        if (!originSelect || !agencyDiv) return;
+        if (originSelect.value === 'AGENCIA') {
+            agencyDiv.classList.remove('d-none');
+            // Remove disabled so the select is sent
+            document.getElementById('id_agency').disabled = false;
+        } else {
+            agencyDiv.classList.add('d-none');
+            // Disable so agency field is sent null if another origin is selected
+            document.getElementById('id_agency').disabled = true;
+            document.getElementById('id_agency').value = '';
+        }
+    }
+
+    if (originSelect) {
+        originSelect.addEventListener('change', toggleAgency);
+        toggleAgency(); // run on load
+    }
+
+    syncPaxCount();
+    rerenderStops();
+    updateCurrencySymbols();
+
+    }) ();
+</script>
+{% endblock %}

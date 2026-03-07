@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Getaway Chile - {{ period_label }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            @frame header_frame {           /* Static Frame */
+                -pdf-frame-content: header_content;
+                left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+            }
+            @frame content_frame {          /* Content Frame */
+                left: 50pt; width: 512pt; top: 110pt; height: 632pt;
+            }
+            @frame footer_frame {           /* Another static Frame */
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #333333;
+        }
+
+        h1 {
+            color: #2C6E7A;
+            font-size: 18pt;
+            margin-bottom: 5px;
+        }
+        h2 {
+            color: #B5823C;
+            font-size: 14pt;
+            border-bottom: 1px solid #B5823C;
+            padding-bottom: 3px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .summary-box {
+            background-color: #F8F9FA;
+            border: 1px solid #DEE2E6;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .summary-title {
+            font-weight: bold;
+            color: #2C6E7A;
+            font-size: 9pt;
+        }
+
+        .summary-value {
+            font-size: 14pt;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th {
+            background-color: #2C6E7A;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: left;
+            padding: 8px;
+            font-size: 9pt;
+        }
+        td {
+            border-bottom: 1px solid #dddddd;
+            padding: 8px;
+            font-size: 9pt;
+        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .gold-text { color: #B5823C; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Header Content -->
+    <div id="header_content">
+        <table style="border: none; width: 100%;">
+            <tr>
+                <td style="border: none; width: 70%;">
+                    <h1>Reporte Financiero de Rendimiento</h1>
+                    <div style="color: #666; font-size: 9pt;">Periodo Analizado: {{ period_label }}</div>
+                </td>
+                <td style="border: none; width: 30%; text-align: right;">
+                    <div style="color: #2C6E7A; font-weight: bold; font-size: 14pt;">GETAWAY CHILE</div>
+                    <div style="color: #666; font-size: 8pt;">Emitido el: {{ now|date:"d M Y, H:i" }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Main Content -->
+    <table>
+        <tr>
+            <td style="width: 33%; border: none;">
+                <div class="summary-box">
+                    <div class="summary-title">INGRESOS TOTALES</div>
+                    <div class="summary-value">${{ total_earnings|floatformat:"0" }}</div>
+                </div>
+            </td>
+            <td style="width: 33%; border: none;">
+                <div class="summary-box">
+                    <div class="summary-title">TICKETS VENDIDOS</div>
+                    <div class="summary-value">{{ total_sales_count }}</div>
+                </div>
+            </td>
+            <td style="width: 33%; border: none;">
+                <div class="summary-box">
+                    <div class="summary-title">PASAJEROS TOTALES</div>
+                    <div class="summary-value">{{ total_passengers }}</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Ránking Mejores Asesores (Top 5)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Vendedor Asignado</th>
+                <th class="text-center">Res. Hechas</th>
+                <th class="text-right">Aporte al Ingreso</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for seller in top_sellers %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ seller.seller__first_name }} {{ seller.seller__last_name }}</td>
+                <td class="text-center">{{ seller.sales_count }}</td>
+                <td class="text-right gold-text">${{ seller.total_amount|floatformat:"0" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No hay datos de ventas en este periodo.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Detalle de Ventas Autorizadas (Últimas 50)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha Reg.</th>
+                <th>Tour/Servicio</th>
+                <th>Vendedor</th>
+                <th class="text-center">Pax</th>
+                <th class="text-right">Total ($)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in sales %}
+            <tr>
+                <td>{{ s.created_at|date:"d/m/Y H:i" }}</td>
+                <td>{{ s.tour.name|default:"Servicio Específico"|truncatechars:35 }}</td>
+                <td>{{ s.seller.first_name }} {{ s.seller.last_name }}</td>
+                <td class="text-center">{{ s.passengers_count }}</td>
+                <td class="text-right">${{ s.total_amount|floatformat:"0" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">Sin transacciones procesadas recientemente.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Footer Content -->
+    <div id="footer_content">
+        <div style="border-top: 1px solid #B5823C; padding-top: 5px; font-size: 8pt; color: #666;">
+            Getaway Chile Turismo & Transporte - Documento Confidencial Interno - Página <pdf:pagenumber> de <pdf:pagecount>
+        </div>
+    </div>
+
+</body>
+</html>

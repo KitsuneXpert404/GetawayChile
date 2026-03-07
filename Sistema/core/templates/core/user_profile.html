@@ -1,0 +1,97 @@
+{% extends role_base_template|default:'core/base_dashboard.html' %}
+{% load widget_tweaks %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Mi Perfil</h6>
+            </div>
+            <div class="card-body">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="me-3">
+                            {% if user.photo %}
+                            <img src="{{ user.photo.url }}" alt="{{ user.get_full_name }}" class="rounded-circle"
+                                style="width: 80px; height: 80px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 80px; height: 80px; font-size: 2rem;">
+                                {{ user.first_name|first }}{{ user.last_name|first }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">{{ user.get_full_name }}</h5>
+                            <p class="text-muted small mb-0">{{ user.email }} ({{ user.role }})</p>
+                        </div>
+                        <div class="ms-auto">
+                            <a href="{% url 'password_change' %}" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-key me-1"></i> Cambiar Contraseña
+                            </a>
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+
+                        <h6 class="text-muted text-uppercase small ls-1 mb-3 fw-bold border-bottom pb-2">Datos
+                            Personales
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12 mb-2">
+                                <label class="form-label small fw-bold">Foto de Perfil</label>
+                                {% render_field form.photo class+="form-control" %}
+                            </div>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">RUT</label>
+                                    {% render_field form.rut class+="form-control" readonly="readonly" %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Fecha Nacimiento</label>
+                                    {% render_field form.birth_date class+="form-control" type="date" %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Primer Nombre</label>
+                                    {% render_field form.first_name class+="form-control" %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Segundo Nombre</label>
+                                    {% render_field form.second_name class+="form-control" %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Apellido Paterno</label>
+                                    {% render_field form.last_name class+="form-control" %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Apellido Materno</label>
+                                    {% render_field form.second_last_name class+="form-control" %}
+                                </div>
+                            </div>
+
+                            <h6 class="text-muted text-uppercase small ls-1 mb-3 fw-bold border-bottom pb-2">Contacto
+                            </h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Teléfono</label>
+                                    {% render_field form.phone class+="form-control" %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Correo Personal</label>
+                                    {% render_field form.personal_email class+="form-control" %}
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary fw-bold">
+                                    <i class="fas fa-save me-2"></i> Guardar Cambios
+                                </button>
+                            </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

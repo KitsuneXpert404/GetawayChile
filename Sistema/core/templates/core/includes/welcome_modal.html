@@ -1,0 +1,53 @@
+{% if user.is_authenticated and user.requires_password_change and user.role != 'ADMIN' and user.role != 'DEVELOPER' %}
+<!-- Welcome & Password Change Modal -->
+<div class="modal fade" id="welcomeModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.15);">
+            <div class="modal-header" style="background:var(--gc-teal); color:#fff; border-bottom:none; padding:1.5rem 2rem;">
+                <h5 class="modal-title fw-bold" id="welcomeModalLabel">
+                    <i class="fas fa-hand-sparkles me-2" style="color:var(--gc-gold);"></i> ¡Bienvenido a Getaway Chile!
+                </h5>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i class="fas fa-user-shield fa-3x mb-3" style="color:var(--gc-teal); opacity:0.8;"></i>
+                <h6 class="fw-bold mb-3" style="font-size:1.1rem;">Tu rol asignado es: <span style="color:var(--gc-gold);">{{ user.get_role_display }}</span></h6>
+                
+                <p class="text-muted small mb-4 text-start bg-light p-3 rounded border">
+                    {% if user.role == 'VENDEDOR' %}
+                    <i class="fas fa-check-circle text-gc-teal me-1"></i> Como vendedor, podrás gestionar tus ventas, revisar disponibilidad de cupos en tiempo real, ver perfiles de pago y descargar el reporte de tus pasajeros confirmados.
+                    {% elif user.role == 'LOGISTICA' %}
+                    <i class="fas fa-check-circle text-gc-teal me-1"></i> En logística, podrás ver la ocupación diaria, asignar vehículos a reservas, agrupar viajes y administrar los cupos operativos de cada tour.
+                    {% elif user.role == 'CONDUCTOR' %}
+                    <i class="fas fa-check-circle text-gc-teal me-1"></i> Como conductor, visualizarás la lista de pasajeros, las rutas, horas de recogida, hoteles y el vehículo asignado para tus operaciones del día.
+                    {% else %}
+                    <i class="fas fa-check-circle text-gc-teal me-1"></i> Explora el sistema y todas sus herramientas disponibles para tu rol.
+                    {% endif %}
+                </p>
+
+                <div class="alert alert-warning text-start" style="border-left:4px solid #d97706; background:#fffbeb;">
+                    <i class="fas fa-key me-2 text-warning"></i>
+                    <strong>Por tu seguridad:</strong> Estás utilizando una contraseña provisoria. Es altamente recomendable que la cambies ahora mismo.
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #edf2f7; padding:1.25rem 2rem;">
+                <a href="{% url 'password_change' %}" class="btn w-100 text-white fw-bold" style="background:var(--gc-teal); border-radius:8px; padding:0.75rem;">
+                    CAMBIAR MI CONTRASEÑA AHORA <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+                <button type="button" class="btn btn-link w-100 text-muted small mt-2 py-0 text-decoration-none" data-bs-dismiss="modal">
+                    Recordarme más tarde
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var welcomeModalEl = document.getElementById('welcomeModal');
+        if (welcomeModalEl) {
+            var welcomeModal = new bootstrap.Modal(welcomeModalEl);
+            welcomeModal.show();
+        }
+    });
+</script>
+{% endif %}

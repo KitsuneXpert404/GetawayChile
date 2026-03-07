@@ -1,0 +1,451 @@
+{% extends 'core/base_dashboard.html' %}
+{% load humanize %}
+
+{% block title %}Centro de Operaciones | Getaway Chile{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .ops-stat-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 18px 20px;
+        box-shadow: 0 2px 16px rgba(44, 110, 122, .1);
+        border-left: 4px solid transparent;
+        transition: transform .18s;
+    }
+
+    .ops-stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .ops-stat-card.pending {
+        border-color: #B5823C;
+    }
+
+    .ops-stat-card.confirmed {
+        border-color: #198754;
+    }
+
+    .ops-stat-card.no-vehicle {
+        border-color: #0d6efd;
+    }
+
+    .ops-stat-card.no-notify {
+        border-color: #6f42c1;
+    }
+
+    .ops-stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .ops-stat-label {
+        font-size: .8rem;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    .ops-table th {
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #888;
+        background: #f8fafc;
+    }
+
+    .ops-table td {
+        vertical-align: middle;
+        font-size: .9rem;
+    }
+
+    .ops-row-confirmed {
+        border-left: 3px solid #198754;
+    }
+
+    .ops-row-pending {
+        border-left: 3px solid #B5823C;
+    }
+
+    .ops-row-cancelled {
+        border-left: 3px solid #dc3545;
+        opacity: .7;
+    }
+
+    .filter-bar {
+        background: #fff;
+        border-radius: 12px;
+        padding: 14px 18px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+        margin-bottom: 20px;
+    }
+
+    .quick-actions .btn {
+        font-size: .78rem;
+        padding: 3px 10px;
+    }
+
+    .today-strip {
+        background: linear-gradient(135deg, #1a4a55, #2C6E7A);
+        border-radius: 12px;
+        color: #fff;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+
+    .today-strip h6 {
+        margin: 0;
+        font-size: .85rem;
+        opacity: .8;
+    }
+
+    .today-tour-pill {
+        background: rgba(255, 255, 255, .15);
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: .85rem;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, .2);
+    }
+
+    .today-tour-pill .time {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #B5823C;
+    }
+
+    .modal-header-gc {
+        background: linear-gradient(135deg, #1a4a55, #2C6E7A);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-satellite-dish me-2" style="color:var(--gc-gold);"></i>
+            Centro de Operaciones
+        </h1>
+        <p class="gc-page-sub mb-0">Gestión de ventas, logística y confirmaciones en un solo lugar</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'sales:create' %}" class="btn-gc-gold"><i class="fas fa-plus me-1"></i> Nueva Venta</a>
+        <a href="{% url 'logistics_vehicle_list' %}" class="btn-gc-outline"><i class="fas fa-truck me-1"></i>
+            Vehículos</a>
+    </div>
+</div>
+
+{# STAT CARDS #}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <a href="?status=PENDIENTE" class="text-decoration-none">
+            <div class="ops-stat-card pending">
+                <div class="ops-stat-number" style="color:#B5823C;">{{ count_pending }}</div>
+                <div class="ops-stat-label"><i class="fas fa-clock me-1"></i> Pendientes</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="?status=CONFIRMADA" class="text-decoration-none">
+            <div class="ops-stat-card confirmed">
+                <div class="ops-stat-number" style="color:#198754;">{{ count_confirmed }}</div>
+                <div class="ops-stat-label"><i class="fas fa-check me-1"></i> Confirmadas</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="?status=CONFIRMADA" class="text-decoration-none">
+            <div class="ops-stat-card no-vehicle">
+                <div class="ops-stat-number" style="color:#0d6efd;">{{ count_without_vehicle }}</div>
+                <div class="ops-stat-label"><i class="fas fa-truck me-1"></i> Sin Vehículo</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="?status=CONFIRMADA" class="text-decoration-none">
+            <div class="ops-stat-card no-notify">
+                <div class="ops-stat-number" style="color:#6f42c1;">{{ count_not_notified }}</div>
+                <div class="ops-stat-label"><i class="fas fa-envelope me-1"></i> Sin Notificar</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+{# TODAY STRIP #}
+{% if today_sales %}
+<div class="today-strip mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <h6><i class="fas fa-calendar-day me-1"></i> TOURS DE HOY</h6>
+        <a href="?date={{ today_str }}" class="btn btn-sm btn-outline-light">Ver solo hoy</a>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        {% for s in today_sales %}
+        <a href="{{ row.detail_url }}" class="today-tour-pill text-decoration-none text-white">
+            {% if s.pickup_time %}<span class="time">{{ s.pickup_time|time:"H:i" }}</span> — {% endif %}
+            <strong>{{ s.client_first_name }} {{ s.client_last_name }}</strong>
+            {% if s.assigned_vehicle %}🚐{% else %}⚠️{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# FILTER BAR #}
+<div class="filter-bar d-flex flex-wrap gap-2 align-items-end mb-4">
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-end w-100">
+        <div>
+            <label class="gc-label mb-1" style="font-size:.75rem;">Búsqueda</label>
+            <input type="text" name="q" class="gc-input" style="width:200px;" placeholder="Nombre, RUT, email…"
+                value="{{ search_q }}">
+        </div>
+        <div>
+            <label class="gc-label mb-1" style="font-size:.75rem;">Fecha del Tour</label>
+            <input type="date" name="date" class="gc-input" style="width:160px;" value="{{ date_filter }}">
+        </div>
+        <div>
+            <label class="gc-label mb-1" style="font-size:.75rem;">Estado</label>
+            <select name="status" class="gc-input form-select" style="width:180px;">
+                {% for opt in status_options %}
+                <option value="{{ opt.value }}" {% if opt.selected %}selected{% endif %}>{{ opt.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-gc-primary px-4"><i class="fas fa-search me-1"></i> Filtrar</button>
+            <a href="{% url 'logistics_sales_ops' %}" class="btn-gc-outline">Limpiar</a>
+        </div>
+    </form>
+</div>
+
+{# SALES TABLE #}
+<div class="gc-card">
+    <div class="gc-card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-list-alt me-2"></i> {{ sales_count_str }}</span>
+        {% if date_filter or status_filter or search_q %}
+        <a href="{% url 'logistics_sales_ops' %}" class="btn btn-sm btn-outline-light"><i class="fas fa-times me-1"></i>
+            Quitar filtros</a>
+        {% endif %}
+    </div>
+    <div class="table-responsive">
+        <table class="gc-table ops-table">
+            <thead>
+                <tr>
+                    <th class="ps-4" style="width:40px;">#</th>
+                    <th>Cliente</th>
+                    <th>Tour</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Logística</th>
+                    <th>Pago</th>
+                    <th class="pe-4 text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in sales_rows %}
+                <tr class="{{ row.row_class }}">
+                    <td class="ps-4 text-muted fw-bold" style="font-size:.82rem;">{{ row.obj.pk }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ row.client_full_name }}</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ row.client_phone }} {{
+                            row.client_email_short }}</div>
+                    </td>
+                    <td>
+                        {% if row.is_private %}
+                        <span class="gc-badge gc-badge-gold me-1" style="font-size:.7rem;">PRIVADO</span>
+                        {% endif %}
+                        {{ row.tour_display }}
+                        <div class="text-muted" style="font-size:.75rem;">{{ row.pax_display }}</div>
+                    </td>
+                    <td>{{ row.tour_date_str }}</td>
+                    <td>
+                        <span class="gc-badge {{ row.status_class }}" style="font-size:.73rem;">
+                            <i class="fas {{ row.status_icon }}"></i> {{ row.status_label }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if row.vehicle_plate %}
+                        <div class="text-success fw-semibold" style="font-size:.8rem;">
+                            <i class="fas fa-truck me-1"></i>{{ row.vehicle_plate }}
+                        </div>
+                        {% if row.pickup_str %}
+                        <div class="text-muted" style="font-size:.75rem;">
+                            <i class="fas fa-clock me-1"></i>{{ row.pickup_str }}
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        {% if row.is_confirmed %}
+                        <span class="text-warning" style="font-size:.78rem;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Sin asignar
+                        </span>
+                        {% else %}
+                        <span class="text-muted" style="font-size:.78rem;">—</span>
+                        {% endif %}
+                        {% endif %}
+                        {% if row.obj.client_notified %}
+                        <div style="font-size:.72rem;color:#6f42c1;">
+                            <i class="fas fa-envelope me-1"></i>Notificado
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="gc-badge {{ row.pay_class }}" style="font-size:.7rem;">{{ row.pay_label }}</span>
+                        <div class="fw-semibold" style="font-size:.82rem;color:var(--gc-teal);margin-top:2px;">
+                            {{ row.cur_sym }}{{ row.obj.total_amount|intcomma }}
+                        </div>
+                    </td>
+                    <td class="pe-4">
+                        <div class="quick-actions d-flex flex-wrap gap-1 justify-content-center">
+                            <a href="{{ row.detail_url }}" class="btn btn-outline-secondary btn-sm" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if row.can_confirm %}
+                            <form method="post" action="{{ row.confirm_url }}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm" title="Confirmar">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if row.can_assign %}
+                            <button type="button" class="btn btn-outline-primary btn-sm" title="Asignar logística"
+                                data-bs-toggle="modal" data-bs-target="#lm{{ row.obj.pk }}">
+                                <i class="fas fa-truck"></i>
+                            </button>
+                            {% endif %}
+                            {% if row.can_notify %}
+                            <form method="post" action="{{ row.notify_url }}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-info btn-sm" title="Notificar cliente">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% if row.can_assign %}
+                <div class="modal fade" id="lm{{ row.obj.pk }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header modal-header-gc">
+                                <h6 class="modal-title">
+                                    <i class="fas fa-truck me-2"></i>Logística — Venta #{{ row.obj.pk }}
+                                </h6>
+                                <button type="button" class="btn-close btn-close-white"
+                                    data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="post" action="{{ row.logistics_url }}">
+                                {% csrf_token %}
+                                <div class="modal-body p-0">
+                                    <!-- Client + tour summary strip -->
+                                    <div style="background:#f7fafa;border-bottom:1px solid #e0eef0;padding:14px 20px;">
+                                        <div class="d-flex flex-wrap gap-3 align-items-start">
+                                            <div>
+                                                <!-- prettier-ignore -->
+                                                <div
+                                                    style="font-size:.7rem;color:#888;text-transform:uppercase;letter-spacing:.05em;">
+                                                    Cliente</div>
+                                                <!-- prettier-ignore -->
+                                                <div class="fw-bold" style="font-size:.95rem;">{{ row.client_full_name
+                                                    }}</div>
+                                                <!-- prettier-ignore -->
+                                                <div style="font-size:.8rem;color:#666;">{{ row.client_phone }}</div>
+                                                <!-- prettier-ignore -->
+                                                <div style="font-size:.78rem;color:#888;">{{ row.client_email_short }}
+                                                </div>
+                                            </div>
+                                            <div class="ms-auto text-end">
+                                                <!-- prettier-ignore -->
+                                                <div
+                                                    style="font-size:.7rem;color:#888;text-transform:uppercase;letter-spacing:.05em;">
+                                                    Tour / Fecha</div>
+                                                <!-- prettier-ignore -->
+                                                <div class="fw-semibold" style="font-size:.9rem;color:var(--gc-teal);">
+                                                    {{ row.tour_display }}</div>
+                                                <!-- prettier-ignore -->
+                                                <div style="font-size:.8rem;color:#666;">📅 {{ row.tour_date_str }}
+                                                </div>
+                                                <!-- prettier-ignore -->
+                                                <div style="font-size:.78rem;color:#888;">👥 {{ row.pax_display }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if row.obj.hotel_address %}
+                                    <div
+                                        style="margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #e0eef0;font-size:.82rem;">
+                                        <i class="fas fa-map-marker-alt me-2" style="color:var(--gc-gold);"></i>{{
+                                        row.obj.hotel_address }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <!-- Assignment fields -->
+                                <div style="padding:18px 20px;">
+                                    <div class="mb-3">
+                                        <label class="gc-label"><i class="fas fa-truck me-1"></i> Vehículo /
+                                            Transportista</label>
+                                        <select name="assigned_vehicle" class="gc-input form-select gc-vehicle-select"
+                                            data-selected-vehicle="{{ row.obj.assigned_vehicle_id }}">
+                                            <option value="">— Sin asignar —</option>
+                                            {% for v in vehicles %}
+                                            <option value="{{ v.pk }}">{{ v.plate }} — {{ v.owner_company }} (cap.
+                                                {{ v.capacity }} pax)</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="gc-label"><i class="fas fa-clock me-1"></i> Hora de
+                                            Recogida</label>
+                                        <input type="time" name="pickup_time" class="gc-input"
+                                            value="{{ row.pickup_str }}">
+                                    </div>
+                                    <div>
+                                        <label class="gc-label"><i class="fas fa-sticky-note me-1"></i> Notas para
+                                            el Conductor</label>
+                                        <textarea name="logistics_notes" class="gc-input" rows="2"
+                                            placeholder="Ej: Hotel en el sector norte, preguntar por el pasajero en recepción…">{{ row.obj.logistics_notes }}</textarea>
+                                    </div>
+                                </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn-gc-outline" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn-gc-gold">
+                                <i class="fas fa-save me-1"></i> Guardar
+                            </button>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <tr>
+        <td colspan="8" class="text-center py-5 text-muted">
+            <i class="fas fa-inbox fa-2x d-block mb-2" style="color:var(--gc-teal);opacity:.25;"></i>
+            No hay ventas con los filtros actuales.
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('show.bs.modal', function (e) {
+        var sel = e.target.querySelector('.gc-vehicle-select');
+        if (!sel) return;
+        var selected = sel.getAttribute('data-selected-vehicle');
+        if (!selected) return;
+        var opts = sel.querySelectorAll('option');
+        opts.forEach(function (o) { o.selected = (o.value === selected); });
+    });
+</script>
+{% endblock %}

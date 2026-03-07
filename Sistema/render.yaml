@@ -1,0 +1,97 @@
+# Getaway Chile ERP — Render Blueprint
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: New > Blueprint > conectar este repo > Root Directory: Sistema
+
+databases:
+  - name: getaway-chile-db
+    databaseName: getaway_chile
+    plan: free              # Cambiar a 'starter' ($7/mes) antes de producción real
+    region: oregon          # Más cercano a Chile disponible en Render
+
+services:
+  - type: web
+    name: getaway-chile-erp
+    runtime: python
+    region: oregon
+    plan: free              # Cambiar a 'starter' ($7/mes) para producción
+    rootDir: Sistema
+
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+
+    envVars:
+      # Auto-generada por Render — no tocar
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+
+      - key: DEBUG
+        value: "false"
+
+      # Conecta automáticamente a la BD definida arriba
+      - key: DATABASE_URL
+        fromDatabase:
+          name: getaway-chile-db
+          property: connectionString
+
+      # Hosts permitidos — añade tu dominio propio cuando lo tengas
+      # Ej: .onrender.com,getawaychile.cl,www.getawaychile.cl
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+
+      # COMPLETAR después del primer deploy con la URL real de Render
+      # Ej: https://getaway-chile-erp.onrender.com
+      # Cuando tengas dominio propio: https://getaway-chile-erp.onrender.com,https://sistema.getawaychile.cl
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+
+      # ============================================================
+      # CLOUDINARY — Almacenamiento de imágenes (fotos de tours, etc.)
+      # 1. Crear cuenta en https://cloudinary.com (gratis)
+      # 2. Ir a Dashboard > API Keys
+      # 3. Copiar la "API Environment variable" (empieza con cloudinary://)
+      # ============================================================
+      - key: CLOUDINARY_URL
+        sync: false
+
+      # ============================================================
+      # EMAIL (Google Workspace o Zoho)
+      # Para Google Workspace:
+      #   EMAIL_HOST: smtp.gmail.com
+      #   EMAIL_PORT: 587
+      #   EMAIL_HOST_USER: sistema@getawaychile.cl
+      #   EMAIL_HOST_PASSWORD: (App Password de Google, no la contraseña normal)
+      # Para Zoho Mail:
+      #   EMAIL_HOST: smtp.zoho.com
+      #   EMAIL_PORT: 587
+      # ============================================================
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.smtp.EmailBackend"
+
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+
+      - key: EMAIL_PORT
+        value: "587"
+
+      - key: EMAIL_USE_TLS
+        value: "true"
+
+      - key: EMAIL_HOST_USER
+        sync: false    # Ej: sistema@getawaychile.cl
+
+      - key: EMAIL_HOST_PASSWORD
+        sync: false    # App Password de Google Workspace
+
+      - key: DEFAULT_FROM_EMAIL
+        sync: false    # Ej: Getaway Chile <sistema@getawaychile.cl>
+
+      # Superusuario para el primer login en producción
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false

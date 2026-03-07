@@ -1,0 +1,64 @@
+{% extends 'core/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Reservas: {{ tour.name }}</h1>
+    <a href="{% url 'logistics_dashboard' %}?date={{ date }}&view=quotas" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> Volver al Dashboard
+    </a>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-white">
+        <h6 class="m-0 font-weight-bold text-primary">Fecha del Tour: {{ date }}</h6>
+    </div>
+    <div class="card-body">
+        {% if sales %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID Venta</th>
+                        <th>Cliente</th>
+                        <th>Contacto</th>
+                        <th class="text-center">Pasajeros</th>
+                        <th>Hotel / Recogida</th>
+                        <th>Estado Pago</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>#{{ sale.id }}</td>
+                        <td class="fw-bold">{{ sale.client_name }}</td>
+                        <td>
+                            <div class="small">{{ sale.client_email }}</div>
+                            <div class="small">{{ sale.client_phone }}</div>
+                        </td>
+                        <td class="text-center"><span class="badge bg-secondary rounded-pill">{{ sale.passengers_count
+                                }}</span></td>
+                        <td>{{ sale.hotel_address|default:"-" }}</td>
+                        <td>
+                            {% if sale.payment_status == 'PAGADA' %}
+                            <span class="badge bg-success">Pagada</span>
+                            {% elif sale.payment_status == 'PENDIENTE' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% elif sale.payment_status == 'ABONADA' %}
+                            <span class="badge bg-info text-dark">Abonada</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rechazada</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">No hay reservas registradas para esta fecha.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

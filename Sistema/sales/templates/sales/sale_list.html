@@ -1,0 +1,190 @@
+﻿{% extends role_base_template %}
+{% load humanize %}
+
+{% block title %}Mis Ventas | Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="gc-page-title mb-0"><i class="fas fa-list-alt me-2" style="color:var(--gc-gold);"></i>Gestionar
+            Ventas</h1>
+        <p class="gc-page-sub mb-0">Historial completo de tus reservas</p>
+    </div>
+    {% if user.role != 'LOGISTICA' %}
+    <a href="{% url 'sales:create' %}" class="btn-gc-gold">
+        <i class="fas fa-plus"></i> Nueva Venta
+    </a>
+    {% endif %}
+</div>
+
+<div class="gc-card mb-4">
+    <div class="gc-card-header" id="filtrosHeader" style="cursor:pointer;" data-bs-toggle="collapse"
+        data-bs-target="#filtrosBody">
+        <i class="fas fa-filter"></i> Filtros de Búsqueda
+        {% if selected_seller or selected_month or selected_year %}
+        <span class="ms-2 gc-badge gc-badge-gold"><i class="fas fa-dot-circle"></i> Activos</span>
+        {% endif %}
+        <i class="fas fa-chevron-down ms-auto" style="font-size:.75rem;"></i>
+    </div>
+    <div class="collapse {% if selected_seller or selected_month or selected_year %}show{% endif %}" id="filtrosBody">
+        <div class="p-3">
+            <form method="get" class="row g-3 align-items-end">
+                {% if user.role != 'VENDEDOR' %}
+                <div class="col-md-4">
+                    <label class="gc-label"><i class="fas fa-user me-1"></i>Vendedor</label>
+                    <select name="seller" class="gc-input form-select" style="padding:.5rem .85rem;">
+                        <option value="">— Todos los vendedores —</option>
+                        {% for opt in sellers_options %}
+                        <option value="{{ opt.id }}" {% if opt.selected %}selected{% endif %}>{{ opt.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-3">
+                    <label class="gc-label"><i class="fas fa-calendar-alt me-1"></i>Mes</label>
+                    <select name="month" class="gc-input form-select" style="padding:.5rem .85rem;">
+                        <option value="">— Todos los meses —</option>
+                        {% for opt in months_options %}
+                        <option value="{{ opt.num }}" {% if opt.selected %}selected{% endif %}>{{ opt.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="gc-label"><i class="fas fa-calendar me-1"></i>Año</label>
+                    <select name="year" class="gc-input form-select" style="padding:.5rem .85rem;">
+                        <option value="">— Todos —</option>
+                        {% for opt in years_options %}
+                        <option value="{{ opt.year }}" {% if opt.selected %}selected{% endif %}>{{ opt.year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn-gc-primary flex-fill justify-content-center">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <a href="{% url 'sales:list' %}" class="btn-gc-outline flex-fill justify-content-center">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="gc-card">
+    <div class="gc-card-header">
+        <i class="fas fa-table me-1"></i> Historial de Ventas
+        <span class="ms-2 gc-badge gc-badge-teal">{{ sales|length }} resultado{{ sales|length|pluralize:"s" }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="gc-table" id="dataTable">
+            <thead>
+                <tr>
+                    <th class="ps-4">#ID</th>
+                    <th>Fecha Creación</th>
+                    <th>Vendedor</th>
+                    <th>Cliente</th>
+                    <th>Tour</th>
+                    <th>Fecha Tour</th>
+                    <th class="text-center">Pax</th>
+                    <th>Total</th>
+                    <th>Estado Pago</th>
+                    <th class="text-end pe-4">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td class="ps-4">
+                        <span class="fw-bold" style="color:var(--gc-teal);">#{{ sale.id }}</span>
+                    </td>
+                    <td>
+                        <div>{{ sale.created_at|date:"d/m/Y" }}</div>
+                        <small class="text-muted">{{ sale.created_at|date:"H:i" }}</small>
+                    </td>
+                    <td>
+                        {% if sale.seller %}
+                        <div class="fw-semibold">{{ sale.seller.first_name }} {{ sale.seller.last_name }}</div>
+                        <small class="text-muted">{{ sale.seller.get_role_display }}</small>
+                        {% else %}
+                        <span class="text-muted fst-italic"><i class="fas fa-globe me-1"></i>Web</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ sale.client_first_name }} {{ sale.client_last_name }}</div>
+                        <small class="text-muted">{{ sale.client_rut_passport }}</small>
+                    </td>
+                    <td>
+                        {% with stops=sale.tour_stops.all %}
+                        {% if stops|length > 1 %}
+                        <span class="gc-badge gc-badge-gold mb-1">Multi ({{ stops|length }})</span><br>
+                        <small class="text-muted">{% for stop in stops %}{% if stop.tour %}{{ stop.tour.name }}{% else %}Privado{% endif %}{% if not forloop.last %} &middot; {% endif %}{% endfor %}</small>
+
+                        {% elif stops|length == 1 %}
+                        {% with s=stops.0 %}
+                        <span class="gc-badge gc-badge-teal mb-1">Unico</span><br>
+                        {% if s.tour %}{{ s.tour.name }}{% elif s.is_private %}<span class="text-muted">Tour Privado</span>{% else %}-{% endif %}
+
+                        {% endwith %}
+                        {% elif sale.tour %}
+                        {{ sale.tour.name }}
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        {% if sale.tour_date %}{{ sale.tour_date|date:"d/m/Y" }}{% else %}<span
+                            class="text-muted">—</span>{% endif %}
+                    </td>
+                    <td class="text-center fw-bold">{{ sale.passengers_count }}</td>
+                    <td class="fw-bold" style="color:var(--gc-teal);">
+                        {% if sale.currency == 'USD' %}US$ {{ sale.total_amount }}{% elif sale.currency == 'BRL' %}R$ {{
+                        sale.total_amount }}{% else %}${{ sale.total_amount|intcomma }}{% endif %}
+                    </td>
+                    <td>
+                        {% if sale.payment_status == 'PAGADO' %}
+                        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle"></i> Pagado</span>
+                        {% elif sale.payment_status == 'ABONADO' %}
+                        <span class="gc-badge gc-badge-gold"><i class="fas fa-clock"></i> Abonado</span>
+                        {% else %}
+                        <span class="gc-badge gc-badge-red"><i class="fas fa-hourglass-half"></i> Pendiente</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="d-flex gap-1 justify-content-end">
+                            <a href="{% url 'sales:detail' sale.pk %}" class="btn-gc-outline"
+                                style="font-size:.72rem;padding:.3rem .65rem;" title="Ver">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if user.is_admin or user.role == 'LOGISTICA' %}
+                            <a href="{% url 'sales:delete' sale.pk %}"
+                                style="font-size:.72rem;padding:.3rem .65rem;background:#c0392b;color:#fff;border-radius:6px;border:0;text-decoration:none;display:inline-flex;align-items:center;"
+                                title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center py-5 text-muted">
+                        <i class="fas fa-inbox fa-2x d-block mb-2" style="color:var(--gc-teal);opacity:.25;"></i>
+                        No se encontraron ventas con los filtros seleccionados.
+                        {% if selected_seller or selected_month or selected_year %}
+                        <br><a href="{% url 'sales:list' %}" class="btn-gc-outline mt-3 d-inline-flex"
+                            style="font-size:.8rem;">
+                            <i class="fas fa-times"></i> Limpiar filtros
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

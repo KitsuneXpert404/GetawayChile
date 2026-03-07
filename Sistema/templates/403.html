@@ -1,0 +1,222 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado | Getaway Chile</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --gc-teal: #2C6E7A;
+            --gc-teal-dark: #1e4f5a;
+            --gc-gold: #B5823C;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #1e4f5a 0%, #2C6E7A 55%, #1a3a44 100%);
+            overflow: hidden;
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .035);
+            pointer-events: none;
+            animation: orbFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-20px) scale(1.05);
+            }
+        }
+
+        .error-card {
+            background: rgba(255, 255, 255, .06);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 24px;
+            padding: 3rem 3.5rem;
+            max-width: 520px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, .35);
+            animation: cardIn .7s cubic-bezier(.22, 1, .36, 1) both;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .error-num {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(5rem, 15vw, 8rem);
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 3px rgba(255, 255, 255, .25);
+            line-height: 1;
+            position: relative;
+            display: inline-block;
+        }
+
+        .error-num::after {
+            content: attr(data-n);
+            position: absolute;
+            inset: 0;
+            -webkit-text-stroke: 0px transparent;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .7) 0%, var(--gc-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .icon-ring {
+            width: 70px;
+            height: 70px;
+            margin: 1.2rem auto;
+            background: rgba(181, 130, 60, .18);
+            border: 2px solid rgba(181, 130, 60, .4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: #e8b96a;
+            animation: iconPop .5s .3s cubic-bezier(.34, 1.56, .64, 1) both;
+        }
+
+        @keyframes iconPop {
+            from {
+                opacity: 0;
+                transform: scale(.5);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .error-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.4rem;
+            margin: .5rem 0 .75rem;
+        }
+
+        .error-desc {
+            color: rgba(255, 255, 255, .6);
+            font-size: .88rem;
+            line-height: 1.65;
+        }
+
+        .btn-go-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gc-gold);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: .7rem 1.8rem;
+            font-weight: 600;
+            font-size: .9rem;
+            text-decoration: none;
+            margin-top: 1.8rem;
+            transition: all .2s;
+            box-shadow: 0 4px 16px rgba(181, 130, 60, .35);
+        }
+
+        .btn-go-home:hover {
+            background: #9a6e30;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255, 255, 255, .6);
+            text-decoration: none;
+            font-size: .82rem;
+            margin-top: .75rem;
+            transition: color .2s;
+        }
+
+        .btn-back:hover {
+            color: #fff;
+        }
+
+        .gc-brand {
+            position: fixed;
+            bottom: 1.25rem;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: .4;
+        }
+
+        .gc-brand img {
+            height: 22px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-orb" style="width:400px;height:400px;top:-100px;left:-100px;"></div>
+    <div class="bg-orb" style="width:300px;height:300px;bottom:-80px;right:-80px;animation-delay:2s;"></div>
+    <div class="bg-orb" style="width:180px;height:180px;top:40%;right:8%;animation-delay:1s;"></div>
+
+    <div class="error-card">
+        <div class="error-num" data-n="403">403</div>
+        <div class="icon-ring"><i class="fas fa-shield-alt"></i></div>
+        <h1 class="error-title">Acceso denegado</h1>
+        <p class="error-desc">No tienes permiso para acceder a esta sección. Si crees que esto es un error, contacta al
+            administrador del sistema.</p>
+        <div>
+            <a href="/" class="btn-go-home"><i class="fas fa-home"></i> Volver al Inicio</a>
+        </div>
+        <div>
+            <a href="javascript:history.back()" class="btn-back"><i class="fas fa-arrow-left"></i> Regresar</a>
+        </div>
+    </div>
+
+    <div class="gc-brand">
+        <img src="{% static 'img/logo_white.png' %}" alt="Getaway Chile"
+            onerror="this.parentElement.innerHTML='<span style=\'color:rgba(255,255,255,.4);font-size:.7rem;font-family:sans-serif;\'>Getaway Chile</span>'">
+    </div>
+</body>
+
+</html>

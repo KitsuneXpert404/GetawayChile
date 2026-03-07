@@ -1,0 +1,50 @@
+{% extends 'core/base_dashboard.html' %}
+{% load widget_tweaks %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="m-0 fw-bold"><i class="fas fa-tasks me-2"></i> Gestión de Operación</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-light border">
+                    <div class="row">
+                        <div class="col-md-6"><strong>Tour:</strong> {{ tour.name }}</div>
+                        <div class="col-md-6 text-end"><strong>Fecha:</strong> {{ date }}</div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+                        {% if field.name == 'status' or field.name == 'driver' %}
+                        {{ field|add_class:"form-select" }}
+                        {% else %}
+                        {{ field|add_class:"form-control" }}
+                        {% endif %}
+
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success fw-bold">Guardar Asignación</button>
+                        <a href="{% url 'logistics_dashboard' %}?date={{ date }}&view=logistics"
+                            class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

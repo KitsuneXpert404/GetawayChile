@@ -1,0 +1,136 @@
+{% extends role_base_template|default:'core/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Solicitudes y Tickets | Getaway Chile{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .ticket-filter-btn {
+        padding: .35rem .9rem;
+        border-radius: 20px;
+        font-size: .78rem;
+        font-weight: 600;
+        border: 1.5px solid rgba(44,110,122,.25);
+        color: var(--gc-muted);
+        background: #fff;
+        text-decoration: none;
+        transition: all .15s;
+    }
+    .ticket-filter-btn:hover, .ticket-filter-btn.active {
+        background: var(--gc-teal);
+        color: #fff;
+        border-color: var(--gc-teal);
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{# ── Title ──────────────────────────────────────────────── #}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-envelope-open-text me-2" style="color:var(--gc-teal);"></i> Solicitudes y Tickets
+        </h1>
+        <p class="gc-page-sub mb-0">Comunicaciones y solicitudes internas entre áreas</p>
+    </div>
+    <a href="{% url 'tickets:create' %}" class="btn-gc-primary">
+        <i class="fas fa-plus"></i> Nueva Solicitud
+    </a>
+</div>
+
+{# ── Filter tabs + table ─────────────────────────────────── #}
+<div class="gc-card">
+    <div class="gc-card-header d-flex align-items-center gap-3 flex-wrap">
+        <span><i class="fas fa-list"></i> Todas las Solicitudes</span>
+        <span class="badge ms-1" style="background:rgba(255,255,255,.2);">{{ page_obj.paginator.count }}</span>
+        <div class="ms-auto d-flex gap-2 flex-wrap">
+            <a href="{% url 'tickets:list' %}" class="ticket-filter-btn {% if not current_status %}active{% endif %}">Todas</a>
+            {% for val, label in status_choices %}
+            <a href="?status={{ val }}" class="ticket-filter-btn {% if current_status == val %}active{% endif %}">{{ label }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="gc-table">
+            <thead>
+                <tr>
+                    <th class="ps-4">#</th>
+                    <th>Tipo</th>
+                    <th>Asunto</th>
+                    <th>Creado por</th>
+                    <th>Dirigido a</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th class="text-end pe-4">Ver</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ticket in tickets %}
+                <tr>
+                    <td class="ps-4 fw-bold" style="color:var(--gc-muted);">#{{ ticket.id }}</td>
+                    <td>
+                        <span class="gc-badge gc-badge-teal">{{ ticket.get_ticket_type_display }}</span>
+                    </td>
+                    <td class="fw-semibold">{{ ticket.title }}</td>
+                    <td>
+                        {% if ticket.creator %}
+                        <div>{{ ticket.creator.first_name }} {{ ticket.creator.last_name }}</div>
+                        <div class="text-muted small">{{ ticket.creator.get_role_display }}</div>
+                        {% else %}<span class="text-muted">—</span>{% endif %}
+                    </td>
+                    <td>{{ ticket.get_target_role_display }}</td>
+                    <td>
+                        <div style="font-size:.85rem;">{{ ticket.created_at|date:"d/m/Y" }}</div>
+                        <div class="text-muted small">{{ ticket.created_at|date:"H:i" }}</div>
+                    </td>
+                    <td>
+                        {% if ticket.status == 'ABIERTA' or ticket.status == 'OPEN' %}
+                        <span class="gc-badge gc-badge-gold"><i class="fas fa-clock me-1"></i>{{ ticket.get_status_display }}</span>
+                        {% elif ticket.status == 'APROBADA' or ticket.status == 'RESUELTA' or ticket.status == 'CLOSED' %}
+                        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>{{ ticket.get_status_display }}</span>
+                        {% elif ticket.status == 'RECHAZADA' %}
+                        <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>{{ ticket.get_status_display }}</span>
+                        {% else %}
+                        <span class="gc-badge" style="background:rgba(100,100,100,.1);color:#555;">{{ ticket.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{% url 'tickets:detail' ticket.id %}" class="btn-gc-outline py-1 px-3" style="font-size:.82rem;">
+                            <i class="fas fa-eye me-1"></i> Ver
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25" style="color:var(--gc-teal);"></i>
+                        <span class="text-muted">No hay solicitudes registradas.</span><br>
+                        <a href="{% url 'tickets:create' %}" class="btn-gc-primary mt-3 d-inline-flex">
+                            <i class="fas fa-plus"></i> Crear primera solicitud
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Pagination #}
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3 gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}" class="btn-gc-outline py-1 px-3">«</a>
+        {% endif %}
+        <span class="btn-gc-outline py-1 px-3" style="pointer-events:none;">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&status={{ current_status }}" class="btn-gc-outline py-1 px-3">»</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,497 @@
+<!-- prettier-ignore -->
+{% extends 'core/base_dashboard.html' %}
+<!-- prettier-ignore -->
+{% load humanize %}
+
+{% block title %}Dashboard Admin | Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+<!-- Sub-header Area -->
+<div class="page-header gc-card mb-4" style="padding:1.5rem 2rem;">
+    <div class="d-sm-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <div class="gc-avatar-btn" style="width:50px; height:50px; font-size:1.2rem;">
+                <i class="fas fa-crown"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Vista General</h1>
+                <p class="page-subtitle">
+                    <!-- prettier-ignore -->
+                    Reporte de <strong>{{ month_name }}</strong> &mdash; Actualizado: {{ updated_time }} hrs
+                </p>
+            </div>
+        </div>
+        <div class="mt-3 mt-sm-0">
+            <a href="{% url 'sales:create' %}" class="btn-gc-gold">
+                <i class="fas fa-plus me-1"></i> Nueva Venta
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards Row -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-card h-100" style="border-bottom: 4px solid var(--gc-teal);">
+            <div class="gc-card-body d-flex align-items-center justify-content-between h-100">
+                <div>
+                    <div class="text-uppercase text-muted fw-bold mb-1"
+                        style="font-size:0.75rem; letter-spacing:0.5px;">Ventas Mes</div>
+                    <!-- prettier-ignore -->
+                    <div class="h3 mb-0 fw-bold" style="color:var(--gc-teal-dark);">{{ kpis.count_this_month }}</div>
+
+                    <!-- prettier-ignore -->
+                    {% if kpis.growth_pct > 0 %}
+                    <small class="text-success fw-semibold"><i class="fas fa-arrow-up"></i> {{ kpis.growth_pct }}% vs
+                        mes anterior</small>
+                    <!-- prettier-ignore -->
+                    {% elif kpis.growth_pct < 0 %} <small class="text-danger fw-semibold"><i
+                            class="fas fa-arrow-down"></i> {{ kpis.growth_pct }}% vs mes anterior</small>
+                        {% else %}
+                        <small class="text-muted">Sin variación</small>
+                        {% endif %}
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                    style="width:55px;height:55px;background:rgba(44,110,122,0.1);color:var(--gc-teal);">
+                    <i class="fas fa-chart-line fa-lg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-card h-100" style="border-bottom: 4px solid #27ae60;">
+            <div class="gc-card-body d-flex align-items-center justify-content-between h-100">
+                <div>
+                    <div class="text-uppercase text-muted fw-bold mb-1"
+                        style="font-size:0.75rem; letter-spacing:0.5px;">Pasajeros Mes</div>
+                    <!-- prettier-ignore -->
+                    <div class="h3 mb-0 fw-bold" style="color:#27ae60;">{{ kpis.pax_this_month }}</div>
+                    <small class="text-muted">Pasajeros confirmados</small>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                    style="width:55px;height:55px;background:rgba(39,174,96,0.1);color:#27ae60;">
+                    <i class="fas fa-users fa-lg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-card h-100" style="border-bottom: 4px solid var(--gc-gold);">
+            <div class="gc-card-body d-flex align-items-center justify-content-between h-100">
+                <div>
+                    <div class="text-uppercase text-muted fw-bold mb-1"
+                        style="font-size:0.75rem; letter-spacing:0.5px;">Total Ingresos</div>
+                    <!-- prettier-ignore -->
+                    <div class="h3 mb-0 fw-bold" style="color:var(--gc-gold-lite);">${{ kpis.revenue_clp_fmt }}</div>
+
+                    <!-- prettier-ignore -->
+                    {% if kpis.revenue_usd > 0 %}
+                    <small class="text-muted fw-semibold">+ USD ${{ kpis.revenue_usd_fmt }}</small>
+                    {% else %}
+                    <small class="text-muted">Pesos Chilenos (CLP)</small>
+                    {% endif %}
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                    style="width:55px;height:55px;background:rgba(181,130,60,0.1);color:var(--gc-gold);">
+                    <i class="fas fa-hand-holding-usd fa-lg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-card h-100" style="border-bottom: 4px solid #e74c3c;">
+            <div class="gc-card-body d-flex align-items-center justify-content-between h-100">
+                <div>
+                    <div class="text-uppercase text-muted fw-bold mb-1"
+                        style="font-size:0.75rem; letter-spacing:0.5px;">Logística Hoy</div>
+                    <!-- prettier-ignore -->
+                    <div class="h3 mb-0 fw-bold" style="color:#e74c3c;">{{ kpis.today_tours }}</div>
+                    <a href="{% url 'tickets:list' %}?status=PENDIENTE"
+                        class="text-decoration-none small text-danger fw-semibold">
+                        <!-- prettier-ignore -->
+                        {{ kpis.pending_tickets }} Solicitudes pendientes &rarr;
+                    </a>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                    style="width:55px;height:55px;background:rgba(231,76,60,0.1);color:#e74c3c;">
+                    <i class="fas fa-route fa-lg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row g-4 mb-4">
+    <!-- Chart -->
+    <div class="col-xl-8">
+        <div class="gc-card h-100">
+            <div class="gc-card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-chart-area me-2" style="color:var(--gc-teal)"></i> Flujo de Ventas Diarias</span>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge bg-light text-dark border"><i class="fas fa-square"
+                            style="color:rgba(181,130,60,0.8)"></i> N° Ventas</span>
+                    <span class="badge bg-light text-dark border"><i class="fas fa-square"
+                            style="color:var(--gc-teal)"></i> Ingresos CLP</span>
+                </div>
+            </div>
+            <div class="gc-card-body">
+                <div style="height:320px;position:relative;">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column (Status & Quick Actions) -->
+    <div class="col-xl-4 d-flex flex-column gap-4">
+        <!-- Donut -->
+        <div class="gc-card">
+            <div class="gc-card-header">
+                <i class="fas fa-money-check-alt me-2 text-success"></i> Estado Recaudación
+            </div>
+            <div class="gc-card-body d-flex align-items-center justify-content-center gap-4">
+                <div style="height:120px;width:120px;position:relative;">
+                    <canvas id="donutChart"></canvas>
+                </div>
+                <div>
+                    <div class="mb-2 small d-flex align-items-center">
+                        <span class="rounded-circle"
+                            style="width:10px;height:10px;background:#27ae60;margin-right:8px;"></span>
+                        <!-- prettier-ignore -->
+                        <span class="text-muted me-auto">Pagado:</span> <strong class="ms-2">{{ kpis.paid }}</strong>
+                    </div>
+                    <div class="mb-2 small d-flex align-items-center">
+                        <span class="rounded-circle"
+                            style="width:10px;height:10px;background:var(--gc-gold);margin-right:8px;"></span>
+                        <span class="text-muted me-auto">Abonado:</span> <strong class="ms-2">{{ kpis.partial }}</strong>
+                    </div>
+                    <div class="small d-flex align-items-center">
+                        <span class="rounded-circle"
+                            style="width:10px;height:10px;background:#e74c3c;margin-right:8px;"></span>
+                        <span class="text-muted me-auto">Pendiente:</span> <strong class="ms-2">{{ kpis.pending_pay }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="gc-card flex-grow-1">
+            <div class="gc-card-header">
+                <i class="fas fa-bolt me-2 text-warning"></i> Acciones Rápidas
+            </div>
+            <div class="gc-card-body d-grid gap-3">
+                <a href="{% url 'export_sales_excel' %}"
+                    class="btn btn-outline-success d-flex justify-content-start align-items-center py-2"
+                    style="border-radius:8px;">
+                    <i class="fas fa-file-excel fs-5 me-3 ms-2"></i>
+                    <div class="text-start">
+                        <div class="fw-bold lh-1 mb-1">Exportar Reportes</div>
+                        <div class="small text-muted" style="font-size:0.75rem">Descargar ventas en Excel</div>
+                    </div>
+                </a>
+                <a href="{% url 'tour_list' %}"
+                    class="btn btn-outline-primary d-flex justify-content-start align-items-center py-2"
+                    style="border-radius:8px;">
+                    <i class="fas fa-map-marked-alt fs-5 me-3 ms-2"></i>
+                    <div class="text-start">
+                        <div class="fw-bold lh-1 mb-1">Catálogo de Tours</div>
+                        <div class="small text-muted" style="font-size:0.75rem">Ver precios y disponibilidades</div>
+                    </div>
+                </a>
+                <a href="{% url 'user_list' %}"
+                    class="btn btn-outline-secondary d-flex justify-content-start align-items-center py-2"
+                    style="border-radius:8px;">
+                    <i class="fas fa-users-cog fs-5 me-3 ms-2"></i>
+                    <div class="text-start">
+                        <div class="fw-bold lh-1 mb-1">Gestionar Usuarios</div>
+                        <div class="small text-muted" style="font-size:0.75rem">Accesos y roles</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Ranking & Recent -->
+<div class="row g-4">
+    <!-- Ranking -->
+    <div class="col-xl-4">
+        <div class="gc-card h-100">
+            <div class="gc-card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-trophy me-2" style="color:var(--gc-gold)"></i> Top Vendedores</span>
+                <small class="text-muted fw-normal">{{ month_name }}</small>
+            </div>
+            <div class="gc-card-body">
+                <!-- prettier-ignore -->
+                {% if sellers_ranking %}
+                <!-- prettier-ignore -->
+                {% for seller in sellers_ranking %}
+                <div
+                    class="d-flex align-items-center justify-content-between mb-1 mt-{% if not forloop.first %}3{% else %}0{% endif %}">
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Medal / Rank -->
+                        <div class="fw-bold d-flex align-items-center justify-content-center border rounded-circle {% if forloop.first %}border-warning bg-warning bg-opacity-10 text-warning{% elif forloop.counter == 2 %}border-secondary bg-secondary bg-opacity-10 text-secondary{% elif forloop.counter == 3 %}border-danger bg-danger bg-opacity-10 text-danger{% else %}border-light bg-light text-muted{% endif %}"
+                            style="width:30px;height:30px;font-size:0.8rem;">
+                            <!-- prettier-ignore -->
+                            {% if forloop.counter <= 3 %} <i class="fas fa-medal"></i>
+                                {% else %}
+                                {{ forloop.counter }}
+                                {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;">{{ seller.name }}</div>
+                            <div class="text-muted" style="font-size:0.75rem;">{{ seller.num_sales }} ventas registradas
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <!-- prettier-ignore -->
+                        <div class="fw-bold" style="color:var(--gc-teal-dark);">
+                            {% if seller.total_clp %}${{ seller.total_clp|intcomma }}{% else %}$0{% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="progress" style="height:5px;">
+                    <!-- prettier-ignore -->
+                    <div class="progress-bar {% if forloop.first %}bg-warning{% elif forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-danger{% else %}bg-info{% endif %}"
+                        style="width:{{ seller.pct }}%"></div>
+                </div>
+                <!-- prettier-ignore -->
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-bar fs-2 text-muted mb-2 opacity-50"></i>
+                    <p class="text-muted small mb-0">No hay ventas registradas aún este mes.</p>
+                </div>
+                <!-- prettier-ignore -->
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Sales List -->
+    <div class="col-xl-8">
+        <div class="gc-card h-100">
+            <div class="gc-card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-receipt me-2 text-muted"></i> Últimos Ingresos (Globales)</span>
+                <a href="{% url 'sales:list' %}" class="btn btn-sm btn-outline-primary"
+                    style="font-size:0.75rem; border-radius:20px;">
+                    Ver Historial &rarr;
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size:0.85rem;">
+                    <thead style="background:rgba(0,0,0,0.02);">
+                        <tr>
+                            <th class="ps-4 fw-semibold text-muted font-monospace">REF</th>
+                            <th class="fw-semibold text-muted">Cliente / Pasajeros</th>
+                            <th class="fw-semibold text-muted">Tour Principal</th>
+                            <th class="fw-semibold text-muted">Monto Total</th>
+                            <th class="fw-semibold text-muted">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- prettier-ignore -->
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge bg-light text-dark border font-monospace">#{{ sale.id }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-bold d-flex align-items-center gap-2" style="color:var(--gc-text)">
+                                    <!-- prettier-ignore -->
+                                    {{ sale.client_first_name }} {{ sale.client_last_name|truncatechars:10 }}
+                                    <span class="badge bg-secondary rounded-pill" style="font-size:0.6rem;"><i
+                                            class="fas fa-user-friends me-1"></i>{{ sale.passengers_count }}</span>
+                                </div>
+                                <div class="text-muted" style="font-size:0.7rem;">
+                                    Hace {{ sale.created_at|timesince }} por {% if sale.seller %}<strong>{{ sale.seller.first_name }}</strong>{% else %}Sistema{% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">{{ sale.tour.name|default:"Tour Personalizado"|truncatechars:25 }}</div>
+                                <div class="text-muted" style="font-size:0.7rem;"><i class="fas fa-calendar-day me-1"></i>{{ sale.tour_date|date:"D d M" }}</div>
+                            </td>
+                            <td class="fw-bold text-success">
+                                <!-- prettier-ignore -->
+                                {% if sale.currency == 'USD' %}US$ {{ sale.total_amount }}
+                                {% elif sale.currency == 'BRL' %}R$ {{ sale.total_amount }}
+                                {% else %}${{ sale.total_amount|intcomma }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <!-- prettier-ignore -->
+                                {% if sale.payment_status == "PAGADO" %}<span class="badge"
+                                    style="background:rgba(39,174,96,0.15);color:#27ae60;">Pagado</span>
+                                <!-- prettier-ignore -->
+                                {% elif sale.payment_status == "ABONADO" %}<span class="badge"
+                                    style="background:rgba(241,196,15,0.15);color:#d35400;">Abonado</span>
+                                <!-- prettier-ignore -->
+                                {% else %}<span class="badge"
+                                    style="background:rgba(231,76,60,0.15);color:#c0392b;">Pendiente</span>{% endif %}
+                            </td>
+                        </tr>
+                        <!-- prettier-ignore -->
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-folder-open mb-3 fs-3 opacity-50"></i>
+                                <p class="mb-0">No hay transacciones registradas.</p>
+                            </td>
+                        </tr>
+                        <!-- prettier-ignore -->
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    (function () {
+        /* prettier-ignore */
+        var labels = {{ chart_labels|safe }};
+    /* prettier-ignore */
+    var counts = {{ chart_counts|safe }};
+    /* prettier-ignore */
+    var revenue = {{ chart_revenue|safe }};
+    /* prettier-ignore */
+    var paid = {{ kpis.paid }};
+    /* prettier-ignore */
+    var partial = {{ kpis.partial }};
+    /* prettier-ignore */
+    var pending = {{ kpis.pending_pay }};
+
+    // Main Chart (Ventas/Ingresos)
+    var mainEl = document.getElementById('mainChart');
+    if (mainEl) {
+        var ctx = mainEl.getContext('2d');
+
+        // Gradient for Bar (Gold)
+        var gradBar = ctx.createLinearGradient(0, 0, 0, 300);
+        gradBar.addColorStop(0, 'rgba(181, 130, 60, 0.85)'); // Gold
+        gradBar.addColorStop(1, 'rgba(181, 130, 60, 0.2)');
+
+        // Gradient for Line (Teal Fill)
+        var gradLine = ctx.createLinearGradient(0, 0, 0, 300);
+        gradLine.addColorStop(0, 'rgba(44, 110, 122, 0.25)'); // Teal lite
+        gradLine.addColorStop(1, 'rgba(44, 110, 122, 0.0)');
+
+        new Chart(ctx, {
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'N° Ventas',
+                        data: counts,
+                        backgroundColor: gradBar,
+                        borderRadius: { topLeft: 6, topRight: 6 },
+                        barPercentage: 0.6,
+                        yAxisID: 'y1',
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Ingresos CLP',
+                        data: revenue,
+                        borderColor: '#2C6E7A', // Teal
+                        backgroundColor: gradLine,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#2C6E7A',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 6,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y2',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        titleColor: '#2c3e50',
+                        bodyColor: '#34495e',
+                        borderColor: 'rgba(44,110,122,0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        boxPadding: 6,
+                        usePointStyle: true,
+                        bodyFont: { family: 'Inter', size: 13 },
+                        titleFont: { family: 'Poppins', size: 14, weight: 'bold' },
+                        callbacks: {
+                            label: function (c) {
+                                if (c.datasetIndex === 1) return ' Ingresos: $' + new Intl.NumberFormat('es-CL').format(c.parsed.y);
+                                return ' ' + c.dataset.label + ': ' + c.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Inter', size: 11 }, color: '#7f8c8d' }
+                    },
+                    y1: {
+                        position: 'left',
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0, font: { family: 'Inter', size: 11 }, color: '#7f8c8d' },
+                        grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false }
+                    },
+                    y2: {
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false },
+                        ticks: { font: { family: 'Inter', size: 11 }, color: '#7f8c8d', callback: function (v) { return '$' + new Intl.NumberFormat('es-CL').format(v); } }
+                    }
+                }
+            }
+        });
+    }
+
+    // Donut Chart
+    var donutEl = document.getElementById('donutChart');
+    if (donutEl) {
+        new Chart(donutEl, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pagado', 'Abonado', 'Pendiente'],
+                // Colors: Green, gc-gold, Red
+                datasets: [{ data: [paid, partial, pending], backgroundColor: ['#27ae60', '#B5823C', '#e74c3c'], borderWidth: 0, hoverOffset: 4 }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(44,110,122,0.9)',
+                        padding: 10,
+                        bodyFont: { family: 'Inter' },
+                        callbacks: { label: function (c) { return ' ' + c.label + ': ' + c.parsed; } }
+                    }
+                }
+            }
+        });
+    }
+    }) ();
+</script>
+{% endblock %}

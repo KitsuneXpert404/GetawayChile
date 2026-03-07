@@ -1,0 +1,258 @@
+﻿{% extends role_base_template %}
+{% load static %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="gc-page-title mb-0"><i class="fas fa-chart-line me-2" style="color:var(--gc-gold);"></i>Mi Panel de
+            Ventas</h1>
+        <p class="gc-page-sub mb-0">{{ month_name }} Â· Actualizado {{ updated_time }}</p>
+    </div>
+    <a href="{% url 'sales:create' %}" class="btn-gc-gold">
+        <i class="fas fa-plus"></i> Registrar Venta
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-stat">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="stat-label"><i class="fas fa-hourglass-half me-1"></i> Reserv. Pendientes</span>
+                <div class="stat-icon" style="color:#d97706; background:rgba(217,119,6,.1);"><i class="fas fa-clock"></i></div>
+            </div>
+            <div class="stat-value">{{ kpis.pending_pay }}</div>
+            <div class="small text-muted mt-1">Por cobrar este mes</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-stat gold">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="stat-label"><i class="fas fa-shopping-bag me-1"></i> Ventas</span>
+                <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+            </div>
+            <div class="stat-value">{{ kpis.count_this_month }}</div>
+            <div class="small mt-1">
+                {% if kpis.growth_pct > 0 %}
+                <span style="color:#1e8449;"><i class="fas fa-arrow-up"></i> {{ kpis.growth_pct }}%</span> vs mes
+                anterior
+                {% elif kpis.growth_pct < 0 %} <span class="text-danger"><i class="fas fa-arrow-down"></i> {{
+                    kpis.growth_pct }}%</span> vs mes anterior
+                    {% else %}
+                    <span class="text-muted">Igual al mes anterior</span>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-stat">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="stat-label"><i class="fas fa-users me-1"></i> Pasajeros ({{ month_name }})</span>
+                <div class="stat-icon"><i class="fas fa-person-walking-luggage"></i></div>
+            </div>
+            <div class="stat-value">{{ kpis.pax_this_month }}</div>
+            <div class="small text-muted mt-1">Pax vendidos este mes</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="gc-stat gold">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="stat-label"><i class="fas fa-bus me-1"></i> Pasajeros Hoy</span>
+                <div class="stat-icon"><i class="fas fa-bus-simple"></i></div>
+            </div>
+            <div class="stat-value">{{ kpis.today_pax }}</div>
+            <div class="small text-muted mt-1">Tours programados hoy</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-8">
+        <div class="gc-card h-100">
+            <div class="gc-card-header">
+                <i class="fas fa-chart-area"></i> Mis Ventas Diarias (CLP) &mdash; {{ month_name }}
+            </div>
+            <div class="p-3">
+                <div style="height:280px;position:relative;">
+                    <canvas id="myAreaChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="gc-card h-100">
+            <div class="gc-card-header">
+                <i class="fas fa-circle-half-stroke"></i> Estado de Mis Pagos
+            </div>
+            <div class="p-3 d-flex flex-column align-items-center justify-content-center" style="height:300px;">
+                <div style="height:220px;width:220px;position:relative;">
+                    <canvas id="myPieChart"></canvas>
+                </div>
+                <div class="d-flex gap-3 mt-3 flex-wrap justify-content-center">
+                    <span class="gc-badge gc-badge-green"><i class="fas fa-circle"></i> Pagados ({{ kpis.paid }})</span>
+                    <span class="gc-badge gc-badge-gold"><i class="fas fa-circle"></i> Abonados ({{ kpis.partial
+                        }})</span>
+
+                    <span class="gc-badge gc-badge-red"><i class="fas fa-circle"></i> Pendientes ({{ kpis.pending_pay
+                        }})</span>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="gc-card">
+    <div class="gc-card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-clock-rotate-left me-1"></i> Mis Ultimas Ventas</span>
+        <a href="{% url 'sales:list' %}" class="btn-gc-outline" style="font-size:.78rem;padding:.3rem .8rem;">
+            Ver todo <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="gc-table">
+            <thead>
+                <tr>
+                    <th class="ps-4">ID / Fecha</th>
+                    <th>Cliente</th>
+                    <th>Tour</th>
+                    <th>Fecha Viaje</th>
+                    <th>Total</th>
+                    <th>Pago</th>
+                    <th class="text-end pe-4">Accion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in recent_sales %}
+                <tr>
+                    <td class="ps-4">
+                        <span class="fw-bold" style="color:var(--gc-teal);">#{{ sale.id }}</span><br>
+                        <small class="text-muted">{{ sale.created_at|date:"d/m/Y H:i" }}</small>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ sale.client_first_name }} {{ sale.client_last_name }}</div>
+                        <small class="text-muted">{{ sale.passengers_count }} Pax</small>
+                    </td>
+                    <td>{{ sale.tour.name }}</td>
+                    <td>{{ sale.tour_date|date:"d/m/Y"|default:"â€”" }}</td>
+                    <td>
+                        <span class="fw-bold">{% if sale.currency == 'USD' %}US${% elif sale.currency == 'BRL' %}R${%
+                            else %}${% endif %}{{ sale.total_amount|floatformat:0 }}</span>
+                    </td>
+                    <td>
+                        {% if sale.payment_status == 'PAGADO' %}
+                        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle"></i> Pagado</span>
+                        {% elif sale.payment_status == 'ABONADO' %}
+                        <span class="gc-badge gc-badge-gold"><i class="fas fa-clock"></i> Abonado</span>
+                        {% else %}
+                        <span class="gc-badge gc-badge-red"><i class="fas fa-hourglass-half"></i> Pendiente</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{% url 'sales:detail' sale.id %}" class="btn-gc-outline"
+                            style="font-size:.75rem;padding:.3rem .75rem;">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fas fa-inbox fa-2x d-block mb-2" style="color:var(--gc-teal);opacity:.3;"></i>
+                        Aun no has registrado ninguna venta.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const labels = JSON.parse('{{ chart_labels|safe }}');
+    const dataCLP = JSON.parse('{{ chart_revenue|safe }}');
+
+    new Chart(document.getElementById('myAreaChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Ventas CLP',
+                data: dataCLP,
+                fill: true,
+                tension: 0.4,
+                borderColor: '#2C6E7A',
+                backgroundColor: 'rgba(44,110,122,0.08)',
+                pointBackgroundColor: '#2C6E7A',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#fff',
+                    titleColor: '#2C6E7A',
+                    bodyColor: '#555',
+                    borderColor: '#e0e0e0',
+                    borderWidth: 1,
+                    padding: 12,
+                    callbacks: {
+                        label: ctx => '$' + ctx.raw.toLocaleString('es-CL')
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 11 } } },
+                y: {
+                    grid: { color: 'rgba(0,0,0,0.04)' },
+                    ticks: {
+                        maxTicksLimit: 5,
+                        font: { size: 11 },
+                        callback: v => '$' + v.toLocaleString('es-CL')
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('myPieChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Pagado', 'Abonado', 'Pendiente'],
+            datasets: [{
+                data: [{{ kpis.paid }}, {{ kpis.partial }}, {{ kpis.pending_pay }}],
+        backgroundColor: ['#2C6E7A', '#B5823C', '#e74a3b'],
+        hoverBackgroundColor: ['#1e4f5a', '#9a6e30', '#c33023'],
+        borderWidth: 3,
+        borderColor: '#fff',
+        hoverBorderColor: '#fff',
+            }]
+        },
+        options: {
+        maintainAspectRatio: false,
+        cutout: '72%',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#fff',
+                titleColor: '#2C6E7A',
+                bodyColor: '#555',
+                borderColor: '#e0e0e0',
+                borderWidth: 1,
+                padding: 12,
+            }
+        }
+    }
+    });
+</script>
+{% endblock %}

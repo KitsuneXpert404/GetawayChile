@@ -1,0 +1,31 @@
+{% extends 'core/base_dashboard.html' %}
+
+{% block title %}Confirmar Eliminación | Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4 border-left-danger">
+            <div class="card-header py-3 bg-white">
+                <h6 class="m-0 font-weight-bold text-danger">Cancelar / Eliminar Venta</h6>
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle fa-4x text-warning mb-4"></i>
+                <h4 class="mb-4">¿Estás seguro de que deseas cancelar esta venta?</h4>
+                <p class="mb-4">
+                    Venta <strong>#{{ object.id }}</strong> para el cliente <strong>{{ object.client_name
+                        }}</strong>.<br>
+                    Al eliminarla, se liberarán <strong>{{ object.passengers_count }}</strong> cupos del tour <strong>{{
+                        object.tour.name }}</strong>.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <a href="{% url 'sales:list' %}" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Confirmar Eliminación</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

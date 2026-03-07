@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f7fbff;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Conductor Navigation Bar - Distinct Color (Orange/Dark Tone) */
+    .conductor-navbar {
+        background: linear-gradient(135deg, #cc5500 0%, #ff8c00 100%);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 0.8rem 2rem;
+    }
+
+    .conductor-navbar .nav-link {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        margin: 0 0.2rem;
+    }
+
+    .conductor-navbar .nav-link:hover,
+    .conductor-navbar .nav-link.active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    /* Action bar below Nav */
+    .conductor-actions-bar {
+        background: white;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 0 0 16px 16px;
+    }
+
+    .conductor-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg conductor-navbar sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+            <img src="{% static 'img/logo_white.png' %}" alt="Getaway Chile"
+                style="height:38px;width:auto;object-fit:contain;"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        </a>
+
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#conductorNav">
+            <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="conductorNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-2 ms-4 border-start border-light border-opacity-25 ps-4">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+                        href="{% url 'dashboard' %}">
+                        <i class="fas fa-bus me-2"></i> Mi Panel de Rutas
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
+                <!-- Bell Notifications -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link btn btn-sm position-relative d-flex align-items-center justify-content-center rounded-circle"
+                        href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        style="width:38px;height:38px;background:rgba(255,255,255,0.1);">
+                        <i
+                            class="fas fa-bell {% if unread_notifications_count %}text-warning{% else %}text-white-50{% endif %}"></i>
+                        {% if unread_notifications_count %}
+                        <span class="position-absolute badge rounded-pill bg-danger"
+                            Style="font-size:.55rem;top:2px;right:2px;min-width:16px;padding:2px 4px;">
+                            {{ unread_notifications_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 mt-2"
+                        style="min-width:340px;border-radius:12px;overflow:hidden;">
+                        <!-- Header -->
+                        <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom"
+                            style="background:#f8f9ff;">
+                            <div>
+                                <span class="fw-bold text-dark"><i
+                                        class="fas fa-bell me-2 text-primary"></i>Notificaciones</span>
+                                {% if unread_notifications_count %}
+                                <span class="badge bg-danger ms-2">{{ unread_notifications_count }} nuevas</span>
+                                {% endif %}
+                            </div>
+                            {% if unread_notifications_count %}
+                            <form method="post" action="{% url 'notifications:mark_all_read' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link btn-sm p-0 text-muted"
+                                    style="font-size:.75rem;">Marcar todas</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        <!-- Notification Items -->
+                        {% for notif in recent_notifications %}
+                        <a class="d-block px-4 py-3 border-bottom text-decoration-none text-dark notification-item"
+                            href="{% url 'notifications:mark_read' notif.pk %}?next={{ notif.link }}"
+                            style="transition:background .15s;">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+                                    style="width:36px;height:36px;">
+                                    <i class="fas fa-bell text-primary" style="font-size:.75rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="small fw-semibold lh-sm">{{ notif.message|truncatechars:80 }}</div>
+                                    <div class="text-muted mt-1" style="font-size:.7rem;">{{
+                                        notif.created_at|timesince }} atrás</div>
+                                </div>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="px-4 py-4 text-center text-muted small">
+                            No tienes notificaciones recientes.
+                        </div>
+                        {% endfor %}
+                        <a href="{% url 'notifications:list' %}"
+                            class="d-block text-center py-2 small fw-bold text-primary bg-light text-decoration-none">Ver
+                            todas</a>
+                    </div>
+                </li>
+
+                <!-- User Dropdown -->
+                <li class="nav-item dropdown ms-2">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="vendedorDropdown"
+                        role="button" data-bs-toggle="dropdown">
+                        <div class="rounded-circle bg-white text-dark d-flex align-items-center justify-content-center fw-bold shadow-sm"
+                            style="width: 32px; height: 32px; font-size: 0.8rem;">
+                            {{ user_initials }}
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2"
+                        aria-labelledby="vendedorDropdown">
+                        <li>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div id="page-content-wrapper" class="w-100 pb-5" style="min-height: calc(100vh - 70px);">
+    <div class="conductor-actions-bar mx-auto" style="max-width: 1400px;">
+        <div class="d-flex align-items-center">
+            <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center me-3"
+                style="width: 48px; height: 48px;">
+                <i class="fas fa-id-card text-warning fs-5"></i>
+            </div>
+            <div>
+                <h5 class="m-0 fw-bold text-dark font-premium">Hola, {{ user_display_name }}</h5>
+                <small class="text-muted">Espacio de trabajo para Conductores</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inject View Layout -->
+    <div class="conductor-container">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade-in shadow-sm border-0 border-start border-4 border-{{ message.tags }} rounded-3 mt-3"
+            role="alert">
+            <div class="d-flex align-items-center">
+                <div>{{ message }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="mt-4">
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+{% include 'core/includes/welcome_modal.html' %}
+
+{% endblock %}

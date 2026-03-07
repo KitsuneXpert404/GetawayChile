@@ -1,0 +1,15 @@
+{
+    "overrides": [
+        {
+            "files": [
+                "**/*.html",
+                "*.html"
+            ],
+            "options": {
+                "parser": "html",
+                "printWidth": 9999,
+                "htmlWhitespaceSensitivity": "ignore"
+            }
+        }
+    ]
+}

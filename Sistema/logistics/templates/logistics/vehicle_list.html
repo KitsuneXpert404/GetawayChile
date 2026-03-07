@@ -1,0 +1,113 @@
+{% extends 'core/base_logistica.html' %}
+
+{% block title %}Flota de Vehículos | Getaway Chile{% endblock %}
+
+{% block dashboard_content %}
+
+{# ── Title ─────────────────────────────────────────────── #}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-truck me-2" style="color:var(--gc-teal);"></i> Flota de Vehículos
+        </h1>
+        <p class="gc-page-sub mb-0">Registro y gestión de todos los vehículos operativos</p>
+    </div>
+    <a href="{% url 'logistics_vehicle_create' %}" class="btn-gc-primary">
+        <i class="fas fa-plus"></i> Nuevo Vehículo
+    </a>
+</div>
+
+{# ── Table ─────────────────────────────────────────────── #}
+<div class="gc-card">
+    <div class="gc-card-header">
+        <i class="fas fa-list"></i> Listado de Flota
+        <span class="ms-auto badge" style="background:rgba(255,255,255,.2);font-size:.75rem;">
+            {{ vehicles.count }} vehículo{{ vehicles.count|pluralize:"s" }}
+        </span>
+    </div>
+    <div class="table-responsive">
+        <table class="gc-table">
+            <thead>
+                <tr>
+                    <th class="ps-4">Patente</th>
+                    <th>Tipo</th>
+                    <th>Agencia / Dueño</th>
+                    <th class="text-center">Cap.</th>
+                    <th>Conductor</th>
+                    <th>WhatsApp</th>
+                    <th>Estado</th>
+                    <th class="text-end pe-4">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vehicle in vehicles %}
+                <tr>
+                    <td class="ps-4">
+                        <span class="fw-bold" style="color:var(--gc-teal);font-size:.95rem;">{{ vehicle.plate }}</span>
+                        {% if vehicle.vehicle_color %}<div class="text-muted small">{{ vehicle.vehicle_color }}{% if vehicle.vehicle_year %} · {{ vehicle.vehicle_year }}{% endif %}</div>{% endif %}
+                    </td>
+                    <td>
+                        <span class="text-muted small">{{ vehicle.get_vehicle_type_display }}</span>
+                    </td>
+                    <td>{{ vehicle.owner_company }}</td>
+                    <td class="text-center">
+                        <span class="gc-badge gc-badge-teal"><i class="fas fa-users"></i> {{ vehicle.capacity }}</span>
+                    </td>
+                    <td>
+                        {% if vehicle.contact_name != '—' %}
+                        <div class="fw-semibold" style="font-size:.88rem;">{{ vehicle.contact_name }}</div>
+                        {% else %}
+                        <span class="text-muted fst-italic small">Sin conductor</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if vehicle.contact_phone %}
+                        <a href="https://wa.me/{{ vehicle.contact_phone|cut:'+' }}" target="_blank"
+                           class="btn btn-sm text-white py-1 px-2" style="background:#25d366;border-radius:6px;font-size:.78rem;"
+                           title="{{ vehicle.contact_phone }}">
+                            <i class="fab fa-whatsapp me-1"></i>{{ vehicle.contact_phone }}
+                        </a>
+                        {% else %}
+                        <span class="text-muted small" title="Edita el vehículo para agregar teléfono">
+                            <i class="fas fa-exclamation-triangle text-warning me-1"></i> Sin teléfono
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if vehicle.is_active %}
+                        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle"></i> Activo</span>
+                        {% else %}
+                        <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle"></i> Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="d-flex gap-1 justify-content-end">
+                            <a href="{% url 'logistics_vehicle_detail' vehicle.pk %}" class="btn btn-sm btn-outline-info py-1 px-2" title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'logistics_vehicle_update' vehicle.pk %}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'logistics_vehicle_delete' vehicle.pk %}" class="btn btn-sm btn-outline-danger py-1 px-2" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="fas fa-truck fa-2x mb-3 opacity-25 d-block" style="color:var(--gc-teal);"></i>
+                        <span class="text-muted">No hay vehículos registrados.</span><br>
+                        <a href="{% url 'logistics_vehicle_create' %}" class="btn-gc-primary mt-3 d-inline-flex">
+                            <i class="fas fa-plus px-1"></i> Agregar primer vehículo
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
