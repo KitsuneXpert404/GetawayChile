@@ -44,19 +44,19 @@ class CustomUserCreationForm(forms.ModelForm):
         user = super().save(commit=False)
         
         # === 1. Auto-generar Email Institucional ===
-        # Formato: 3 primeras letras nombre . apellido_paterno @getawaychile.cl
-        # Ej: ric.flores@getawaychile.cl
+        # Formato: 3 primeras letras nombre . apellido_paterno @sistemagetawaychile.cl
+        # Ej: ric.flores@sistemagetawaychile.cl
         first_name_clean = slugify(user.first_name.split()[0])
         first_part = first_name_clean[:3] # Primeras 3 letras
         last_name_clean = slugify(user.last_name.split()[0])
         
-        base_email = f"{first_part}.{last_name_clean}@getawaychile.cl"
+        base_email = f"{first_part}.{last_name_clean}@sistemagetawaychile.cl"
         email = base_email
         counter = 1
         
         # Validar si correo ya existe (Ej: hay dos Ricardo Flores -> ric.flores1)
         while User.objects.filter(email=email).exists():
-            email = f"{first_part}.{last_name_clean}{counter}@getawaychile.cl"
+            email = f"{first_part}.{last_name_clean}{counter}@sistemagetawaychile.cl"
             counter += 1
             
         user.email = email
@@ -98,7 +98,7 @@ Se ha creado tu perfil en el sistema corporativo con el rol de {user.get_role_di
 
 A continuación, tus credenciales de acceso iniciales:
 
-URL de Acceso: https://www.getawaychile.cl/dashboard/ (o entorno correspondiente)
+URL de Acceso: https://sistemagetawaychile.cl/dashboard/
 Email / Usuario: {user.email}
 Contraseña Temporal: {generated_password}
 
@@ -115,7 +115,7 @@ Equipo Administrativo de Getaway Chile.
                 send_mail(
                     subject=asunto,
                     message=mensaje,
-                    from_email='no-reply@getawaychile.cl',
+                    from_email='no-reply@sistemagetawaychile.cl',
                     recipient_list=[user.personal_email] if user.personal_email else [],
                     fail_silently=False,
                 )

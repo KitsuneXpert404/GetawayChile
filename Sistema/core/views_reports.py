@@ -263,7 +263,7 @@ class ReportEmailPdfView(LoginRequiredMixin, AdminRequiredMixin, View):
                 msg = EmailMessage(
                     subject=f"Reporte de Rendimiento General: {period_label}",
                     body="Adjunto encontrarás el reporte generado con las métricas de rendimiento y ventas de Getaway Chile correspondientes al periodo seleccionado.",
-                    from_email="noreply@getawaychile.cl",
+                    from_email="noreply@sistemagetawaychile.cl",
                     to=[email_dest],
                 )
                 msg.attach(filename, pdf_file.content, 'application/pdf')
