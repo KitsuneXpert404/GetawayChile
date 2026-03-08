@@ -85,22 +85,25 @@ class CustomUserCreationForm(forms.ModelForm):
         if commit:
             user.save()
             
-            # === 3. Enviar Correo de Bienvenida con Credenciales ===
+            # === 3. Enviar Correo de Bienvenida con Credenciales (Asíncrono) ===
             from django.core.mail import send_mail
             import logging
+            import threading
+            
             logger = logging.getLogger(__name__)
             
-            asunto = "Bienvenido al Equipo | Credenciales de Acceso Getaway Chile"
-            mensaje = f"""Hola {user.first_name},
+            def enviar_correo_bienvenida(user_obj, password):
+                asunto = "Bienvenido al Equipo | Credenciales de Acceso Getaway Chile"
+                mensaje = f"""Hola {user_obj.first_name},
 
 ¡Bienvenido al ERP de Getaway Chile!
-Se ha creado tu perfil en el sistema corporativo con el rol de {user.get_role_display()}.
+Se ha creado tu perfil en el sistema corporativo con el rol de {user_obj.get_role_display()}.
 
 A continuación, tus credenciales de acceso iniciales:
 
 URL de Acceso: https://sistemagetawaychile.cl/dashboard/
-Email / Usuario: {user.email}
-Contraseña Temporal: {generated_password}
+Email / Usuario: {user_obj.email}
+Contraseña Temporal: {password}
 
 IMPORTANTE: 
 1. Al iniciar sesión por primera vez, el sistema te exigirá que cambies esta contraseña provisoria por una definitiva por motivos de seguridad. 
@@ -109,19 +112,22 @@ IMPORTANTE:
 Saludos cordiales,
 Equipo Administrativo de Getaway Chile.
 """
-            try:
-                # Utilizamos el sistema de mail de Django
-                # (Actualmente puede ir a consola dependiente de settings.py)
-                send_mail(
-                    subject=asunto,
-                    message=mensaje,
-                    from_email='no-reply@sistemagetawaychile.cl',
-                    recipient_list=[user.personal_email] if user.personal_email else [],
-                    fail_silently=False,
-                )
-            except Exception as e:
-                logger.error(f"Error enviando correo a usuario nuevo {user.email}: {e}")
-                
+                try:
+                    send_mail(
+                        subject=asunto,
+                        message=mensaje,
+                        from_email='no-reply@sistemagetawaychile.cl',
+                        recipient_list=[user_obj.personal_email] if user_obj.personal_email else [],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    logger.error(f"Error enviando correo a usuario nuevo {user_obj.email}: {e}")
+
+            # Lanzar el envío de correo en un hilo paralelo para no congelar la pantalla de creación
+            email_thread = threading.Thread(target=enviar_correo_bienvenida, args=(user, generated_password))
+            email_thread.daemon = True
+            email_thread.start()
+            
         return user
 
 class CustomUserUpdateForm(forms.ModelForm):
