@@ -1,4 +1,4 @@
-{% extends role_base_template|default:'core/base_dashboard.html' %}
+{% extends role_base_template %}
 {% load static %}
 
 {% block title %}{{ ticket.title }} | Solicitudes | Getaway Chile{% endblock %}
@@ -6,13 +6,49 @@
 {% block extra_css %}
 {{ block.super }}
 <style>
-    .ticket-info-row { display:flex; justify-content:space-between; align-items:flex-start; padding:.55rem 0; border-bottom:1px solid rgba(44,110,122,.07); font-size:.88rem; }
-    .ticket-info-row:last-child { border-bottom:none; }
-    .ticket-info-label { color:var(--gc-muted); font-weight:600; font-size:.74rem; text-transform:uppercase; letter-spacing:.05em; min-width:90px; padding-top:2px; }
-    .ticket-response-card { border-left:4px solid transparent; border-radius:10px; padding:1.25rem; }
-    .ticket-response-card.approved { border-left-color:#10b981; background:rgba(16,185,129,.05); }
-    .ticket-response-card.rejected { border-left-color:#ef4444; background:rgba(239,68,68,.05); }
-    .ticket-response-card.info    { border-left-color:#3b82f6; background:rgba(59,130,246,.05); }
+    .ticket-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: .55rem 0;
+        border-bottom: 1px solid rgba(44, 110, 122, .07);
+        font-size: .88rem;
+    }
+
+    .ticket-info-row:last-child {
+        border-bottom: none;
+    }
+
+    .ticket-info-label {
+        color: var(--gc-muted);
+        font-weight: 600;
+        font-size: .74rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        min-width: 90px;
+        padding-top: 2px;
+    }
+
+    .ticket-response-card {
+        border-left: 4px solid transparent;
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+
+    .ticket-response-card.approved {
+        border-left-color: #10b981;
+        background: rgba(16, 185, 129, .05);
+    }
+
+    .ticket-response-card.rejected {
+        border-left-color: #ef4444;
+        background: rgba(239, 68, 68, .05);
+    }
+
+    .ticket-response-card.info {
+        border-left-color: #3b82f6;
+        background: rgba(59, 130, 246, .05);
+    }
 </style>
 {% endblock %}
 
@@ -34,11 +70,14 @@
         {% if ticket.status == 'ABIERTA' or ticket.status == 'OPEN' %}
         <span class="gc-badge gc-badge-gold"><i class="fas fa-clock me-1"></i>{{ ticket.get_status_display }}</span>
         {% elif ticket.status == 'APROBADA' or ticket.status == 'RESUELTA' or ticket.status == 'CLOSED' %}
-        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>{{ ticket.get_status_display }}</span>
+        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>{{ ticket.get_status_display
+            }}</span>
         {% elif ticket.status == 'RECHAZADA' %}
-        <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>{{ ticket.get_status_display }}</span>
+        <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>{{ ticket.get_status_display
+            }}</span>
         {% else %}
-        <span class="gc-badge" style="background:rgba(100,100,100,.1);color:#555;">{{ ticket.get_status_display }}</span>
+        <span class="gc-badge" style="background:rgba(100,100,100,.1);color:#555;">{{ ticket.get_status_display
+            }}</span>
         {% endif %}
     </div>
 </div>
@@ -50,7 +89,8 @@
         {# Description #}
         <div class="gc-card mb-4">
             <div class="gc-card-header"><i class="fas fa-file-alt"></i> Descripción de la Solicitud</div>
-            <div class="p-4" style="font-size:.92rem;line-height:1.7;white-space:pre-line;">{{ ticket.description }}</div>
+            <div class="p-4" style="font-size:.92rem;line-height:1.7;white-space:pre-line;">{{ ticket.description }}
+            </div>
             {% if ticket.tour %}
             <div class="border-top px-4 pb-4 pt-3">
                 <div class="d-flex gap-4 flex-wrap" style="font-size:.88rem;">
@@ -75,7 +115,7 @@
         {% if ticket.response %}
         <div class="gc-card mb-4">
             <div class="gc-card-header {% if ticket.status == 'APROBADA' or ticket.status == 'RESUELTA' %}{% elif ticket.status == 'RECHAZADA' %}{% endif %}"
-                 style="{% if ticket.status == 'APROBADA' or ticket.status == 'RESUELTA' or ticket.status == 'CLOSED' %}background:linear-gradient(135deg,#065f46,#059669);{% elif ticket.status == 'RECHAZADA' %}background:linear-gradient(135deg,#991b1b,#dc2626);{% else %}background:linear-gradient(135deg,#1e3a8a,#3b82f6);{% endif %}">
+                style="{% if ticket.status == 'APROBADA' or ticket.status == 'RESUELTA' or ticket.status == 'CLOSED' %}background:linear-gradient(135deg,#065f46,#059669);{% elif ticket.status == 'RECHAZADA' %}background:linear-gradient(135deg,#991b1b,#dc2626);{% else %}background:linear-gradient(135deg,#1e3a8a,#3b82f6);{% endif %}">
                 <i class="fas fa-reply"></i> Respuesta — {{ ticket.get_status_display }}
             </div>
             <div class="p-4">
@@ -83,7 +123,8 @@
                 {% if ticket.responded_by %}
                 <div class="border-top pt-3 mt-3 text-muted small">
                     <i class="fas fa-user-check me-1"></i>
-                    Respondido por <strong>{{ ticket.responded_by.first_name }} {{ ticket.responded_by.last_name }}</strong>
+                    Respondido por <strong>{{ ticket.responded_by.first_name }} {{ ticket.responded_by.last_name
+                        }}</strong>
                     {% if ticket.responded_at %}el {{ ticket.responded_at|date:"d/m/Y H:i" }}{% endif %}
                 </div>
                 {% endif %}
@@ -151,11 +192,14 @@
                 <div class="ticket-info-row">
                     <span class="ticket-info-label">Estado</span>
                     {% if ticket.status == 'ABIERTA' or ticket.status == 'OPEN' %}
-                    <span class="gc-badge gc-badge-gold"><i class="fas fa-clock me-1"></i>{{ ticket.get_status_display }}</span>
+                    <span class="gc-badge gc-badge-gold"><i class="fas fa-clock me-1"></i>{{ ticket.get_status_display
+                        }}</span>
                     {% elif ticket.status == 'APROBADA' or ticket.status == 'RESUELTA' or ticket.status == 'CLOSED' %}
-                    <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>{{ ticket.get_status_display }}</span>
+                    <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>{{
+                        ticket.get_status_display }}</span>
                     {% elif ticket.status == 'RECHAZADA' %}
-                    <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>{{ ticket.get_status_display }}</span>
+                    <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>{{
+                        ticket.get_status_display }}</span>
                     {% else %}
                     <span class="gc-badge gc-badge-gray">{{ ticket.get_status_display }}</span>
                     {% endif %}

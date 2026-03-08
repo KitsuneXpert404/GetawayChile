@@ -1,4 +1,4 @@
-{% extends role_base_template|default:'core/base_dashboard.html' %}
+{% extends role_base_template %}
 {% load static %}
 
 {% block title %}Solicitudes y Tickets | Getaway Chile{% endblock %}
@@ -11,13 +11,15 @@
         border-radius: 20px;
         font-size: .78rem;
         font-weight: 600;
-        border: 1.5px solid rgba(44,110,122,.25);
+        border: 1.5px solid rgba(44, 110, 122, .25);
         color: var(--gc-muted);
         background: #fff;
         text-decoration: none;
         transition: all .15s;
     }
-    .ticket-filter-btn:hover, .ticket-filter-btn.active {
+
+    .ticket-filter-btn:hover,
+    .ticket-filter-btn.active {
         background: var(--gc-teal);
         color: #fff;
         border-color: var(--gc-teal);
@@ -46,9 +48,11 @@
         <span><i class="fas fa-list"></i> Todas las Solicitudes</span>
         <span class="badge ms-1" style="background:rgba(255,255,255,.2);">{{ page_obj.paginator.count }}</span>
         <div class="ms-auto d-flex gap-2 flex-wrap">
-            <a href="{% url 'tickets:list' %}" class="ticket-filter-btn {% if not current_status %}active{% endif %}">Todas</a>
+            <a href="{% url 'tickets:list' %}"
+                class="ticket-filter-btn {% if not current_status %}active{% endif %}">Todas</a>
             {% for val, label in status_choices %}
-            <a href="?status={{ val }}" class="ticket-filter-btn {% if current_status == val %}active{% endif %}">{{ label }}</a>
+            <a href="?status={{ val }}" class="ticket-filter-btn {% if current_status == val %}active{% endif %}">{{
+                label }}</a>
             {% endfor %}
         </div>
     </div>
@@ -87,17 +91,23 @@
                     </td>
                     <td>
                         {% if ticket.status == 'ABIERTA' or ticket.status == 'OPEN' %}
-                        <span class="gc-badge gc-badge-gold"><i class="fas fa-clock me-1"></i>{{ ticket.get_status_display }}</span>
-                        {% elif ticket.status == 'APROBADA' or ticket.status == 'RESUELTA' or ticket.status == 'CLOSED' %}
-                        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>{{ ticket.get_status_display }}</span>
+                        <span class="gc-badge gc-badge-gold"><i class="fas fa-clock me-1"></i>{{
+                            ticket.get_status_display }}</span>
+                        {% elif ticket.status == 'APROBADA' or ticket.status == 'RESUELTA' or ticket.status == 'CLOSED'
+                        %}
+                        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>{{
+                            ticket.get_status_display }}</span>
                         {% elif ticket.status == 'RECHAZADA' %}
-                        <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>{{ ticket.get_status_display }}</span>
+                        <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>{{
+                            ticket.get_status_display }}</span>
                         {% else %}
-                        <span class="gc-badge" style="background:rgba(100,100,100,.1);color:#555;">{{ ticket.get_status_display }}</span>
+                        <span class="gc-badge" style="background:rgba(100,100,100,.1);color:#555;">{{
+                            ticket.get_status_display }}</span>
                         {% endif %}
                     </td>
                     <td class="text-end pe-4">
-                        <a href="{% url 'tickets:detail' ticket.id %}" class="btn-gc-outline py-1 px-3" style="font-size:.82rem;">
+                        <a href="{% url 'tickets:detail' ticket.id %}" class="btn-gc-outline py-1 px-3"
+                            style="font-size:.82rem;">
                             <i class="fas fa-eye me-1"></i> Ver
                         </a>
                     </td>
@@ -121,13 +131,15 @@
     {% if page_obj.has_other_pages %}
     <div class="d-flex justify-content-center py-3 gap-2">
         {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}" class="btn-gc-outline py-1 px-3">«</a>
+        <a href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}"
+            class="btn-gc-outline py-1 px-3">«</a>
         {% endif %}
         <span class="btn-gc-outline py-1 px-3" style="pointer-events:none;">
             {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
         </span>
         {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}&status={{ current_status }}" class="btn-gc-outline py-1 px-3">»</a>
+        <a href="?page={{ page_obj.next_page_number }}&status={{ current_status }}"
+            class="btn-gc-outline py-1 px-3">»</a>
         {% endif %}
     </div>
     {% endif %}
