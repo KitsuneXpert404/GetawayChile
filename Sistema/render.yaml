@@ -13,6 +13,7 @@ services:
   - type: web
     name: getaway-chile-erp
     runtime: python
+    pythonVersion: "3.11.9"
     region: oregon
     plan: free              # Cambiar a 'starter' ($7/mes) para producción
     rootDir: Sistema
