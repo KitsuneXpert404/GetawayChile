@@ -23,14 +23,8 @@ class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         user = self.request.user
         
         # Determine the base template based on the user's role
-        if user.role == 'VENDEDOR':
-            context['role_base_template'] = 'core/base_vendedor.html'
-        elif user.role == 'LOGISTICA':
-            context['role_base_template'] = 'core/base_logistica.html'
-        elif user.role == 'CONDUCTOR':
-            context['role_base_template'] = 'core/base_conductor.html'
-        else:
-            context['role_base_template'] = 'core/base_dashboard.html'
+        from core.context_processors import get_role_template
+        context['role_base_template'] = get_role_template(user)
             
         return context
 
@@ -83,14 +77,8 @@ class UserChangePasswordView(LoginRequiredMixin, PasswordChangeView):
         user = self.request.user
         
         # Determine the base template based on the user's role
-        if user.role == 'VENDEDOR':
-            context['role_base_template'] = 'core/base_vendedor.html'
-        elif user.role == 'LOGISTICA':
-            context['role_base_template'] = 'core/base_logistica.html'
-        elif user.role == 'CONDUCTOR':
-            context['role_base_template'] = 'core/base_conductor.html'
-        else:
-            context['role_base_template'] = 'core/base_dashboard.html'
+        from core.context_processors import get_role_template
+        context['role_base_template'] = get_role_template(user)
             
         return context
     
@@ -118,14 +106,8 @@ class UserProfileView(LoginRequiredMixin, UpdateView):
         user = self.request.user
         
         # Determine the base template based on the user's role
-        if user.role == 'VENDEDOR':
-            context['role_base_template'] = 'core/base_vendedor.html'
-        elif user.role == 'LOGISTICA':
-            context['role_base_template'] = 'core/base_logistica.html'
-        elif user.role == 'CONDUCTOR':
-            context['role_base_template'] = 'core/base_conductor.html'
-        else:
-            context['role_base_template'] = 'core/base_dashboard.html'
+        from core.context_processors import get_role_template
+        context['role_base_template'] = get_role_template(user)
             
         return context
 

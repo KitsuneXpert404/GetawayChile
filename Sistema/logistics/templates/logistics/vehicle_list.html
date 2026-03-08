@@ -1,4 +1,4 @@
-{% extends 'core/base_logistica.html' %}
+{% extends role_base_template|default:'core/base_dashboard.html' %}
 
 {% block title %}Flota de Vehículos | Getaway Chile{% endblock %}
 
@@ -44,7 +44,8 @@
                 <tr>
                     <td class="ps-4">
                         <span class="fw-bold" style="color:var(--gc-teal);font-size:.95rem;">{{ vehicle.plate }}</span>
-                        {% if vehicle.vehicle_color %}<div class="text-muted small">{{ vehicle.vehicle_color }}{% if vehicle.vehicle_year %} · {{ vehicle.vehicle_year }}{% endif %}</div>{% endif %}
+                        {% if vehicle.vehicle_color %}<div class="text-muted small">{{ vehicle.vehicle_color }}{% if
+                            vehicle.vehicle_year %} · {{ vehicle.vehicle_year }}{% endif %}</div>{% endif %}
                     </td>
                     <td>
                         <span class="text-muted small">{{ vehicle.get_vehicle_type_display }}</span>
@@ -63,8 +64,9 @@
                     <td>
                         {% if vehicle.contact_phone %}
                         <a href="https://wa.me/{{ vehicle.contact_phone|cut:'+' }}" target="_blank"
-                           class="btn btn-sm text-white py-1 px-2" style="background:#25d366;border-radius:6px;font-size:.78rem;"
-                           title="{{ vehicle.contact_phone }}">
+                            class="btn btn-sm text-white py-1 px-2"
+                            style="background:#25d366;border-radius:6px;font-size:.78rem;"
+                            title="{{ vehicle.contact_phone }}">
                             <i class="fab fa-whatsapp me-1"></i>{{ vehicle.contact_phone }}
                         </a>
                         {% else %}
@@ -82,13 +84,16 @@
                     </td>
                     <td class="text-end pe-4">
                         <div class="d-flex gap-1 justify-content-end">
-                            <a href="{% url 'logistics_vehicle_detail' vehicle.pk %}" class="btn btn-sm btn-outline-info py-1 px-2" title="Ver detalles">
+                            <a href="{% url 'logistics_vehicle_detail' vehicle.pk %}"
+                                class="btn btn-sm btn-outline-info py-1 px-2" title="Ver detalles">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{% url 'logistics_vehicle_update' vehicle.pk %}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Editar">
+                            <a href="{% url 'logistics_vehicle_update' vehicle.pk %}"
+                                class="btn btn-sm btn-outline-secondary py-1 px-2" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a href="{% url 'logistics_vehicle_delete' vehicle.pk %}" class="btn btn-sm btn-outline-danger py-1 px-2" title="Eliminar">
+                            <a href="{% url 'logistics_vehicle_delete' vehicle.pk %}"
+                                class="btn btn-sm btn-outline-danger py-1 px-2" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </div>

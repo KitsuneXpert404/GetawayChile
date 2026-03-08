@@ -111,12 +111,8 @@ class LogisticsQuotasManagerView(LoginRequiredMixin, UserPassesTestMixin, Templa
                 'is_override': cupo_maximo != tour.cupo_maximo_diario,
             })
 
-        if self.request.user.role == 'VENDEDOR':
-            role_template = 'core/base_vendedor.html'
-        elif self.request.user.role == 'LOGISTICA':
-            role_template = 'core/base_logistica.html'
-        else:
-            role_template = 'core/base_dashboard.html'
+        from core.context_processors import get_role_template
+        role_template = get_role_template(self.request.user)
         context.update({
             'role_base_template': role_template,
             'selected_date': selected_date_str,

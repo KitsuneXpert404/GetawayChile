@@ -1,4 +1,4 @@
-{% extends 'core/base_logistica.html' %}
+{% extends role_base_template|default:'core/base_dashboard.html' %}
 
 {% block title %}Inicio Logística | Getaway Chile{% endblock %}
 
@@ -7,7 +7,8 @@
 <div class="page-header gc-card mb-4" style="padding:1.5rem 2rem;">
     <div class="d-sm-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-3">
-            <div class="gc-avatar-btn border-0" style="width:50px; height:50px; font-size:1.2rem; background:rgba(44,110,122,0.1); color:var(--gc-teal)">
+            <div class="gc-avatar-btn border-0"
+                style="width:50px; height:50px; font-size:1.2rem; background:rgba(44,110,122,0.1); color:var(--gc-teal)">
                 <i class="fas fa-boxes"></i>
             </div>
             <div>
@@ -32,7 +33,8 @@
         <div class="gc-card h-100" style="border-bottom: 4px solid #e74c3c;">
             <div class="gc-card-body d-flex align-items-center justify-content-between h-100">
                 <div>
-                    <div class="text-uppercase fw-bold mb-1" style="font-size:0.75rem; letter-spacing:0.5px; color:#e74c3c">Aleta Operativa</div>
+                    <div class="text-uppercase fw-bold mb-1"
+                        style="font-size:0.75rem; letter-spacing:0.5px; color:#e74c3c">Aleta Operativa</div>
                     <div class="h3 mb-0 fw-bold text-dark">{{ count_without_vehicle }}</div>
                     <small class="text-muted">Reservas sin vehículo asignado</small>
                 </div>
@@ -49,7 +51,8 @@
         <div class="gc-card h-100" style="border-bottom: 4px solid #27ae60;">
             <div class="gc-card-body d-flex align-items-center justify-content-between h-100">
                 <div>
-                    <div class="text-uppercase text-muted fw-bold mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">En Operación</div>
+                    <div class="text-uppercase text-muted fw-bold mb-1"
+                        style="font-size:0.75rem; letter-spacing:0.5px;">En Operación</div>
                     <div class="h3 mb-0 fw-bold" style="color:#27ae60;">{{ count_confirmed }}</div>
                     <small class="text-muted">Ventas / Reservas confirmadas</small>
                 </div>
@@ -66,7 +69,8 @@
         <div class="gc-card h-100" style="border-bottom: 4px solid var(--gc-gold);">
             <div class="gc-card-body d-flex align-items-center justify-content-between h-100">
                 <div>
-                    <div class="text-uppercase text-muted fw-bold mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">Pendiente Aviso</div>
+                    <div class="text-uppercase text-muted fw-bold mb-1"
+                        style="font-size:0.75rem; letter-spacing:0.5px;">Pendiente Aviso</div>
                     <div class="h3 mb-0 fw-bold" style="color:var(--gc-gold-lite);">{{ count_not_notified }}</div>
                     <small class="text-muted">Pasajeros no notificados aún</small>
                 </div>
@@ -83,7 +87,8 @@
         <div class="gc-card h-100" style="border-bottom: 4px solid var(--gc-teal);">
             <div class="gc-card-body d-flex align-items-center justify-content-between h-100">
                 <div>
-                    <div class="text-uppercase text-muted fw-bold mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">Esperando Pago</div>
+                    <div class="text-uppercase text-muted fw-bold mb-1"
+                        style="font-size:0.75rem; letter-spacing:0.5px;">Esperando Pago</div>
                     <div class="h3 mb-0 fw-bold text-dark">{{ count_pending }}</div>
                     <small class="text-muted">Reservas web o en proceso</small>
                 </div>
@@ -103,7 +108,8 @@
         <div class="gc-card h-100">
             <div class="gc-card-header d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-users me-2 text-primary"></i> Volumen de Pasajeros Próximos 3 Días</span>
-                <a href="{% url 'logistics_quotas_manager' %}" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem; border-radius:20px;">
+                <a href="{% url 'logistics_quotas_manager' %}" class="btn btn-sm btn-outline-secondary"
+                    style="font-size:0.75rem; border-radius:20px;">
                     Ver Cupos Reservados
                 </a>
             </div>
@@ -116,7 +122,7 @@
                         <div class="small mt-1 text-muted">Pax a Mover</div>
                     </div>
                     {% empty %}
-                        <p class="text-muted">No hay proyecciones para los próximos días.</p>
+                    <p class="text-muted">No hay proyecciones para los próximos días.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -130,16 +136,21 @@
                 <i class="fas fa-bolt me-2" style="color:var(--gc-gold)"></i> Acciones Frecuentes de Logística
             </div>
             <div class="gc-card-body d-grid gap-3" style="grid-template-columns: 1fr 1fr;">
-                 <a href="{% url 'logistics_sales_ops' %}" class="btn p-3 text-start border d-flex align-items-center rounded bg-white" style="transition:.2s;" onmouseover="this.classList.add('shadow-sm')" onmouseout="this.classList.remove('shadow-sm')">
-                    <div class="rounded p-3 bg-opacity-10 me-3" style="background:rgba(44,110,122,0.1); color:var(--gc-teal);">
+                <a href="{% url 'logistics_sales_ops' %}"
+                    class="btn p-3 text-start border d-flex align-items-center rounded bg-white" style="transition:.2s;"
+                    onmouseover="this.classList.add('shadow-sm')" onmouseout="this.classList.remove('shadow-sm')">
+                    <div class="rounded p-3 bg-opacity-10 me-3"
+                        style="background:rgba(44,110,122,0.1); color:var(--gc-teal);">
                         <i class="fas fa-random fa-lg"></i>
                     </div>
                     <div>
                         <div class="fw-bold text-dark">Centro Op.</div>
                         <div class="small text-muted">Asignar vehículos diarios</div>
                     </div>
-                 </a>
-                 <a href="{% url 'logistics_vehicle_list' %}" class="btn p-3 text-start border d-flex align-items-center rounded bg-white" style="transition:.2s;" onmouseover="this.classList.add('shadow-sm')" onmouseout="this.classList.remove('shadow-sm')">
+                </a>
+                <a href="{% url 'logistics_vehicle_list' %}"
+                    class="btn p-3 text-start border d-flex align-items-center rounded bg-white" style="transition:.2s;"
+                    onmouseover="this.classList.add('shadow-sm')" onmouseout="this.classList.remove('shadow-sm')">
                     <div class="rounded p-3 bg-opacity-10 me-3" style="background:rgba(39,174,96,0.1); color:#27ae60;">
                         <i class="fas fa-truck-moving fa-lg"></i>
                     </div>
@@ -147,8 +158,10 @@
                         <div class="fw-bold text-dark">Flota Total</div>
                         <div class="small text-muted">Administrar transportistas</div>
                     </div>
-                 </a>
-                 <a href="{% url 'logistics_quotas_manager' %}" class="btn p-3 text-start border d-flex align-items-center rounded bg-white" style="transition:.2s;" onmouseover="this.classList.add('shadow-sm')" onmouseout="this.classList.remove('shadow-sm')">
+                </a>
+                <a href="{% url 'logistics_quotas_manager' %}"
+                    class="btn p-3 text-start border d-flex align-items-center rounded bg-white" style="transition:.2s;"
+                    onmouseover="this.classList.add('shadow-sm')" onmouseout="this.classList.remove('shadow-sm')">
                     <div class="rounded p-3 bg-opacity-10 me-3 bg-warning text-warning">
                         <i class="fas fa-ticket-alt fa-lg text-dark"></i>
                     </div>
@@ -156,16 +169,19 @@
                         <div class="fw-bold text-dark">Cupos Diarios</div>
                         <div class="small text-muted">Aumentar o bloquear px</div>
                     </div>
-                 </a>
-                 <a href="{% url 'sales:list' %}" class="btn p-3 text-start border d-flex align-items-center rounded bg-white" style="transition:.2s;" onmouseover="this.classList.add('shadow-sm')" onmouseout="this.classList.remove('shadow-sm')">
-                    <div class="rounded p-3 bg-opacity-10 me-3" style="background:rgba(181,130,60,0.1); color:var(--gc-gold);">
+                </a>
+                <a href="{% url 'sales:list' %}"
+                    class="btn p-3 text-start border d-flex align-items-center rounded bg-white" style="transition:.2s;"
+                    onmouseover="this.classList.add('shadow-sm')" onmouseout="this.classList.remove('shadow-sm')">
+                    <div class="rounded p-3 bg-opacity-10 me-3"
+                        style="background:rgba(181,130,60,0.1); color:var(--gc-gold);">
                         <i class="fas fa-search-dollar fa-lg"></i>
                     </div>
                     <div>
                         <div class="fw-bold text-dark">Busca-Venta</div>
                         <div class="small text-muted">Visor (solo lectura)</div>
                     </div>
-                 </a>
+                </a>
             </div>
         </div>
     </div>

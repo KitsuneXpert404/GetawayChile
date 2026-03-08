@@ -1,12 +1,24 @@
-{% extends 'core/base_logistica.html' %}
+{% extends role_base_template|default:'core/base_dashboard.html' %}
 
 {% block title %}{{ vehicle.plate }} — Detalle Vehículo | Getaway Chile{% endblock %}
 
 {% block extra_css %}
 {{ block.super }}
 <style>
-    .vd-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#8899a4; display:block; margin-bottom:3px; }
-    .vd-val   { font-size:.92rem; font-weight:500; }
+    .vd-label {
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #8899a4;
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .vd-val {
+        font-size: .92rem;
+        font-weight: 500;
+    }
 </style>
 {% endblock %}
 
@@ -18,7 +30,8 @@
         <h1 class="gc-page-title mb-0">
             <i class="fas fa-truck me-2" style="color:var(--gc-teal);"></i>
             <span style="color:var(--gc-teal);">{{ vehicle.plate }}</span>
-            <small class="text-muted fw-normal ms-2" style="font-size:.6em;">{{ vehicle.get_vehicle_type_display }}</small>
+            <small class="text-muted fw-normal ms-2" style="font-size:.6em;">{{ vehicle.get_vehicle_type_display
+                }}</small>
         </h1>
         <p class="gc-page-sub mb-0">{{ vehicle.owner_company }}</p>
     </div>
@@ -43,7 +56,8 @@
                 <div class="row g-4">
                     <div class="col-sm-6 col-md-4">
                         <span class="vd-label">Patente / Placa</span>
-                        <div class="vd-val fw-bold" style="font-size:1.15rem;color:var(--gc-teal);">{{ vehicle.plate }}</div>
+                        <div class="vd-val fw-bold" style="font-size:1.15rem;color:var(--gc-teal);">{{ vehicle.plate }}
+                        </div>
                     </div>
                     <div class="col-sm-6 col-md-4">
                         <span class="vd-label">Tipo</span>
@@ -52,7 +66,8 @@
                     <div class="col-sm-6 col-md-4">
                         <span class="vd-label">Capacidad</span>
                         <div class="vd-val">
-                            <span class="gc-badge gc-badge-teal"><i class="fas fa-users me-1"></i>{{ vehicle.capacity }} pax</span>
+                            <span class="gc-badge gc-badge-teal"><i class="fas fa-users me-1"></i>{{ vehicle.capacity }}
+                                pax</span>
                         </div>
                     </div>
                     {% if vehicle.vehicle_year %}
@@ -95,7 +110,8 @@
     <div class="col-lg-5">
 
         <div class="gc-card mb-4">
-            <div class="gc-card-header text-white" style="background:linear-gradient(135deg,var(--gc-teal-dark),var(--gc-teal));">
+            <div class="gc-card-header text-white"
+                style="background:linear-gradient(135deg,var(--gc-teal-dark),var(--gc-teal));">
                 <i class="fas fa-user-tie me-2"></i> Conductor
             </div>
             <div class="p-4">
@@ -103,11 +119,13 @@
                 {% if vehicle.default_driver %}
                 <div class="mb-4">
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <div style="width:48px;height:48px;border-radius:50%;background:rgba(44,110,122,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <div
+                            style="width:48px;height:48px;border-radius:50%;background:rgba(44,110,122,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                             <i class="fas fa-user-circle fa-lg" style="color:var(--gc-teal);"></i>
                         </div>
                         <div>
-                            <div class="fw-bold">{{ vehicle.default_driver.get_full_name|default:vehicle.default_driver.username }}</div>
+                            <div class="fw-bold">{{
+                                vehicle.default_driver.get_full_name|default:vehicle.default_driver.username }}</div>
                             <div class="text-muted small">Usuario del sistema · Conductor</div>
                         </div>
                     </div>
@@ -127,12 +145,13 @@
                 <div class="mb-3">
                     <span class="vd-label">Teléfono / WhatsApp</span>
                     <div class="d-flex align-items-center gap-2 mt-1">
-                        <a href="tel:{{ vehicle.driver_phone }}" class="vd-val fw-semibold text-decoration-none" style="color:var(--gc-teal);">
+                        <a href="tel:{{ vehicle.driver_phone }}" class="vd-val fw-semibold text-decoration-none"
+                            style="color:var(--gc-teal);">
                             <i class="fas fa-phone me-1"></i>{{ vehicle.driver_phone }}
                         </a>
                         <a href="https://wa.me/{{ vehicle.driver_phone|cut:'+' }}?text=Hola+{{ vehicle.contact_name|urlencode }}%2C+equipo+de+Getaway+Chile."
-                           target="_blank" class="btn btn-sm text-white py-1 px-2" style="background:#25d366;border-radius:6px;font-size:.78rem;"
-                           title="Abrir WhatsApp">
+                            target="_blank" class="btn btn-sm text-white py-1 px-2"
+                            style="background:#25d366;border-radius:6px;font-size:.78rem;" title="Abrir WhatsApp">
                             <i class="fab fa-whatsapp me-1"></i> WhatsApp
                         </a>
                     </div>
@@ -150,18 +169,21 @@
                 <div class="mb-3">
                     <span class="vd-label">Email del Conductor</span>
                     <div>
-                        <a href="mailto:{{ vehicle.driver_email }}" class="vd-val text-decoration-none" style="color:var(--gc-teal);">
+                        <a href="mailto:{{ vehicle.driver_email }}" class="vd-val text-decoration-none"
+                            style="color:var(--gc-teal);">
                             <i class="fas fa-envelope me-1"></i>{{ vehicle.driver_email }}
                         </a>
                     </div>
                 </div>
                 {% endif %}
 
-                {% if not vehicle.driver_phone and not vehicle.driver_name and not vehicle.default_driver and not vehicle.driver_email %}
+                {% if not vehicle.driver_phone and not vehicle.driver_name and not vehicle.default_driver and not
+                vehicle.driver_email %}
                 <div class="text-center text-muted py-4">
                     <i class="fas fa-user-slash fa-2x mb-2 d-block opacity-25"></i>
                     Sin información de conductor
-                    <br><a href="{% url 'logistics_vehicle_update' vehicle.pk %}" class="btn-gc-primary mt-2 d-inline-flex" style="font-size:.82rem;">
+                    <br><a href="{% url 'logistics_vehicle_update' vehicle.pk %}"
+                        class="btn-gc-primary mt-2 d-inline-flex" style="font-size:.82rem;">
                         <i class="fas fa-edit px-1"></i> Agregar conductor
                     </a>
                 </div>
@@ -171,7 +193,8 @@
 
         {# Quick actions #}
         <div class="d-flex gap-2">
-            <a href="{% url 'logistics_vehicle_update' vehicle.pk %}" class="btn-gc-outline flex-fill justify-content-center">
+            <a href="{% url 'logistics_vehicle_update' vehicle.pk %}"
+                class="btn-gc-outline flex-fill justify-content-center">
                 <i class="fas fa-edit me-1"></i> Editar Vehículo
             </a>
             <a href="{% url 'logistics_vehicle_delete' vehicle.pk %}" class="btn btn-sm btn-outline-danger px-3">
