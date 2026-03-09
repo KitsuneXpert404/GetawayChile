@@ -93,6 +93,7 @@ class CustomUserCreationForm(forms.ModelForm):
             logger = logging.getLogger(__name__)
             
             def enviar_correo_bienvenida(user_obj, password):
+                from django.conf import settings
                 asunto = "Bienvenido al Equipo | Credenciales de Acceso Getaway Chile"
                 mensaje = f"""Hola {user_obj.first_name},
 
@@ -116,7 +117,7 @@ Equipo Administrativo de Getaway Chile.
                     send_mail(
                         subject=asunto,
                         message=mensaje,
-                        from_email='no-reply@sistemagetawaychile.cl',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[user_obj.personal_email] if user_obj.personal_email else [],
                         fail_silently=False,
                     )

@@ -260,10 +260,11 @@ class ReportEmailPdfView(LoginRequiredMixin, AdminRequiredMixin, View):
             filename = f"Reporte_Getaway_{period_label.replace(' ', '_')}.pdf"
             
             try:
+                from django.conf import settings
                 msg = EmailMessage(
                     subject=f"Reporte de Rendimiento General: {period_label}",
                     body="Adjunto encontrarás el reporte generado con las métricas de rendimiento y ventas de Getaway Chile correspondientes al periodo seleccionado.",
-                    from_email="noreply@sistemagetawaychile.cl",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[email_dest],
                 )
                 msg.attach(filename, pdf_file.content, 'application/pdf')
