@@ -126,17 +126,20 @@ class LogisticsQuotasManagerView(LoginRequiredMixin, UserPassesTestMixin, Templa
         return context
 
 class LogisticsRequiredMixin(UserPassesTestMixin):
+    raise_exception = True  # Return 403 instead of redirect loop for authenticated users
+
     def test_func(self):
-        return self.request.user.is_authenticated and (self.request.user.role == 'ADMIN' or self.request.user.role == 'LOGISTICA')
+        u = self.request.user
+        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
 
 class LogisticsHomeView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'logistics/home.html'
 
+    raise_exception = True
+
     def test_func(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return False
-        return user.role in ['ADMIN', 'LOGISTICA']
+        u = self.request.user
+        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -173,11 +176,11 @@ class LogisticsHomeView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
 class LogisticsDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'logistics/dashboard.html'
 
+    raise_exception = True
+
     def test_func(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return False
-        return user.role in ['ADMIN', 'LOGISTICA']
+        u = self.request.user
+        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -726,8 +729,11 @@ class TourReservationsDetailView(LoginRequiredMixin, LogisticsRequiredMixin, Lis
 # El Centro de Operaciones fue fusionado con el Diario de Operaciones.
 # Esta vista redirige al dashboard unificado para mantener compatibilidad con URLs existentes.
 class SalesOperationsDashboardView(LoginRequiredMixin, UserPassesTestMixin, View):
+    raise_exception = True
+
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.role in ['ADMIN', 'LOGISTICA']
+        u = self.request.user
+        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
 
     def get(self, request, *args, **kwargs):
         return redirect('/dashboard/logistics/dashboard/')

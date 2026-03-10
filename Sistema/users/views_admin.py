@@ -9,8 +9,11 @@ from .forms import CustomUserCreationForm, CustomUserUpdateForm
 User = get_user_model()
 
 class AdminRequiredMixin(UserPassesTestMixin):
+    raise_exception = True  # Return 403 instead of infinite redirect loop
+
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.is_admin
+        u = self.request.user
+        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role == 'ADMIN')
 
 class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
     model = User

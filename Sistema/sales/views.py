@@ -271,7 +271,9 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     success_url = reverse_lazy('sales:list')
 
     def test_func(self):
-        return self.request.user.role != 'LOGISTICA'
+        u = self.request.user
+        # LOGISTICA cannot create sales, everyone else (ADMIN, VENDEDOR, CONDUCTOR) can
+        return u.is_authenticated and not (u.role == 'LOGISTICA' and not getattr(u, 'is_admin', False))
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -320,6 +322,11 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         self.object.seller = self.request.user
 
         stops = _parse_tour_stops(self.request.POST)
+
+        # ── Validación: debe existir al menos un tour ──────────────
+        if not stops:
+            form.add_error(None, "Debes agregar al menos un Tour al itinerario antes de guardar la venta.")
+            return self.form_invalid(form)
 
         from django.utils import timezone
         import datetime
@@ -414,7 +421,14 @@ class SaleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     success_url = reverse_lazy('sales:list')
 
     def test_func(self):
-        return self.request.user.role != 'LOGISTICA'
+        u = self.request.user
+        # Admin and Logistics can edit any sale; Vendedores can edit only their own
+        if getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA']:
+            return True
+        if u.role == 'VENDEDOR':
+            sale = self.get_object()
+            return sale.seller_id == u.pk
+        return False
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -487,8 +501,8 @@ class SaleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context = self.get_context_data()
         passengers = context['passengers']
 
-        # Enforce security at DB level for Vendedores (in case of DOM tampering)
-        if self.request.user.role == 'VENDEDOR':
+        # Enforce field locks for Vendedores only (Admin/Logistica skip this)
+        if self.request.user.role == 'VENDEDOR' and not getattr(self.request.user, 'is_admin', False):
             orig = Sale.objects.get(pk=self.object.pk)
             form.instance.client_first_name = orig.client_first_name
             form.instance.client_last_name = orig.client_last_name
@@ -550,8 +564,9 @@ class SaleDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('sales:list')
 
     def test_func(self):
-        # Solamente los administradores pueden eliminar ventas
-        return self.request.user.is_admin
+        # Only Admin can delete sales
+        u = self.request.user
+        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role == 'ADMIN')
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -584,8 +599,11 @@ from django.conf import settings as django_settings
 
 class _AdminOrLogisticsRequired(LoginRequiredMixin, UserPassesTestMixin):
     """Mixin to restrict views to Admin and Logistics roles."""
+    raise_exception = True
+
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.role in ['ADMIN', 'LOGISTICA']
+        u = self.request.user
+        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
 
 
 class SaleConfirmView(_AdminOrLogisticsRequired, View):

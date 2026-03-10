@@ -20,8 +20,11 @@ from django.template.loader import get_template
 User = get_user_model()
 
 class AdminRequiredMixin(UserPassesTestMixin):
+    raise_exception = True  # Return 403 instead of redirect loop
+
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.is_admin
+        u = self.request.user
+        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
 
 class ReportDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
     template_name = 'core/report_dashboard.html'
