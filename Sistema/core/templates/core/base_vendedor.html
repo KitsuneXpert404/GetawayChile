@@ -852,21 +852,6 @@
 {# ===== MAIN CONTENT ===== #}
 <div class="gc-content-wrapper">
     <div class="gc-page">
-        {# Messages #}
-        {% if messages %}
-        {% for message in messages %}
-        <div class="gc-alert alert alert-{{ message.tags }} alert-dismissible mb-3" role="alert"
-            style="{% if message.tags == 'success' %}border-color:var(--gc-teal);background:#f0f9f8;color:var(--gc-teal);{% elif message.tags == 'error' or message.tags == 'danger' %}border-color:#c0392b;background:#fdf3f2;color:#c0392b;{% else %}border-color:var(--gc-gold);background:#fdf8f0;color:var(--gc-gold);{% endif %}">
-            <div class="d-flex align-items-center gap-2">
-                {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>{% elif message.tags == 'error' or
-                message.tags == 'danger' %}<i class="fas fa-exclamation-circle"></i>{% else %}<i
-                    class="fas fa-info-circle"></i>{% endif %}
-                {{ message }}
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-        {% endif %}
 
         {# Page view slot #}
         {% block dashboard_content %}{% endblock %}

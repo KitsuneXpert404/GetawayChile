@@ -578,7 +578,7 @@ class LogisticsSaleDetailView(LoginRequiredMixin, LogisticsRequiredMixin, Detail
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['back_url'] = self.request.META.get('HTTP_REFERER', '') or reverse('logistics_dashboard')
+        ctx['back_url'] = reverse('logistics_sales_ops')
         ctx['view_only'] = True   # signals template to hide action buttons
         return ctx
 
@@ -603,7 +603,7 @@ class LogisticsSaleManageView(LoginRequiredMixin, LogisticsRequiredMixin, Detail
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         sale = self.object
-        ctx['back_url'] = self.request.META.get('HTTP_REFERER', '') or reverse('logistics_dashboard')
+        ctx['back_url'] = reverse('logistics_sales_ops')
         ctx['view_only'] = False
         # URLs for actions
         ctx['confirm_url'] = reverse('sales:confirm', args=[sale.pk])

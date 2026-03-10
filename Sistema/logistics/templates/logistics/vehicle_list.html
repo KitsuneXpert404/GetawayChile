@@ -44,8 +44,7 @@
                 <tr>
                     <td class="ps-4">
                         <span class="fw-bold" style="color:var(--gc-teal);font-size:.95rem;">{{ vehicle.plate }}</span>
-                        {% if vehicle.vehicle_color %}<div class="text-muted small">{{ vehicle.vehicle_color }}{% if
-                            vehicle.vehicle_year %} · {{ vehicle.vehicle_year }}{% endif %}</div>{% endif %}
+                        {% if vehicle.vehicle_color %}<div class="text-muted small">{{ vehicle.vehicle_color }}{% if vehicle.vehicle_year %} · {{ vehicle.vehicle_year }}{% endif %}</div>{% endif %}
                     </td>
                     <td>
                         <span class="text-muted small">{{ vehicle.get_vehicle_type_display }}</span>

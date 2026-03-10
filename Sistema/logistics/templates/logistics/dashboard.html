@@ -254,8 +254,8 @@
                 <button type="submit" class="btn btn-sm btn-gc-primary flex-fill">
                     <i class="fas fa-search me-1"></i>Buscar
                 </button>
-                <a href="?date={{ selected_date }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">
-                    <i class="fas fa-times"></i>
+                <a href="{% url 'logistics_dashboard' %}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">
+                    <i class="fas fa-times me-1"></i> Limpiar filtros
                 </a>
             </div>
         </form>
@@ -302,6 +302,11 @@
                             <a href="{{ row.detail_url }}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Ver información (solo lectura)">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            {% if user.role == 'ADMIN' or user.is_admin %}
+                            <a href="{% url 'sales:update' row.obj.pk %}" class="btn btn-sm btn-outline-warning py-1 px-2" title="Editar venta">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            {% endif %}
                             <a href="{{ row.manage_url }}" class="btn btn-sm py-1 px-3 btn-gc-primary" title="Gestionar: confirmar, cancelar, asignar, notificar">
                                 <i class="fas fa-sliders-h me-1"></i> Gestionar
                             </a>

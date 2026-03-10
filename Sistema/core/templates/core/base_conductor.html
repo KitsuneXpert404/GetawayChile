@@ -182,17 +182,6 @@
 
     <!-- Inject View Layout -->
     <div class="conductor-container">
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade-in shadow-sm border-0 border-start border-4 border-{{ message.tags }} rounded-3 mt-3"
-            role="alert">
-            <div class="d-flex align-items-center">
-                <div>{{ message }}</div>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
-        {% endif %}
 
         <div class="mt-4">
             {% block dashboard_content %}{% endblock %}

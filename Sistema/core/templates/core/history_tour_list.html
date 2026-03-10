@@ -58,30 +58,30 @@
                         <thead class="bg-light text-gc-teal">
                             <tr>
                                 <th class="ps-4">Vigencia y Tiempo</th>
-                                <th>Acción / Autor</th>
-                                <th>Precios Base Configurados</th>
-                                <th>Ventas Acumuladas</th>
-                                <th class="text-end pe-4">Opciones de Versión</th>
+                                <th>Acción y Autor</th>
+                                <th>Resumen de Cambios</th>
+                                <th>Precios & Ventas</th>
+                                <th class="text-end pe-4">Opciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for record in group.records %}
                             <tr {% if record.is_current_active %}style="background:rgba(44,110,122,.03);"{% endif %}>
-                                <td class="ps-4" style="min-width:180px;">
+                                <td class="ps-4" style="min-width:160px;">
                                     <div class="fw-bold text-dark mb-1">
                                         <i class="far fa-play-circle text-success me-1"></i>
                                         {{ record.valid_from|date:"d M Y, H:i" }}
                                     </div>
-                                    <div class="text-muted">
-                                        <i class="far fa-stop-circle text-danger me-1"></i>
+                                    <div class="text-muted small">
                                         {% if record.is_current_active %}
-                                        <span class="text-gc-teal fw-bold">Actualidad</span>
+                                        <span class="text-gc-teal fw-bold"><i class="fas fa-check-circle me-1"></i>Vigente Actual</span>
                                         {% else %}
+                                        <i class="far fa-stop-circle text-danger me-1"></i>
                                         {{ record.valid_to|date:"d M Y, H:i" }}
                                         {% endif %}
                                     </div>
                                 </td>
-                                <td>
+                                <td style="min-width:140px;">
                                     <div class="mb-1">
                                     {% if record.history_type == '+' %}
                                         <span class="badge bg-success rounded-pill px-2"><i class="fas fa-plus"></i> Creación</span>
@@ -97,20 +97,45 @@
                                         <i class="fas fa-user-edit"></i> {{ record.history_user.first_name|default:record.history_user.email|default:"Sistema" }}
                                     </div>
                                 </td>
+                                <td style="min-width:250px;">
+                                    {% if record.changes_summary %}
+                                        <ul class="mb-0 ps-3" style="font-size: 0.82rem; color: #555;">
+                                        {% for change in record.changes_summary|slice:":3" %}
+                                            <li class="mb-1">{{ change|safe }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                        {% if record.changes_summary|length > 3 %}
+                                        <div id="extraChanges-{{ record.history_id }}" style="display: none;">
+                                            <ul class="mb-0 ps-3 mt-1" style="font-size: 0.82rem; color: #555;">
+                                            {% for change in record.changes_summary|slice:"3:" %}
+                                                <li class="mb-1">{{ change|safe }}</li>
+                                            {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% with remainder_count=record.changes_summary|length|add:"-3" %}
+                                        <a href="javascript:void(0);" onclick="var el = document.getElementById('extraChanges-{{ record.history_id }}'); if(el.style.display === 'none'){ el.style.display = 'block'; this.innerHTML = 'Ocultar <i class=\'fas fa-caret-up\'></i>'; } else { el.style.display = 'none'; this.innerHTML = 'Ver {{ remainder_count }} más <i class=\'fas fa-caret-down\'></i>'; }" class="d-inline-block ms-3 mt-1 text-gc-teal fw-semibold" style="font-size: 0.75rem; text-decoration: none;">
+                                            Ver {{ remainder_count }} más <i class="fas fa-caret-down"></i>
+                                        </a>
+                                        {% endwith %}
+                                        {% endif %}
+                                    {% elif record.history_type == '+' %}
+                                        <div class="text-success small fw-semibold"><i class="fas fa-check"></i> Tour registrado inicialmente.</div>
+                                    {% else %}
+                                        <div class="text-muted small fst-italic">Sin cambios detectables en campos de interés.</div>
+                                    {% endif %}
+                                </td>
                                 <td>
-                                    <div class="d-flex flex-column gap-1">
-                                        <span class="badge bg-light text-dark border w-auto text-start fw-normal px-2 py-1">
+                                    <div class="d-flex flex-column gap-1 mb-2">
+                                        <span class="badge bg-light text-dark border w-auto text-start fw-normal px-2 py-1" style="font-size:0.75rem;">
                                             CLP ${{ record.precio_clp|intcomma }} | USD ${{ record.precio_usd|intcomma }} | BRL R${{ record.precio_brl|intcomma }}
                                         </span>
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge rounded-pill fw-normal px-3 py-2 {% if record.sales_count > 0 %}bg-primary{% else %}bg-secondary{% endif %}" style="font-size:0.85rem;">
-                                        <i class="fas fa-shopping-cart me-1"></i> {{ record.sales_count }}
+                                    <span class="badge rounded-pill fw-normal px-2 py-1 {% if record.sales_count > 0 %}bg-primary{% else %}bg-secondary{% endif %}" style="font-size:0.75rem;">
+                                        <i class="fas fa-shopping-cart me-1"></i> {{ record.sales_count }} Ventas
                                     </span>
                                 </td>
-                                <td class="text-end pe-4">
-                                    <div class="d-flex gap-2 justify-content-end">
+                                <td class="text-end pe-4 align-middle">
+                                    <div class="d-flex gap-2 justify-content-end align-items-center">
                                         {% if record.sales_count > 0 %}
                                         <a href="{% url 'history_tour_pdf' record.history_id %}" target="_blank" class="btn btn-sm btn-outline-danger" title="Descargar reporte PDF de ventas asociadas a este rango" style="font-size:0.8rem; padding: 0.25rem 0.5rem;">
                                             <i class="fas fa-file-pdf"></i> PDF

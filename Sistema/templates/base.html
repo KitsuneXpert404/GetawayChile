@@ -291,19 +291,98 @@
         }
     </style>
 
-    <!-- Main Content -->
-    <main class="">
-        {% if messages %}
-        <div class="container mt-3">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
+    <!-- Toast Notifications (single, centered, auto-dismiss) -->
+    {% if messages %}
+    <div id="gc-toast-container" style="
+        position: fixed;
+        top: 72px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        pointer-events: none;
+        min-width: 320px;
+        max-width: 600px;
+        width: 90%;
+    ">
+        {% for message in messages %}
+        {% if message.tags == 'success' %}
+        <div class="gc-toast gc-toast-success" style="
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+            background:#f0fdf4; border-left:4px solid #16a34a; color:#15803d;
+            border-radius:10px; padding:14px 18px; box-shadow:0 4px 20px rgba(0,0,0,.12);
+            pointer-events:all; width:100%; animation: gcToastIn .3s ease;">
+            <span><i class="fas fa-check-circle me-2"></i>{{ message }}</span>
+            <button onclick="this.closest('.gc-toast').remove()" style="background:none;border:none;color:inherit;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;" title="Cerrar">✕</button>
+        </div>
+        {% elif message.tags == 'error' or message.tags == 'danger' %}
+        <div class="gc-toast gc-toast-error" style="
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+            background:#fef2f2; border-left:4px solid #dc2626; color:#b91c1c;
+            border-radius:10px; padding:14px 18px; box-shadow:0 4px 20px rgba(0,0,0,.12);
+            pointer-events:all; width:100%; animation: gcToastIn .3s ease;">
+            <span><i class="fas fa-exclamation-circle me-2"></i>{{ message }}</span>
+            <button onclick="this.closest('.gc-toast').remove()" style="background:none;border:none;color:inherit;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;" title="Cerrar">✕</button>
+        </div>
+        {% elif message.tags == 'warning' %}
+        <div class="gc-toast gc-toast-warning" style="
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+            background:#fffbeb; border-left:4px solid #d97706; color:#b45309;
+            border-radius:10px; padding:14px 18px; box-shadow:0 4px 20px rgba(0,0,0,.12);
+            pointer-events:all; width:100%; animation: gcToastIn .3s ease;">
+            <span><i class="fas fa-exclamation-triangle me-2"></i>{{ message }}</span>
+            <button onclick="this.closest('.gc-toast').remove()" style="background:none;border:none;color:inherit;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;" title="Cerrar">✕</button>
+        </div>
+        {% else %}
+        <div class="gc-toast gc-toast-info" style="
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+            background:#eff6ff; border-left:4px solid #2563eb; color:#1d4ed8;
+            border-radius:10px; padding:14px 18px; box-shadow:0 4px 20px rgba(0,0,0,.12);
+            pointer-events:all; width:100%; animation: gcToastIn .3s ease;">
+            <span><i class="fas fa-info-circle me-2"></i>{{ message }}</span>
+            <button onclick="this.closest('.gc-toast').remove()" style="background:none;border:none;color:inherit;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;" title="Cerrar">✕</button>
         </div>
         {% endif %}
+        {% endfor %}
+    </div>
+    <style>
+        @keyframes gcToastIn {
+            from { opacity: 0; transform: translateY(-16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes gcToastOut {
+            from { opacity: 1; transform: translateY(0); }
+            to   { opacity: 0; transform: translateY(-10px); }
+        }
+        .gc-toast.hiding {
+            animation: gcToastOut .3s ease forwards;
+        }
+    </style>
+    <script>
+        (function() {
+            function autoClose() {
+                var toasts = document.querySelectorAll('.gc-toast');
+                toasts.forEach(function(t) {
+                    setTimeout(function() {
+                        t.classList.add('hiding');
+                        setTimeout(function() { t.remove(); }, 320);
+                    }, 5000);
+                });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', autoClose);
+            } else {
+                autoClose();
+            }
+        })();
+    </script>
+    {% endif %}
 
+    <!-- Main Content -->
+    <main class="">
         {% block content %}{% endblock %}
     </main>
 

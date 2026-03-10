@@ -86,6 +86,13 @@ class SaleListView(LoginRequiredMixin, ListView):
     template_name = 'sales/sale_list.html'
     context_object_name = 'sales'
 
+    def dispatch(self, request, *args, **kwargs):
+        # Admin and Logística users manage sales from the operations center
+        u = request.user
+        if u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ('ADMIN', 'LOGISTICA')):
+            return redirect(reverse_lazy('logistics_sales_ops'))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = (
             Sale.objects
@@ -268,7 +275,11 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Sale
     form_class = SaleForm
     template_name = 'sales/sale_form.html'
-    success_url = reverse_lazy('sales:list')
+    def get_success_url(self):
+        u = self.request.user
+        if getattr(u, 'is_admin', False) or u.role == 'ADMIN':
+            return reverse_lazy('logistics_sales_ops')
+        return reverse_lazy('sales:list')
 
     def test_func(self):
         u = self.request.user
@@ -374,7 +385,7 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                     passengers.save()
                 _save_tour_stops(self.object, stops, pax)
                 messages.success(self.request, "Venta ingresada correctamente. Pendiente de confirmación logística.")
-                return redirect(self.success_url)
+                return redirect(self.get_success_url())
 
             # Regular tour — check availability for first stop
             availability, _ = TourAvailability.objects.get_or_create(
@@ -407,7 +418,7 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                     f"Venta {dest_label} registrada, pero NO HAY CUPO SUFICIENTE. Pendiente de revisión."
                 )
 
-            return redirect(self.success_url)
+            return redirect(self.get_success_url())
 
     def form_invalid(self, form):
         messages.error(self.request, "Error al crear la venta. Revise los datos.")

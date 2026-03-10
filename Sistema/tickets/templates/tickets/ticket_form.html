@@ -29,62 +29,42 @@
             {% endif %}
 
             <div class="gc-card mb-4 shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
-                <div class="gc-card-header text-white"
-                    style="background-color: var(--gc-teal, #2C6E7A); padding: 1.2rem 1.5rem; font-size: 1.1rem; border-bottom: none;">
+                <div class="gc-card-header text-white" style="background-color: var(--gc-teal, #2C6E7A); padding: 1.2rem 1.5rem; font-size: 1.1rem; border-bottom: none;">
                     <i class="fas fa-envelope-open-text me-2"></i> Formulario de Solicitud
                 </div>
                 <div class="gc-card-body p-4 p-md-5" style="background-color: #ffffff;">
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold text-muted small text-uppercase"
-                                style="letter-spacing: 0.5px;">Dirigido a <span class="text-danger">*</span></label>
-                            {% render_field form.target_role class+="form-select shadow-none border-secondary-subtle"
-                            style="padding: 0.75rem; border-radius: 8px;" %}
+                            <label class="form-label fw-bold text-muted small text-uppercase" style="letter-spacing: 0.5px;">Dirigido a <span class="text-danger">*</span></label>
+                            {% render_field form.target_role class+="form-select shadow-none border-secondary-subtle" style="padding: 0.75rem; border-radius: 8px;" %}
                             <div class="text-danger small mt-1">{{ form.target_role.errors }}</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold text-muted small text-uppercase"
-                                style="letter-spacing: 0.5px;">Tipo de Solicitud <span
-                                    class="text-danger">*</span></label>
-                            {% render_field form.ticket_type class+="form-select shadow-none border-secondary-subtle"
-                            style="padding: 0.75rem; border-radius: 8px;" %}
+                            <label class="form-label fw-bold text-muted small text-uppercase" style="letter-spacing: 0.5px;">Tipo de Solicitud <span class="text-danger">*</span></label>
+                            {% render_field form.ticket_type class+="form-select shadow-none border-secondary-subtle" style="padding: 0.75rem; border-radius: 8px;" %}
                             <div class="text-danger small mt-1">{{ form.ticket_type.errors }}</div>
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label fw-bold text-muted small text-uppercase"
-                                style="letter-spacing: 0.5px;">Asunto <span class="text-danger">*</span></label>
-                            {% render_field form.title class+="form-control shadow-none border-secondary-subtle"
-                            placeholder="Ej: Error en fecha de la venta #1234" style="padding: 0.75rem; border-radius:
-                            8px;" %}
+                            <label class="form-label fw-bold text-muted small text-uppercase" style="letter-spacing: 0.5px;">Asunto <span class="text-danger">*</span></label>
+                            {% render_field form.title class+="form-control shadow-none border-secondary-subtle" placeholder="Ej: Error en fecha de la venta #1234" style="padding: 0.75rem; border-radius: 8px;" %}
                             <div class="text-danger small mt-1">{{ form.title.errors }}</div>
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label fw-bold text-muted small text-uppercase"
-                                style="letter-spacing: 0.5px;">Descripción <span class="text-danger">*</span></label>
-                            {% render_field form.description class+="form-control shadow-none border-secondary-subtle"
-                            rows="5" placeholder="Sé específico. Incluye fechas, números de venta u otra info
-                            relevante." style="padding: 0.75rem; border-radius: 8px;" %}
+                            <label class="form-label fw-bold text-muted small text-uppercase" style="letter-spacing: 0.5px;">Descripción <span class="text-danger">*</span></label>
+                            {% render_field form.description class+="form-control shadow-none border-secondary-subtle" rows="5" placeholder="Sé específico. Incluye fechas, números de venta u otra info relevante." style="padding: 0.75rem; border-radius: 8px;" %}
                             <div class="text-danger small mt-1">{{ form.description.errors }}</div>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold text-muted small text-uppercase"
-                                style="letter-spacing: 0.5px;">Tour Relacionado <span
-                                    class="text-muted text-lowercase ms-1"
-                                    style="font-size:0.75rem; letter-spacing:0; font-weight: normal;">(Opcional)</span></label>
-                            {% render_field form.tour class+="form-select shadow-none border-secondary-subtle"
-                            style="padding: 0.75rem; border-radius: 8px;" %}
+                            <label class="form-label fw-bold text-muted small text-uppercase" style="letter-spacing: 0.5px;">Tour Relacionado <span class="text-muted text-lowercase ms-1" style="font-size:0.75rem; letter-spacing:0; font-weight: normal;">(Opcional)</span></label>
+                            {% render_field form.tour class+="form-select shadow-none border-secondary-subtle" style="padding: 0.75rem; border-radius: 8px;" %}
                             <div class="text-danger small mt-1">{{ form.tour.errors }}</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold text-muted small text-uppercase"
-                                style="letter-spacing: 0.5px;">Fecha del Tour <span
-                                    class="text-muted text-lowercase ms-1"
-                                    style="font-size:0.75rem; letter-spacing:0; font-weight: normal;">(Opcional)</span></label>
-                            {% render_field form.tour_date class+="form-control shadow-none border-secondary-subtle"
-                            type="date" style="padding: 0.75rem; border-radius: 8px;" %}
+                            <label class="form-label fw-bold text-muted small text-uppercase" style="letter-spacing: 0.5px;">Fecha del Tour <span class="text-muted text-lowercase ms-1" style="font-size:0.75rem; letter-spacing:0; font-weight: normal;">(Opcional)</span></label>
+                            {% render_field form.tour_date class+="form-control shadow-none border-secondary-subtle" type="date" style="padding: 0.75rem; border-radius: 8px;" %}
                             <div class="text-danger small mt-1">{{ form.tour_date.errors }}</div>
                         </div>
                     </div>
@@ -92,10 +72,8 @@
             </div>
 
             <div class="d-flex justify-content-end gap-3 mt-4 mb-5">
-                <a href="{% url 'tickets:list' %}" class="btn btn-light border-secondary-subtle fw-bold text-muted"
-                    style="padding: 0.8rem 2rem; border-radius: 10px;">Cancelar</a>
-                <button type="submit" class="btn btn-warning fw-bold text-white shadow-sm"
-                    style="background-color: var(--gc-gold, #B8860B); border: none; padding: 0.8rem 2.5rem; border-radius: 10px; font-size: 1rem;">
+                <a href="{% url 'tickets:list' %}" class="btn btn-light border-secondary-subtle fw-bold text-muted" style="padding: 0.8rem 2rem; border-radius: 10px;">Cancelar</a>
+                <button type="submit" class="btn btn-warning fw-bold text-white shadow-sm" style="background-color: var(--gc-gold, #B8860B); border: none; padding: 0.8rem 2.5rem; border-radius: 10px; font-size: 1rem;">
                     <i class="fas fa-paper-plane me-2"></i> Enviar Solicitud
                 </button>
             </div>

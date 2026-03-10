@@ -94,10 +94,30 @@ class UserChangePasswordView(LoginRequiredMixin, PasswordChangeView):
         return super().form_valid(form)
 
 from django.views.generic import UpdateView
+from django import forms as django_forms
+
+class UserProfileForm(django_forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'second_name', 'last_name', 'second_last_name',
+                  'phone', 'personal_email', 'rut', 'birth_date', 'photo']
+        widgets = {
+            'birth_date': django_forms.DateInput(
+                attrs={'type': 'date', 'class': 'gc-input'},
+                format='%Y-%m-%d'
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pre-fill birth_date in ISO format so the date picker shows the saved value
+        if self.instance and self.instance.birth_date:
+            self.initial['birth_date'] = self.instance.birth_date.strftime('%Y-%m-%d')
+
 
 class UserProfileView(LoginRequiredMixin, UpdateView):
     model = User
-    fields = ['first_name', 'second_name', 'last_name', 'second_last_name', 'phone', 'personal_email', 'rut', 'birth_date', 'photo']
+    form_class = UserProfileForm
     template_name = 'core/user_profile.html'
     success_url = reverse_lazy('user_profile')
 
@@ -107,13 +127,10 @@ class UserProfileView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        
-        # Determine the base template based on the user's role
         from core.context_processors import get_role_template
         context['role_base_template'] = get_role_template(user)
-            
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, "Tu perfil ha sido actualizado.")
+        messages.success(self.request, "Perfil actualizado correctamente.")
         return super().form_valid(form)

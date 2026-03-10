@@ -183,6 +183,7 @@ class TourHistoryListView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, Lis
         now = timezone.now()
         for group in results:
             recs = group['records']
+            # recs is sorted newest to oldest. We want to compare each rec with the one immediately older than it.
             for i in range(len(recs)):
                 rec = recs[i]
                 start_date = rec.history_date
@@ -201,6 +202,46 @@ class TourHistoryListView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, Lis
                 rec.valid_to = end_date
                 rec.sales_count = sales_count
                 rec.is_current_active = (i == 0 and not group['is_deleted'])
+
+                # Compute changes
+                changes = []
+                # The "older" record is at index i+1
+                if i < len(recs) - 1:
+                    prev_rec = recs[i+1]
+                    
+                    fields_to_check = [
+                        ('name', 'Nombre'),
+                        ('tour_type', 'Tipo de Tour'),
+                        ('precio_clp', 'Precio Base (CLP)'),
+                        ('precio_adulto_clp', 'Precio Adulto (CLP)'),
+                        ('precio_infante_clp', 'Precio Infante (CLP)'),
+                        ('precio_usd', 'Precio Base (USD)'),
+                        ('precio_adulto_usd', 'Precio Adulto (USD)'),
+                        ('precio_infante_usd', 'Precio Infante (USD)'),
+                        ('precio_brl', 'Precio Base (BRL)'),
+                        ('precio_adulto_brl', 'Precio Adulto (BRL)'),
+                        ('precio_infante_brl', 'Precio Infante (BRL)'),
+                        ('active', 'Estado Activo'),
+                        ('destination', 'Destino'),
+                        ('duration', 'Duración'),
+                        ('cupo_maximo_diario', 'Cupo Máximo'),
+                    ]
+                    
+                    for field_name, friendly_name in fields_to_check:
+                        old_val = getattr(prev_rec, field_name)
+                        new_val = getattr(rec, field_name)
+                        if old_val != new_val:
+                            # Format booleans nicely
+                            if isinstance(old_val, bool): old_val = 'Sí' if old_val else 'No'
+                            if isinstance(new_val, bool): new_val = 'Sí' if new_val else 'No'
+                            
+                            # Format decimals without .00 if possible to save space
+                            if old_val is None: old_val = 'N/A'
+                            if new_val is None: new_val = 'N/A'
+                            
+                            changes.append(f"{friendly_name}: {old_val} ➔ {new_val}")
+                            
+                rec.changes_summary = changes
                 
         return results
 

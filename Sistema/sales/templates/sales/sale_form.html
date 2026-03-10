@@ -1044,6 +1044,40 @@
         syncPaxCount();
         serializeStops();
 
+        // ── Tour stop validation ──────────────────────────────────────
+        var tourError = null;
+        if (stops.length === 0) {
+            tourError = 'Debes agregar al menos un destino al itinerario antes de registrar la venta.';
+        } else {
+            for (var si = 0; si < stops.length; si++) {
+                var s = stops[si];
+                if (!s.is_private && !s.tour_id) {
+                    tourError = 'El destino #' + (si + 1) + ' no tiene ningún tour seleccionado. Selecciona un tour o activa "Tour Privado".';
+                    break;
+                }
+                if (!s.tour_date) {
+                    tourError = 'El destino #' + (si + 1) + ' no tiene fecha asignada. Asigna una fecha para continuar.';
+                    break;
+                }
+            }
+        }
+
+        if (tourError) {
+            e.preventDefault();
+            var errBanner = document.getElementById('tourStopError');
+            if (!errBanner) {
+                errBanner = document.createElement('div');
+                errBanner.id = 'tourStopError';
+                errBanner.className = 'alert alert-danger mt-2 mb-2';
+                stopsContainer.parentElement.insertBefore(errBanner, stopsContainer);
+            }
+            errBanner.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i><strong>Itinerario incompleto:</strong> ' + tourError;
+            errBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        var existingTourErr = document.getElementById('tourStopError');
+        if (existingTourErr) existingTourErr.remove();
+
         // Voucher validation: if amount_paid > 0 OR status != PENDIENTE, require at least 1 voucher
         var amountPaidEl = document.getElementById('id_amount_paid');
         var payStatusEl = document.getElementById('id_payment_status');
@@ -1058,7 +1092,6 @@
             var needsVoucher = paid > 0 || status !== 'PENDIENTE';
             if (needsVoucher && !voucher1HasFile && !existingVoucher) {
                 e.preventDefault();
-                // Show error message
                 var errDiv = document.getElementById('voucherError');
                 if (!errDiv) {
                     errDiv = document.createElement('div');
