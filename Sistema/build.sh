@@ -8,6 +8,9 @@ cd "$(dirname "$0")"
 pip install --upgrade pip
 pip install -r requirements.txt
 
+# Crear directorio static si no existe (evita fallo de collectstatic)
+mkdir -p static
+
 python manage.py collectstatic --noinput
 python manage.py migrate --noinput
 # Crea superusuario si no existe (usa DJANGO_SUPERUSER_* env vars)

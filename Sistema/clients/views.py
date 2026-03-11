@@ -1,4 +1,5 @@
 from rest_framework import generics
+from users.permissions import IsAdminOrLogisticaOrReadOnly
 from .models import Client
 from .serializers import ClientSerializer
 
@@ -6,6 +7,7 @@ from .serializers import ClientSerializer
 class ClientList(generics.ListCreateAPIView):
     serializer_class = ClientSerializer
     queryset = Client.objects.all()
+    permission_classes = [IsAdminOrLogisticaOrReadOnly]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -18,3 +20,4 @@ class ClientList(generics.ListCreateAPIView):
 class ClientDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ClientSerializer
     queryset = Client.objects.all()
+    permission_classes = [IsAdminOrLogisticaOrReadOnly]

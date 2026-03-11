@@ -1,12 +1,7 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from users.views_admin import AdminRequiredMixin
-from django.contrib.auth.mixins import UserPassesTestMixin
-
-class AdminOrLogisticsRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.is_authenticated and (self.request.user.role == 'ADMIN' or self.request.user.role == 'LOGISTICA')
+from core.mixins import AdminOrLogisticsRequiredMixin
 from django.contrib import messages
 from .models import Agency
 from .forms import AgencyForm

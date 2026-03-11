@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.db.models import Sum, Count, F
 from django.db.models.functions import TruncDate, TruncMonth
@@ -12,6 +12,7 @@ from io import BytesIO
 
 from sales.models import Sale
 from django.contrib.auth import get_user_model
+from core.mixins import AdminOrLogisticsRequiredMixin
 
 # xhtml2pdf for PDF generation
 from xhtml2pdf import pisa
@@ -19,14 +20,8 @@ from django.template.loader import get_template
 
 User = get_user_model()
 
-class AdminRequiredMixin(UserPassesTestMixin):
-    raise_exception = True  # Return 403 instead of redirect loop
 
-    def test_func(self):
-        u = self.request.user
-        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
-
-class ReportDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+class ReportDashboardView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, TemplateView):
     template_name = 'core/report_dashboard.html'
     
     def get_context_data(self, **kwargs):
@@ -143,7 +138,7 @@ def render_to_pdf(template_src, context_dict={}):
         return HttpResponse(result.getvalue(), content_type='application/pdf')
     return None
 
-class ReportGeneratePdfView(LoginRequiredMixin, AdminRequiredMixin, View):
+class ReportGeneratePdfView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         period = request.GET.get('period', 'month')
         now = timezone.now()
@@ -210,7 +205,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 import calendar
 
-class ReportEmailPdfView(LoginRequiredMixin, AdminRequiredMixin, View):
+class ReportEmailPdfView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         period = request.POST.get('period', 'month')
         email_dest = request.POST.get('email_dest')

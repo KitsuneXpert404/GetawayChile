@@ -42,33 +42,35 @@ services:
 
       # COMPLETAR después del primer deploy con la URL real de Render
       # Ej: https://getaway-chile-erp.onrender.com
-      # Cuando tengas dominio propio: https://getaway-chile-erp.onrender.com,https://sistema.getawaychile.cl
+      # Con dominio propio: https://getaway-chile-erp.onrender.com,https://sistema.getawaychile.cl
       - key: CSRF_TRUSTED_ORIGINS
         sync: false
 
       # ============================================================
-      # CLOUDINARY — Almacenamiento de imágenes (fotos de tours, etc.)
+      # CLOUDINARY — Almacenamiento de imágenes (vouchers, fotos)
       # 1. Crear cuenta en https://cloudinary.com (gratis)
-      # 2. Ir a Dashboard > API Keys
-      # 3. Copiar la "API Environment variable" (empieza con cloudinary://)
+      # 2. Dashboard > API Keys > copiar "API Environment variable" (cloudinary://...)
       # ============================================================
       - key: CLOUDINARY_URL
         sync: false
 
       # ============================================================
-      # EMAIL (Google Workspace o Zoho)
-      # Para Google Workspace:
-      #   EMAIL_HOST: smtp.gmail.com
-      #   EMAIL_PORT: 587
-      #   EMAIL_HOST_USER: sistema@getawaychile.cl
-      #   EMAIL_HOST_PASSWORD: (App Password de Google, no la contraseña normal)
-      # Para Zoho Mail:
-      #   EMAIL_HOST: smtp.zoho.com
-      #   EMAIL_PORT: 587
+      # EMAIL — Obligatorios para que funcionen correos en producción
+      # Opción A — Google Workspace:
+      #   EMAIL_HOST=smtp.gmail.com
+      #   EMAIL_PORT=587
+      #   EMAIL_USE_TLS=true
+      #   EMAIL_HOST_USER=tu-correo@getawaychile.cl
+      #   EMAIL_HOST_PASSWORD=Contraseña de aplicación (no la contraseña normal)
+      #   DEFAULT_FROM_EMAIL=Getaway Chile <tu-correo@getawaychile.cl>
+      # Opción B — Zoho Mail (recomendado si usas Zoho):
+      #   EMAIL_HOST=smtp.zoho.com
+      #   EMAIL_PORT=587
+      #   EMAIL_USE_TLS=true
+      #   EMAIL_HOST_USER=tu-correo@getawaychile.cl
+      #   EMAIL_HOST_PASSWORD=tu_contraseña_zoho
+      #   DEFAULT_FROM_EMAIL=Getaway Chile <tu-correo@getawaychile.cl>
       # ============================================================
-      - key: EMAIL_BACKEND
-        value: "django.core.mail.backends.smtp.EmailBackend"
-
       - key: EMAIL_HOST
         value: "smtp.gmail.com"
 
@@ -82,12 +84,12 @@ services:
         sync: false    # Ej: sistema@getawaychile.cl
 
       - key: EMAIL_HOST_PASSWORD
-        sync: false    # App Password de Google Workspace
+        sync: false    # Contraseña de aplicación (Google) o contraseña Zoho
 
       - key: DEFAULT_FROM_EMAIL
         sync: false    # Ej: Getaway Chile <sistema@getawaychile.cl>
 
-      # Superusuario para el primer login en producción
+      # Superusuario para el primer login en producción (solo primer deploy)
       - key: DJANGO_SUPERUSER_USERNAME
         sync: false
 

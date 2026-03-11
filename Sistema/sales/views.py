@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db import transaction
@@ -12,6 +13,7 @@ from .forms import SaleForm, PassengerFormSet, PassengerUpdateFormSet
 from catalog.models import TourAvailability, Tour
 
 
+@login_required
 def get_tour_details(request, tour_id):
     try:
         tour = Tour.objects.get(pk=tour_id)
@@ -27,6 +29,7 @@ def get_tour_details(request, tour_id):
         return JsonResponse({'error': 'Tour no encontrado'}, status=404)
 
 
+@login_required
 def check_availability(request):
     tour_id = request.GET.get('tour_id')
     date_str = request.GET.get('date')
@@ -463,7 +466,7 @@ class SaleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             
             # Make total_amount visually readonly but allow JS submissions
             if 'total_amount' in form.fields:
-                form.fields[field].widget.attrs['readonly'] = True
+                form.fields['total_amount'].widget.attrs['readonly'] = True
                 
         return form
 

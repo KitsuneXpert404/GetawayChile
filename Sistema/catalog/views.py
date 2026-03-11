@@ -1,30 +1,27 @@
 from django.shortcuts import render
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
+from core.mixins import AdminOrLogisticsRequiredMixin
 from .models import Tour
 from .forms import TourForm
 
-class AdminRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.is_authenticated and (self.request.user.role == 'ADMIN' or self.request.user.role == 'LOGISTICA')
-
 from django.views.generic import DetailView
 
-class TourDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class TourDetailView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, DetailView):
     model = Tour
     template_name = 'catalog/tour_detail.html'
     context_object_name = 'tour'
 
 
-class TourListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class TourListView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, ListView):
     model = Tour
     template_name = 'catalog/tour_list.html'
     context_object_name = 'tours'
     ordering = ['name']
 
-class TourCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class TourCreateView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, CreateView):
     model = Tour
     form_class = TourForm
     template_name = 'catalog/tour_form.html'
@@ -42,7 +39,7 @@ class TourCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         messages.error(self.request, error_msg)
         return super().form_invalid(form)
 
-class TourUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class TourUpdateView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, UpdateView):
     model = Tour
     form_class = TourForm
     template_name = 'catalog/tour_form.html'
@@ -60,7 +57,7 @@ class TourUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
         messages.error(self.request, error_msg)
         return super().form_invalid(form)
 
-class TourDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class TourDeleteView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, DeleteView):
     model = Tour
     template_name = 'catalog/tour_confirm_delete.html'
     success_url = reverse_lazy('tour_list')

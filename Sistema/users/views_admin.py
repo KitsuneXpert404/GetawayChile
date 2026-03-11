@@ -1,21 +1,16 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
 from django.contrib import messages
+from core.mixins import AdminOrDesarrolladorRequiredMixin
 from .forms import CustomUserCreationForm, CustomUserUpdateForm
 
 User = get_user_model()
 
-class AdminRequiredMixin(UserPassesTestMixin):
-    raise_exception = True  # Return 403 instead of infinite redirect loop
 
-    def test_func(self):
-        u = self.request.user
-        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role == 'ADMIN')
-
-class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class UserListView(LoginRequiredMixin, AdminOrDesarrolladorRequiredMixin, ListView):
     model = User
     template_name = 'core/user_list.html'
     context_object_name = 'users'
@@ -31,7 +26,7 @@ class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
             
         return context
 
-class UserCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class UserCreateView(LoginRequiredMixin, AdminOrDesarrolladorRequiredMixin, CreateView):
     model = User
     form_class = CustomUserCreationForm
     template_name = 'core/user_form.html'
@@ -41,7 +36,7 @@ class UserCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         messages.success(self.request, f"Usuario creado exitosamente. Email institucional: {form.instance.email}")
         return super().form_valid(form)
 
-class UserUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class UserUpdateView(LoginRequiredMixin, AdminOrDesarrolladorRequiredMixin, UpdateView):
     model = User
     form_class = CustomUserUpdateForm
     template_name = 'core/user_form.html'
@@ -51,7 +46,7 @@ class UserUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
         messages.success(self.request, "Usuario actualizado correctamente.")
         return super().form_valid(form)
 
-class UserDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class UserDeleteView(LoginRequiredMixin, AdminOrDesarrolladorRequiredMixin, DeleteView):
     model = User
     template_name = 'core/user_confirm_delete.html'
     success_url = reverse_lazy('user_list')

@@ -12,13 +12,7 @@ from xhtml2pdf import pisa
 
 from sales.models import Sale, SaleTour
 from catalog.models import Tour
-from users.views_admin import AdminRequiredMixin
-
-from django.contrib.auth.mixins import UserPassesTestMixin
-
-class AdminOrLogisticsRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.is_authenticated and (self.request.user.role == 'ADMIN' or self.request.user.role == 'LOGISTICA')
+from core.mixins import AdminOrLogisticsRequiredMixin
 
 class SaleHistoryListView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin, ListView):
     template_name = 'core/history_sale_list.html'

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 import datetime
@@ -107,9 +107,6 @@ def _vendedor_context(user):
         'updated_time': timezone.localtime(timezone.now()).strftime('%H:%M'),
         'recent_sales': recent_sales,
     }
-
-    # Fallback
-    return render(request, 'core/dashboard_admin.html', _admin_context())
 
 
 MESES_ES = {
@@ -236,9 +233,18 @@ def _admin_context():
 
 # --- Report Exports ---
 
+def _user_can_export_sales(user):
+    """Solo ADMIN y LOGISTICA pueden exportar ventas a Excel."""
+    if not user or not user.is_authenticated:
+        return False
+    return getattr(user, 'is_admin', False) or user.role in ('ADMIN', 'LOGISTICA')
+
+
 @login_required
 def export_sales_excel(request):
-    """Export sales of the current month as an Excel file."""
+    """Export sales of the current month as an Excel file. Solo ADMIN y LOGISTICA."""
+    if not _user_can_export_sales(request.user):
+        return HttpResponseForbidden("No tiene permiso para exportar ventas.")
     try:
         import openpyxl
         from openpyxl.styles import Font, PatternFill, Alignment

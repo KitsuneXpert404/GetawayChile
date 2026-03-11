@@ -195,20 +195,28 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'  # Splash screen → auto-redirects to dashboard
 LOGOUT_REDIRECT_URL = 'home'
 
+# Dominio público (opcional). Para enlaces en correos; en Render suele bastar la URL del servicio.
+SITE_DOMAIN = os.environ.get("SITE_DOMAIN", "").strip()
+
 # ===================================================================
 # EMAIL — SMTP (Google Workspace / Zoho / otro)
-# Configura estas variables en Render > Environment
+# En producción (DEBUG=False) se usa SMTP; en dev puede ser console.
+# Configura en Render: EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, DEFAULT_FROM_EMAIL
 # ===================================================================
-EMAIL_BACKEND = os.environ.get(
-    "EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend"  # En dev, imprime en consola
-)
+if not DEBUG:
+    # Producción: forzar backend SMTP para que los correos se envíen de verdad
+    _email_backend = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+else:
+    _email_backend = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+
+EMAIL_BACKEND = _email_backend
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+_default_from = os.environ.get("DEFAULT_FROM_EMAIL", "").strip()
+DEFAULT_FROM_EMAIL = _default_from or EMAIL_HOST_USER or "noreply@getawaychile.cl"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # ===================================================================

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from core.mixins import AdminOrLogisticsRequiredMixin, LogisticsRequiredMixin
 from .models import DailyOperation, Vehicle
 from catalog.models import Tour, TourAvailability
 from sales.models import Sale
@@ -125,21 +126,8 @@ class LogisticsQuotasManagerView(LoginRequiredMixin, UserPassesTestMixin, Templa
         })
         return context
 
-class LogisticsRequiredMixin(UserPassesTestMixin):
-    raise_exception = True  # Return 403 instead of redirect loop for authenticated users
-
-    def test_func(self):
-        u = self.request.user
-        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
-
-class LogisticsHomeView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+class LogisticsHomeView(LoginRequiredMixin, LogisticsRequiredMixin, TemplateView):
     template_name = 'logistics/home.html'
-
-    raise_exception = True
-
-    def test_func(self):
-        u = self.request.user
-        return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
