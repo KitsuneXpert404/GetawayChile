@@ -27,10 +27,18 @@ urlpatterns = [
 
     # Trip logistics management (new logistics-only page)
     path('gestion-viajes/', views.TripManagementView.as_view(), name='logistics_trip_management'),
+    
+    # Vehicle occupancy map
+    path('ocupacion-vehiculos/', views.VehicleOccupancyDashboardView.as_view(), name='logistics_vehicle_occupancy'),
 
     # Logistics sale detail (read-only, for logistics users)
-    path('venta/<int:pk>/', views.LogisticsSaleDetailView.as_view(), name='logistics_sale_detail'),
+    path('auditoria_venta/<int:pk>/', views.LogisticsSaleDetailView.as_view(), name='logistics_sale_detail'),
     # Logistics sale manage (full management: confirm, cancel, assign, notify, traceability)
     path('gestionar/<int:pk>/', views.LogisticsSaleManageView.as_view(), name='logistics_sale_manage'),
+
+    # Field Operations (Guides and Conductors)
+    path('mis-viajes/', views.FieldOperationsDashboardView.as_view(), name='field_operations_dashboard'),
+    path('viajes/<int:pk>/check-in/', views.FieldOperationCheckInView.as_view(), name='field_operation_check_in'),
+    path('viajes/<int:pk>/check-out/', views.FieldOperationCheckOutView.as_view(), name='field_operation_check_out'),
 ]
 

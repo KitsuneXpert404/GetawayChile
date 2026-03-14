@@ -279,3 +279,26 @@ class TourVersionPDFReportView(LoginRequiredMixin, AdminOrLogisticsRequiredMixin
         if pisa_status.err:
             return HttpResponse('Error generando PDF', status=500)
         return response
+
+from django.views.generic import DetailView
+
+class AuditSaleDetailView(LoginRequiredMixin, DetailView):
+    """Read-only audit detail of a sale. Visible to those with access to history. NO action buttons."""
+    template_name = 'core/audit_sale_detail.html'
+    context_object_name = 'sale'
+
+    def get_queryset(self):
+        return Sale.objects.select_related(
+            'tour', 'seller', 'assigned_vehicle', 'confirmed_by'
+        ).prefetch_related(
+            'passengers',
+            'tour_stops__tour',
+            'tour_stops__assigned_vehicle',
+            'tour_stops__vehicle_assigned_by',
+            'tour_stops__stop_confirmed_by',
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['view_only'] = True
+        return ctx

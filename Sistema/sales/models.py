@@ -47,6 +47,7 @@ class Sale(models.Model):
     # Basic Client Info (Embedded for MVP speed as per user request to not overcomplicate yet)
     client_first_name = models.CharField(max_length=100, verbose_name="Nombres Cliente", default="")
     client_last_name = models.CharField(max_length=100, verbose_name="Apellidos Cliente", default="")
+    client_age = models.PositiveIntegerField(verbose_name="Edad", default=18)
     client_rut_passport = models.CharField(max_length=50, verbose_name="RUT/Pasaporte", default="00000000")
     client_nationality = models.CharField(max_length=50, choices=NationalityChoices.choices, default=NationalityChoices.CL, verbose_name="Nacionalidad")
     client_email = models.EmailField(verbose_name="Email", blank=True, default="")
@@ -212,6 +213,7 @@ class Passenger(models.Model):
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name="passengers")
     first_name = models.CharField(max_length=100, verbose_name="Nombres", default="")
     last_name = models.CharField(max_length=100, verbose_name="Apellidos", default="")
+    age = models.PositiveIntegerField(verbose_name="Edad", default=18)
     rut_passport = models.CharField(max_length=50, blank=True)
     nationality = models.CharField(max_length=50, choices=NationalityChoices.choices, default=NationalityChoices.CL, verbose_name="Nacionalidad")
 

@@ -332,12 +332,13 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def form_valid(self, form):
         context = self.get_context_data()
         passengers = context['passengers']
-        self.object = form.save(commit=False)
-        self.object.seller = self.request.user
+
+        # ── Validar formsets y stops antes de abrir la transacción ──
+        if not passengers.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, passengers=passengers))
 
         stops = _parse_tour_stops(self.request.POST)
 
-        # ── Validación: debe existir al menos un tour ──────────────
         if not stops:
             form.add_error(None, "Debes agregar al menos un Tour al itinerario antes de guardar la venta.")
             return self.form_invalid(form)
@@ -355,6 +356,9 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                         return self.form_invalid(form)
                 except ValueError:
                     pass
+
+        self.object = form.save(commit=False)
+        self.object.seller = self.request.user
 
         # Use first stop's data as the "primary" tour on the Sale record
         if stops:
@@ -383,9 +387,10 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             if self.object.is_private or not tour:
                 self.object.status = SaleStatus.PENDING_APPROVAL
                 self.object.save()
-                if passengers.is_valid():
-                    passengers.instance = self.object
-                    passengers.save()
+                
+                passengers.instance = self.object
+                passengers.save()
+                
                 _save_tour_stops(self.object, stops, pax)
                 messages.success(self.request, "Venta ingresada correctamente. Pendiente de confirmación logística.")
                 return redirect(self.get_success_url())
@@ -404,9 +409,9 @@ class SaleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             self.object.status = SaleStatus.PENDING_APPROVAL
             self.object.save()
             
-            if passengers.is_valid():
-                passengers.instance = self.object
-                passengers.save()
+            passengers.instance = self.object
+            passengers.save()
+            
             _save_tour_stops(self.object, stops, pax)
 
             dest_label = "Multidestino" if len(stops) > 1 else "Único destino"
@@ -515,6 +520,10 @@ class SaleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context = self.get_context_data()
         passengers = context['passengers']
 
+        # ── Validar formsets antes de procesos pesados ──
+        if not passengers.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, passengers=passengers))
+
         # Enforce field locks for Vendedores only (Admin/Logistica skip this)
         if self.request.user.role == 'VENDEDOR' and not getattr(self.request.user, 'is_admin', False):
             orig = Sale.objects.get(pk=self.object.pk)
@@ -563,8 +572,10 @@ class SaleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
                 self.object.tour_language = first.get('tour_language', 'ES')
                 self.object.is_private = bool(first.get('is_private', False))
             self.object.save()
-            if passengers.is_valid():
-                passengers.save()
+            
+            passengers.instance = self.object
+            passengers.save()
+            
             _save_tour_stops(self.object, stops, pax)
             messages.success(self.request, "Venta actualizada correctamente.")
             return redirect(self.success_url)
@@ -620,8 +631,17 @@ class _AdminOrLogisticsRequired(LoginRequiredMixin, UserPassesTestMixin):
         return u.is_authenticated and (getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA'])
 
 
-class SaleConfirmView(_AdminOrLogisticsRequired, View):
+class SaleConfirmView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Confirm a pending sale (PENDIENTE → CONFIRMADA)."""
+
+    def test_func(self):
+        u = self.request.user
+        if getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA']:
+            return True
+        if u.role == 'VENDEDOR':
+            sale = get_object_or_404(Sale, pk=self.kwargs.get('pk'))
+            return sale.seller_id == u.pk
+        return False
 
     def post(self, request, pk):
         sale = get_object_or_404(Sale, pk=pk)
@@ -633,11 +653,20 @@ class SaleConfirmView(_AdminOrLogisticsRequired, View):
             messages.success(request, f"✅ Venta #{sale.pk} confirmada correctamente.")
         else:
             messages.warning(request, "Esta venta no se puede confirmar (ya está confirmada o cancelada).")
-        return redirect('sales:detail', pk=pk)
+        return redirect(request.META.get('HTTP_REFERER', 'sales:detail'))
 
 
-class SaleCancelView(_AdminOrLogisticsRequired, View):
+class SaleCancelView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Cancel a sale (any status → CANCELADA)."""
+
+    def test_func(self):
+        u = self.request.user
+        if getattr(u, 'is_admin', False) or u.role in ['ADMIN', 'LOGISTICA']:
+            return True
+        if u.role == 'VENDEDOR':
+            sale = get_object_or_404(Sale, pk=self.kwargs.get('pk'))
+            return sale.seller_id == u.pk
+        return False
 
     def post(self, request, pk):
         sale = get_object_or_404(Sale, pk=pk)
@@ -649,7 +678,7 @@ class SaleCancelView(_AdminOrLogisticsRequired, View):
             sale.cancellation_reason = reason
             sale.save(update_fields=['status', 'cancellation_reason'])
             messages.success(request, f"🚫 Venta #{sale.pk} cancelada.")
-        return redirect('sales:detail', pk=pk)
+        return redirect(request.META.get('HTTP_REFERER', 'sales:detail'))
 
 
 class SaleLogisticsAssignView(_AdminOrLogisticsRequired, View):
@@ -724,6 +753,8 @@ class SaleNotifyClientView(_AdminOrLogisticsRequired, View):
         else:
             stop_label = None
 
+        custom_message = request.POST.get('custom_message', '').strip()
+
         # ── Email ──────────────────────────────────────────────────
         if do_email:
             context = {
@@ -731,6 +762,7 @@ class SaleNotifyClientView(_AdminOrLogisticsRequired, View):
                 'stops': selected_stops,
                 'passengers': sale.passengers.all(),
                 'lang': lang,
+                'custom_message': custom_message,
             }
             _subjects = {
                 'EN': f"✈️ Booking Confirmed #{sale.pk}{' — ' + stop_label if stop_label else ''} — Getaway Chile",
@@ -744,6 +776,7 @@ class SaleNotifyClientView(_AdminOrLogisticsRequired, View):
                 f"Tu reserva #{sale.pk} ha sido CONFIRMADA.\n"
                 f"Hora de recogida: {sale.pickup_time or 'Por confirmar'}\n"
                 f"Hotel/Dirección: {sale.hotel_address or 'Sin especificar'}\n\n"
+                + (f"Observaciones: {custom_message}\n\n" if custom_message else "") +
                 f"¡Muchas gracias por elegir Getaway Chile!"
             )
             try:
@@ -763,7 +796,7 @@ class SaleNotifyClientView(_AdminOrLogisticsRequired, View):
         # ── WhatsApp ───────────────────────────────────────────────
         if do_whatsapp:
             from notifications.whatsapp import send_whatsapp_notification_for_stops
-            ok, detail = send_whatsapp_notification_for_stops(sale, selected_stops, lang)
+            ok, detail = send_whatsapp_notification_for_stops(sale, selected_stops, lang, custom_message)
             if ok:
                 messages.success(request, f"💬 WhatsApp enviado: {detail}")
             else:

@@ -58,7 +58,7 @@ def notify_new_sale(sender, instance, created, **kwargs):
     else:
         # Check for status changes to notify the seller
         if getattr(instance, '_old_status', None) and instance.status != instance._old_status:
-            if instance.status == SaleStatus.CANCELADA:
+            if instance.status == SaleStatus.CANCELLED:
                 msg = f"Tu Venta #{instance.id} ({tour_name}) ha sido CANCELADA por Administración."
                 Notification.objects.create(recipient=instance.seller, message=msg, link=link)
 

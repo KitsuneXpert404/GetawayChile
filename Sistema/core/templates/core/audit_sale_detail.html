@@ -1,0 +1,255 @@
+{% extends 'core/base_dashboard.html' %}
+{% load humanize %}
+
+{% block title %}Auditoría Venta #{{ sale.id }} | Getaway Chile{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .lsd-stop-card { background:rgba(44,110,122,.04); border:1px solid rgba(44,110,122,.14); border-radius:10px; }
+    .lsd-label { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#8899a4; display:block; margin-bottom:2px; }
+    .lsd-timeline { border-left:3px solid rgba(44,110,122,.2); padding-left:16px; position:relative; }
+    .lsd-timeline-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.7rem; flex-shrink:0; }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-eye me-2" style="color:var(--gc-teal);"></i>
+            Venta <span style="color:var(--gc-gold);">#{{ sale.id }}</span>
+            <small class="badge ms-2" style="background:#e5e7eb;color:#374151;font-size:.55em;vertical-align:middle;">Solo lectura</small>
+        </h1>
+        <p class="gc-page-sub mb-0">
+            {% if sale.is_private %}<span class="gc-badge gc-badge-gold"><i class="fas fa-star"></i> Tour Privado</span>
+            {% else %}<span class="gc-badge gc-badge-teal"><i class="fas fa-ticket-alt"></i> Tour Regular</span>{% endif %}
+            &nbsp;·&nbsp; Registrado el {{ sale.created_at|date:"d/m/Y H:i" }}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.history.back()" class="btn-gc-outline"><i class="fas fa-arrow-left"></i> Volver</button>
+    </div>
+</div>
+
+<div class="row g-4">
+    {# ===== LEFT COLUMN ===== #}
+    <div class="col-lg-8">
+
+        {# Client info #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header"><i class="fas fa-user-circle"></i> Datos del Cliente</div>
+            <div class="p-4">
+                <div class="row g-3" style="font-size:.9rem;">
+                    <div class="col-md-6">
+                        <span class="lsd-label">Nombre Completo</span>
+                        <div class="fw-bold">{{ sale.client_first_name }} {{ sale.client_last_name }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="lsd-label">RUT / Pasaporte</span>
+                        <div>{{ sale.client_rut_passport }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="lsd-label">Teléfono</span>
+                        <div>{{ sale.client_phone|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="lsd-label">Email</span>
+                        <div>{{ sale.client_email|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="lsd-label">Nacionalidad</span>
+                        <div>{{ sale.client_nationality }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="lsd-label">Hotel / Dirección de Recogida</span>
+                        <div class="fw-semibold" style="color:var(--gc-teal);">{{ sale.hotel_address|default:"No especificado" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Stops table #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header"><i class="fas fa-map-signs"></i> Destinos y Fechas</div>
+            <div class="table-responsive">
+                <table class="gc-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Tour</th>
+                            <th>Fecha</th>
+                            <th>Idioma</th>
+                            <th>Pax</th>
+                            <th>Estado Stop</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stop in sale.tour_stops.all %}
+                        <tr>
+                            <td class="ps-4 fw-semibold">{{ stop.tour.name|default:"Tour Privado" }}</td>
+                            <td>{{ stop.tour_date|date:"d/m/Y" }}</td>
+                            <td>{{ stop.get_tour_language_display }}</td>
+                            <td>
+                                {{ stop.pax_adults }} adulto{{ stop.pax_adults|pluralize:"s" }}
+                                {% if stop.pax_infants %}· {{ stop.pax_infants }} infante{{ stop.pax_infants|pluralize:"s" }}{% endif %}
+                            </td>
+                            <td>
+                                {% if stop.stop_status == 'CONFIRMADA' %}
+                                <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle"></i> Confirmada</span>
+                                {% elif stop.stop_status == 'CANCELADA' %}
+                                <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle"></i> Cancelada</span>
+                                {% else %}
+                                <span class="gc-badge" style="background:rgba(180,130,60,.12);color:#B5823C;"><i class="fas fa-clock"></i> Pendiente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# Logistics per stop #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header" style="background:linear-gradient(135deg,#1a4a55,var(--gc-teal));"><i class="fas fa-truck"></i> Logística de Operación</div>
+            <div class="p-0">
+                {% for stop in sale.tour_stops.all %}
+                <div class="py-3 px-4 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <div>
+                            <span class="fw-bold" style="color:var(--gc-teal);font-size:.95rem;">{{ stop.tour.name|default:"Tour Privado" }}</span>
+                            <span class="badge bg-light text-dark border ms-2 small">{{ stop.tour_date|date:"d/m/Y" }}</span>
+                        </div>
+                        {# Read-only: show Asignar button as disabled badge #}
+                        {% if stop.assigned_vehicle %}
+                        <span class="badge bg-success py-1 px-2"><i class="fas fa-check me-1"></i>Vehículo asignado</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark py-1 px-2"><i class="fas fa-exclamation-triangle me-1"></i>Sin asignar</span>
+                        {% endif %}
+                    </div>
+                    <div class="row g-3" style="font-size:.9rem;">
+                        <div class="col-md-4">
+                            <span class="lsd-label">Vehículo Asignado</span>
+                            {% if stop.assigned_vehicle %}
+                            <div class="fw-semibold"><i class="fas fa-truck me-1" style="color:var(--gc-teal);"></i>{{ stop.assigned_vehicle.plate }} — {{ stop.assigned_vehicle.owner_company }}</div>
+                            <div class="text-muted small">Cap: {{ stop.assigned_vehicle.capacity }} pax</div>
+                            {% else %}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Sin asignar</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2">
+                            <span class="lsd-label">Hora Recogida</span>
+                            <div class="fw-bold" style="color:var(--gc-gold);font-size:1.1rem;">
+                                {% if stop.pickup_time %}<i class="fas fa-clock me-1"></i>{{ stop.pickup_time|time:"H:i" }}
+                                {% else %}<span class="text-muted">—</span>{% endif %}
+                            </div>
+                        </div>
+                        {% if stop.vehicle_assigned_at %}
+                        <div class="col-md-3">
+                            <span class="lsd-label">Asignado</span>
+                            <div class="text-muted small">{{ stop.vehicle_assigned_at|date:"d/m/Y H:i" }}</div>
+                            {% if stop.vehicle_assigned_by %}<div class="small">{{ stop.vehicle_assigned_by.get_full_name|default:stop.vehicle_assigned_by.username }}</div>{% endif %}
+                        </div>
+                        {% endif %}
+                        {% if stop.logistics_notes %}
+                        <div class="col-12">
+                            <span class="lsd-label">Notas Internas</span>
+                            <div class="text-muted small">{{ stop.logistics_notes|linebreaksbr }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-4 text-center text-muted small">Sin stops registrados.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Passenger list #}
+        {% if sale.passengers.exists %}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header"><i class="fas fa-users"></i> Pasajeros</div>
+            <div class="table-responsive">
+                <table class="gc-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Nombres</th>
+                            <th>Apellidos</th>
+                            <th>RUT / Pasaporte</th>
+                            <th class="pe-4">Nacionalidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in sale.passengers.all %}
+                        <tr>
+                            <td class="ps-4 fw-bold" style="color:var(--gc-teal);">{{ forloop.counter }}</td>
+                            <td>{{ p.first_name }}</td>
+                            <td>{{ p.last_name }}</td>
+                            <td>{{ p.rut_passport|default:"—" }}</td>
+                            <td class="pe-4">{{ p.nationality }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    {# ===== RIGHT COLUMN ===== #}
+    <div class="col-lg-4">
+
+        {# Estado y pagos #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header"><i class="fas fa-receipt"></i> Estado y Pagos</div>
+            <div class="p-4" style="font-size:.9rem;">
+                <span class="lsd-label">Estado de la Venta</span>
+                {% if sale.status == 'CONFIRMADA' %}<span class="gc-badge gc-badge-green mb-3"><i class="fas fa-check-circle"></i> Confirmada</span>
+                {% elif sale.status == 'CANCELADA' %}<span class="gc-badge gc-badge-red mb-3"><i class="fas fa-times-circle"></i> Cancelada</span>
+                {% else %}<span class="gc-badge gc-badge-gold mb-3"><i class="fas fa-clock"></i> Pendiente</span>{% endif %}
+
+                <div class="mt-3">
+                    <span class="lsd-label">Estado de Pago</span>
+                    {% if sale.payment_status == 'PAGADO' %}<span class="gc-badge gc-badge-green"><i class="fas fa-check-circle"></i> Pagado</span>
+                    {% elif sale.payment_status == 'ABONADO' %}<span class="gc-badge gc-badge-gold"><i class="fas fa-clock"></i> Abonado</span>
+                    {% else %}<span class="gc-badge gc-badge-red"><i class="fas fa-hourglass-half"></i> Pendiente</span>{% endif %}
+                </div>
+
+                <hr class="my-3" style="border-color:rgba(44,110,122,.1);">
+                <div class="d-flex justify-content-between mb-1"><span class="text-muted">Moneda</span><span class="fw-semibold">{{ sale.currency }}</span></div>
+                <div class="d-flex justify-content-between mb-1"><span class="text-muted">Monto Pagado</span><span class="fw-semibold" style="color:var(--gc-teal);">
+                    {% if sale.currency == 'USD' %}US${% elif sale.currency == 'BRL' %}R${% else %}${% endif %}{{ sale.amount_paid|intcomma }}</span></div>
+                <div class="d-flex justify-content-between"><span class="text-muted fw-bold">Total</span><span class="fw-bold" style="color:var(--gc-gold);font-size:1.05rem;">
+                    {% if sale.currency == 'USD' %}US${% elif sale.currency == 'BRL' %}R${% else %}${% endif %}{{ sale.total_amount|intcomma }}</span></div>
+            </div>
+        </div>
+
+        {# Vendedor #}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header"><i class="fas fa-user-tie"></i> Responsable</div>
+            <div class="p-4" style="font-size:.9rem;">
+                <span class="lsd-label">Vendedor</span>
+                <div class="fw-semibold">{% if sale.seller %}{{ sale.seller.first_name }} {{ sale.seller.last_name }}{% else %}—{% endif %}</div>
+                {% if sale.confirmed_by %}
+                <hr class="my-2" style="border-color:rgba(44,110,122,.1);">
+                <span class="lsd-label">Confirmado por</span>
+                <div>{{ sale.confirmed_by.first_name }} {{ sale.confirmed_by.last_name }}</div>
+                {% if sale.confirmed_at %}<div class="text-muted small">{{ sale.confirmed_at|date:"d/m/Y H:i" }}</div>{% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        {# Only ADMIN can cancel, from here we just show info if cancelled #}
+        {% if sale.cancellation_reason %}
+        <div class="alert alert-danger mt-2">
+            <strong><i class="fas fa-ban me-1"></i>Motivo de Cancelación:</strong> {{ sale.cancellation_reason }}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

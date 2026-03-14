@@ -470,6 +470,15 @@ class StopLogisticsUpdateView(LoginRequiredMixin, LogisticsRequiredMixin, Update
         stop = form.save(commit=False)
         stop.vehicle_assigned_at = timezone.now()
         stop.vehicle_assigned_by = self.request.user
+        
+        # Auto-confirm stop if a vehicle is assigned
+        if stop.assigned_vehicle:
+            if stop.stop_status != 'CONFIRMADA':
+                stop.stop_status = 'CONFIRMADA'
+                stop.stop_confirmed_at = timezone.now()
+                # Using the request user as the confirmer
+                stop.stop_confirmed_by = getattr(self.request, 'user', None)
+
         stop.save()
         tour_label = stop.tour.name if stop.tour else 'Tour Privado'
         date_label = stop.tour_date.strftime('%d/%m/%Y') if stop.tour_date else ''
@@ -612,6 +621,30 @@ class LogisticsSaleManageView(LoginRequiredMixin, LogisticsRequiredMixin, Detail
                 events.append({'icon': 'fa-truck', 'color': '#2563eb', 'label': f'Vehículo asignado — {stop.tour.name if stop.tour else "Stop"}',
                                 'dt': stop.vehicle_assigned_at,
                                 'by': stop.vehicle_assigned_by.get_full_name() if stop.vehicle_assigned_by else '—'})
+                                
+            # Get DailyOperation for this stop to inject Field Operation Check-in/out
+            if stop.assigned_vehicle and stop.tour and stop.tour_date:
+                ops = DailyOperation.objects.filter(
+                    tour=stop.tour, date=stop.tour_date, vehicle=stop.assigned_vehicle
+                )
+                for op in ops:
+                    if op.check_in_at:
+                        events.append({
+                            'icon': 'fa-play-circle', 
+                            'color': '#10b981', 
+                            'label': f'Viaje Iniciado (Check-in) — {stop.tour.name}',
+                            'dt': op.check_in_at,
+                            'by': op.check_in_by.get_full_name() if op.check_in_by else 'Guía/Conductor'
+                        })
+                    if op.check_out_at:
+                        events.append({
+                            'icon': 'fa-flag-checkered', 
+                            'color': '#6b7280', 
+                            'label': f'Viaje Terminado (Check-out) — {stop.tour.name}',
+                            'dt': op.check_out_at,
+                            'by': op.check_out_by.get_full_name() if op.check_out_by else 'Guía/Conductor'
+                        })
+
         if sale.client_notified and sale.client_notified_at:
             events.append({'icon': 'fa-paper-plane', 'color': '#B5823C', 'label': 'Cliente notificado', 'dt': sale.client_notified_at, 'by': '—'})
         if sale.cancelled_at if hasattr(sale, 'cancelled_at') else False:
@@ -726,4 +759,192 @@ class SalesOperationsDashboardView(LoginRequiredMixin, UserPassesTestMixin, View
     def get(self, request, *args, **kwargs):
         return redirect('/dashboard/logistics/dashboard/')
 
+# ============================================================
+# FIELD OPERATIONS DASHBOARD (CONDUCTORS AND GUIDES)
+# ============================================================
+class FieldOperationsDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = 'logistics/field_operations.html'
+
+    def test_func(self):
+        u = self.request.user
+        return u.is_authenticated and u.role in ['CONDUCTOR', 'GUIA', 'ADMIN', 'LOGISTICA']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.db.models import Q
+        
+        selected_date_str = self.request.GET.get('date', '')
+        if not selected_date_str:
+            selected_date = datetime.date.today()
+            selected_date_str = selected_date.isoformat()
+        else:
+            try:
+                selected_date = datetime.date.fromisoformat(selected_date_str)
+            except ValueError:
+                selected_date = datetime.date.today()
+                selected_date_str = selected_date.isoformat()
+                
+        prev_date = (selected_date - datetime.timedelta(days=1)).isoformat()
+        next_date = (selected_date + datetime.timedelta(days=1)).isoformat()
+
+        # Build query for the current user's assigned operations
+        qs = DailyOperation.objects.filter(date=selected_date).select_related('tour', 'vehicle', 'driver', 'guide')
+        if not getattr(self.request.user, 'is_admin', False) and self.request.user.role not in ['ADMIN', 'LOGISTICA']:
+            qs = qs.filter(Q(driver=self.request.user) | Q(guide=self.request.user))
+            
+        operations = list(qs)
+        
+        # For each operation, attach the sales and passengers
+        for op in operations:
+            op.sales_list = SaleTour.objects.filter(
+                tour=op.tour, 
+                tour_date=op.date,
+                assigned_vehicle=op.vehicle
+            ).exclude(sale__status='CANCELADA').select_related('sale').prefetch_related('sale__passengers').order_by('pickup_time')
+            
+            pax_count = 0
+            for st in op.sales_list:
+                pax_count += (st.pax_adults + st.pax_infants)
+            
+            op.total_passengers = pax_count
+
+        context['selected_date'] = selected_date_str
+        context['selected_date_obj'] = selected_date
+        context['prev_date'] = prev_date
+        context['next_date'] = next_date
+        context['operations'] = operations
+        
+        return context
+
+class FieldOperationCheckInView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        u = self.request.user
+        return u.is_authenticated and u.role in ['CONDUCTOR', 'GUIA', 'ADMIN', 'LOGISTICA']
+        
+    def post(self, request, pk):
+        op = get_object_or_404(DailyOperation, pk=pk)
+        
+        if not op.check_in_at:
+            from django.utils import timezone
+            op.check_in_at = timezone.now()
+            op.check_in_by = request.user
+            op.save(update_fields=['check_in_at', 'check_in_by'])
+            messages.success(request, f"¡Check-in realizado con éxito para el viaje del {op.tour.name}!")
+        else:
+            messages.warning(request, "Este viaje ya tenía un Check-in registrado previamente.")
+            
+        return redirect(request.META.get('HTTP_REFERER', 'field_operations_dashboard'))
+
+class FieldOperationCheckOutView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        u = self.request.user
+        return u.is_authenticated and u.role in ['CONDUCTOR', 'GUIA', 'ADMIN', 'LOGISTICA']
+        
+    def post(self, request, pk):
+        op = get_object_or_404(DailyOperation, pk=pk)
+        
+        if not op.check_out_at:
+            from django.utils import timezone
+            op.check_out_at = timezone.now()
+            op.check_out_by = request.user
+            op.save(update_fields=['check_out_at', 'check_out_by'])
+            messages.success(request, f"Check-out (Fin de viaje) registrado para {op.tour.name}.")
+        else:
+            messages.warning(request, "Este viaje ya tenía un Check-out registrado previamente.")
+            
+        return redirect(request.META.get('HTTP_REFERER', 'field_operations_dashboard'))
+
+class VehicleOccupancyDashboardView(LoginRequiredMixin, LogisticsRequiredMixin, TemplateView):
+    """
+    Dashboard to visualize the occupancy generic seat map of all active operations for a given date.
+    """
+    template_name = 'logistics/vehicle_occupancy.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        from django.db.models import Sum
+        from sales.models import SaleTour
+        import datetime
+
+        date_str = self.request.GET.get('date', '')
+        if not date_str:
+            target_date = datetime.date.today()
+            date_str = target_date.isoformat()
+        else:
+            try:
+                target_date = datetime.date.fromisoformat(date_str)
+            except ValueError:
+                target_date = datetime.date.today()
+                date_str = target_date.isoformat()
+
+        # Fetch distinct vehicle+tour combinations from assigned SaleTours
+        assigned_stops = SaleTour.objects.filter(
+            tour_date=target_date,
+            assigned_vehicle__isnull=False,
+            stop_status='CONFIRMADA'
+        ).exclude(sale__status='CANCELADA').select_related(
+            'tour', 'assigned_vehicle', 'sale'
+        )
+
+        # Group the stops by vehicle and tour
+        from collections import defaultdict
+        groups = defaultdict(list)
+        for stop in assigned_stops:
+            groups[(stop.assigned_vehicle_id, stop.tour_id)].append(stop)
+
+        ops_data = []
+        for (vid, tid), stops in groups.items():
+            vehicle = stops[0].assigned_vehicle
+            tour = stops[0].tour
+            
+            pax = sum((s.pax_adults or 0) + (s.pax_infants or 0) for s in stops)
+            cap = vehicle.capacity if vehicle else 0
+            
+            # Find if there is a DailyOperation to get the driver (optional at this stage)
+            op = DailyOperation.objects.filter(date=target_date, vehicle=vehicle, tour=tour).first()
+            driver = op.driver if op and op.driver else vehicle.default_driver
+            
+            passengers_list = []
+            for stop in stops:
+                pax_count = (stop.pax_adults or 0) + (stop.pax_infants or 0)
+                pickup = stop.pickup_time or stop.sale.pickup_time
+                passengers_list.append({
+                    'sale_id': stop.sale.id,
+                    'client_name': f"{stop.sale.client_first_name} {stop.sale.client_last_name}".strip(),
+                    'pax_count': pax_count,
+                    'hotel': stop.sale.hotel_address,
+                    'pickup_time': pickup,
+                    'phone': stop.sale.client_phone,
+                    'notes': stop.logistics_notes
+                })
+                
+            # Sort passengers list by pickup time
+            passengers_list.sort(key=lambda x: x['pickup_time'] or datetime.time(23, 59))
+            
+            # Build generic seat array: length = capacity, True = occupied, False = empty
+            seats = []
+            for i in range(cap):
+                if i < pax:
+                    seats.append({'id': i+1, 'occupied': True})
+                else:
+                    seats.append({'id': i+1, 'occupied': False})
+                    
+            ops_data.append({
+                'vehicle': vehicle,
+                'tour': tour,
+                'driver': driver,
+                'capacity': cap,
+                'pax': pax,
+                'seats': seats,
+                'passengers_list': passengers_list,
+                'available': max(0, cap - pax),
+                'percentage': min(100, int((pax / cap) * 100)) if cap > 0 else 0
+            })
+
+        ctx['date_str'] = date_str
+        ctx['date_obj'] = target_date
+        ctx['prev_date'] = (target_date - datetime.timedelta(days=1)).isoformat()
+        ctx['next_date'] = (target_date + datetime.timedelta(days=1)).isoformat()
+        ctx['ops_data'] = ops_data
+        return ctx
 

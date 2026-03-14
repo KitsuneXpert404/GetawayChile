@@ -66,33 +66,7 @@
         </form>
         {% endif %}
 
-        {# Cancel button - disabled if PAGADO+CONFIRMADA and tour within 2 days #}
-        {% if sale.status != 'CANCELADA' %}
-        {% if sale.payment_status == 'PAGADO' and sale.status == 'CONFIRMADA' and days_to_tour is not None and days_to_tour < 2 %}
-        <button type="button" class="btn btn-outline-danger btn-sm px-3 action-btn" disabled title="No se puede cancelar: la venta está pagada y el tour es en menos de 2 días">
-            <i class="fas fa-lock me-1"></i> Cancelar (bloqueado)
-        </button>
-        {% else %}
-        <button type="button" class="btn btn-outline-danger btn-sm px-3 action-btn" data-bs-toggle="modal" data-bs-target="#cancelModal">
-            <i class="fas fa-times me-1"></i> Cancelar Venta
-        </button>
-        {% endif %}
-        {% endif %}
 
-        {# Asignar Logística: single-stop goes to the form directly; multi-stop is disabled #}
-        {% if stop_count <= 1 %}
-        {% with first_stop=sale.tour_stops.first %}
-        {% if first_stop %}
-        <a href="{% url 'logistics_stop_assign' sale_pk=sale.pk stop_pk=first_stop.pk %}" class="btn btn-outline-primary btn-sm px-3 action-btn">
-            <i class="fas fa-truck me-1"></i> Asignar Logística
-        </a>
-        {% endif %}
-        {% endwith %}
-        {% else %}
-        <button type="button" class="btn btn-outline-secondary btn-sm px-3 action-btn" disabled title="Usa los botones de asignación por stop en el panel de Logística de abajo">
-            <i class="fas fa-truck me-1"></i> Asignar Logística ↓
-        </button>
-        {% endif %}
 
         {% if sale.status == 'CONFIRMADA' %}{% if sale.client_email or sale.client_phone %}
         <button type="button" class="btn btn-sm px-3 action-btn {% if sale.client_notified %}btn-outline-secondary{% else %}btn-gc-gold{% endif %}" data-bs-toggle="modal" data-bs-target="#notifyModal">
@@ -189,9 +163,6 @@
                                     {% if stop.stop_status != 'CONFIRMADA' and stop.stop_status != 'CANCELADA' %}
                                     <form method="post" action="{% url 'sales:stop_confirm' sale_pk=sale.pk stop_pk=stop.pk %}" class="d-inline">{% csrf_token %}<button type="submit" class="btn btn-success btn-sm px-2 py-1" title="Confirmar este stop"><i class="fas fa-check"></i></button></form>
                                     {% endif %}
-                                    {% if stop.stop_status != 'CANCELADA' %}
-                                    <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" title="Cancelar este stop" data-bs-toggle="modal" data-bs-target="#stopCancelModal{{ stop.pk }}"><i class="fas fa-times"></i></button>
-                                    {% endif %}
                                 </div>
                             </td>
                             {% endif %}
@@ -206,33 +177,7 @@
             </div>
         </div>
 
-        {# Stop-cancel modals (one per stop) #}
-        {% if request.user.role == 'ADMIN' or request.user.role == 'LOGISTICA' %}
-        {% for stop in sale.tour_stops.all %}
-        <div class="modal fade" id="stopCancelModal{{ stop.pk }}" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h6 class="modal-title"><i class="fas fa-times-circle me-2"></i>Cancelar: {{ stop.tour.name|default:"Tour" }} — {{ stop.tour_date|date:"d/m/Y" }}</h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form method="post" action="{% url 'sales:stop_cancel' sale_pk=sale.pk stop_pk=stop.pk %}">
-                        {% csrf_token %}
-                        <div class="modal-body">
-                            <p class="text-muted small mb-3">Este stop quedará como <strong>CANCELADO</strong> independientemente del resto de los tours de la venta.</p>
-                            <label class="gc-label">Motivo de cancelación (opcional)</label>
-                            <textarea name="stop_cancel_reason" class="gc-input" rows="2" placeholder="Ej: Problema técnico, clima, solicitud del cliente..."></textarea>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn-gc-outline" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-danger px-4"><i class="fas fa-times me-1"></i> Cancelar Stop</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        {% endif %}
+
 
 
         {# Private details #}
@@ -583,77 +528,6 @@
 </div>
 
 
-{# Cancel Modal #}
-<div class="modal fade" id="cancelModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header" style="background:var(--gc-teal);color:#fff;">
-                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Cancelar Venta #{{ sale.id }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post" action="{% url 'sales:cancel' sale.pk %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <p class="text-muted mb-3">Esta acción marcará la venta como <strong>CANCELADA</strong>. Ingresa el
-                        motivo para el registro interno.</p>
-                    <label class="gc-label">Motivo de Cancelación</label>
-                    <textarea name="cancellation_reason" class="gc-input" rows="3"
-                        placeholder="Ej: Cliente solicitó cancelación, cambio de fecha..."></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-gc-outline" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger px-4">
-                        <i class="fas fa-times me-1"></i> Sí, Cancelar Venta
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-{# Logistics Modal #}
-<div class="modal fade" id="logisticsModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background:var(--gc-teal);color:#fff;">
-                <h5 class="modal-title"><i class="fas fa-truck me-2"></i>Asignar Logística — Venta #{{ sale.id }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post" action="{% url 'sales:assign_logistics' sale.pk %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-7">
-                            <label class="gc-label">Vehículo / Agencia Transportista</label>
-                            <select name="assigned_vehicle" class="gc-input form-select">
-                                <option value="">— Sin asignar —</option>
-                                {% for v in vehicle_options %}
-                                <option value="{{ v.pk }}" {% if v.is_selected %}selected{% endif %}>{{ v.label }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="gc-label">Hora de Recogida</label>
-                            <input type="time" name="pickup_time" class="gc-input"
-                                value="{% if sale.pickup_time %}{{ sale.pickup_time|time:'H:i' }}{% endif %}">
-                        </div>
-                        <div class="col-12">
-                            <label class="gc-label">Notas de Logística (Internas)</label>
-                            <textarea name="logistics_notes" class="gc-input" rows="3"
-                                placeholder="Ej: Recoger en puerta principal del hotel...">{{ sale.logistics_notes }}</textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-gc-outline" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn-gc-gold px-4">
-                        <i class="fas fa-save me-1"></i> Guardar Logística
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 {% endblock %}

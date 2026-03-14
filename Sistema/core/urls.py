@@ -55,6 +55,7 @@ urlpatterns = [
     # Audit History
     path('dashboard/history/sales/', views_history.SaleHistoryListView.as_view(), name='history_sale_list'),
     path('dashboard/history/sales/seller/<int:user_id>/', views_history.SaleHistoryBySellerListView.as_view(), name='history_sale_by_seller'),
+    path('dashboard/history/sales/<int:pk>/', views_history.AuditSaleDetailView.as_view(), name='audit_sale_detail'),
     path('dashboard/history/sales/<int:history_id>/restore/', views_history.SaleVersionRestoreView.as_view(), name='history_sale_restore'),
     path('dashboard/history/tours/', views_history.TourHistoryListView.as_view(), name='history_tour_list'),
     path('dashboard/history/tours/<int:history_id>/restore/', views_history.TourVersionRestoreView.as_view(), name='history_tour_restore'),

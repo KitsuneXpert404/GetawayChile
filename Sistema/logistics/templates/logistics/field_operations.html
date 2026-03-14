@@ -1,0 +1,173 @@
+{% extends "core/base_dashboard.html" %}
+
+{% block title %}Mis Viajes - Getaway Chile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4 mb-0"><i class="fas fa-route gc-text-gold"></i> Mis Viajes Asignados</h2>
+    
+    <!-- Date Navigation -->
+    <div class="btn-group shadow-sm">
+        <a href="?date={{ prev_date }}" class="btn btn-outline-secondary" title="Día Anterior">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <button class="btn btn-light border fw-bold" disabled style="opacity:1;">
+            {% if selected_date_str == today_str %}
+                Hoy ({{ selected_date_obj|date:"d M Y" }})
+            {% else %}
+                {{ selected_date_obj|date:"d M Y" }}
+            {% endif %}
+        </button>
+        <a href="?date={{ next_date }}" class="btn btn-outline-secondary" title="Día Siguiente">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+</div>
+
+{% if operations %}
+    <div class="row g-4">
+        {% for op in operations %}
+        <div class="col-12 col-xl-6">
+            <div class="gc-card h-100 border-0 shadow-sm">
+                <!-- Trip Header Status -->
+                <div class="gc-card-header d-flex justify-content-between align-items-center rounded-top
+                    {% if op.check_out_at %}bg-secondary text-white
+                    {% elif op.check_in_at %}bg-success text-white 
+                    {% else %}bg-dark text-white{% endif %}">
+                    <span>
+                        <i class="fas fa-van-shuttle me-2"></i> {{ op.tour.name }}
+                    </span>
+                    <span class="badge bg-light text-dark rounded-pill shadow-sm">
+                        {% if op.check_out_at %}Finalizado
+                        {% elif op.check_in_at %}En Curso
+                        {% else %}Pendiente{% endif %}
+                    </span>
+                </div>
+                
+                <div class="card-body p-4 bg-white position-relative">
+                    {% if op.check_out_at %}
+                    <div class="position-absolute d-flex justify-content-center align-items-center" style="top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.7);z-index:5;">
+                        <span class="fs-1 fw-bold text-secondary text-uppercase" style="transform: rotate(-15deg); border: 4px solid #6c757d; padding: 10px 20px; border-radius: 10px; opacity:0.8;">VIAJE CERRADO</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row mb-3 gx-3 gy-2">
+                        <div class="col-6 col-sm-4 text-center">
+                            <i class="fas fa-users fs-3 text-muted mb-2 d-block"></i>
+                            <span class="fw-bold fs-5 text-dark">{{ op.total_passengers }}</span>
+                            <small class="d-block text-muted">Pasajeros</small>
+                        </div>
+                        <div class="col-6 col-sm-4 text-center border-start border-end">
+                            <i class="fas fa-id-card fs-3 text-muted mb-2 d-block"></i>
+                            <span class="fw-bold fs-6 text-dark text-truncate d-block">{{ op.guide.get_full_name|default:"Sin Guía" }}</span>
+                            <small class="d-block text-muted">Guía Asignado</small>
+                        </div>
+                        <div class="col-12 col-sm-4 text-center mt-3 mt-sm-0">
+                            <i class="fas fa-car fs-3 text-muted mb-2 d-block"></i>
+                            <span class="fw-bold fs-6 text-dark d-block">
+                                {% if op.vehicle %}
+                                    <span class="badge bg-primary">{{ op.vehicle.plate }}</span>
+                                {% else %}
+                                    Sin Vehículo
+                                {% endif %}
+                            </span>
+                            <small class="d-block text-muted">{{ op.driver.get_full_name|default:"Sin Conductor" }}</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="fw-bold text-dark mt-4 mb-3"><i class="fas fa-list-ol me-2 gc-text-teal"></i> Lista de Recogidas</h6>
+                    
+                    {% if op.sales_list %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm align-middle fs-6">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Pasajeros</th>
+                                    <th>Titular</th>
+                                    <th>Hotel / Dir.</th>
+                                    <th>Obs.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stop in op.sales_list %}
+                                <tr>
+                                    <td class="fw-bold text-primary">{{ stop.pickup_time|time:"H:i"|default:"Por conf." }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary rounded-pill fs-7">{{ stop.pax_adults }}A + {{ stop.pax_infants }}I</span>
+                                    </td>
+                                    <td>{{ stop.sale.client_first_name }} {{ stop.sale.client_last_name }}</td>
+                                    <td>
+                                        <a href="https://www.google.com/maps/search/?api=1&query={{ stop.sale.hotel_address|urlencode }}" target="_blank" class="text-decoration-none" title="Ver en Google Maps">
+                                            <i class="fas fa-map-marker-alt text-danger me-1"></i> {{ stop.sale.hotel_address|truncatechars:35 }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if stop.logistics_notes %}
+                                        <i class="fas fa-info-circle text-info" data-bs-toggle="tooltip" title="{{ stop.logistics_notes }}"></i>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning py-2 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i> No hay pasajeros confirmados asignados a este vehículo en la ruta actual.
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-light p-3 d-flex justify-content-between align-items-center border-0 rounded-bottom">
+                    <div class="small">
+                        {% if op.check_in_at %}
+                            <span class="text-success fw-bold"><i class="fas fa-check-double"></i> Iniciado:</span> {{ op.check_in_at|date:"H:i" }} hrs.
+                            {% if op.check_out_at %}<br><span class="text-secondary fw-bold"><i class="fas fa-flag-checkered"></i> Terminado:</span> {{ op.check_out_at|date:"H:i" }} hrs.{% endif %}
+                        {% else %}
+                            <span class="text-muted"><i class="fas fa-clock"></i> Pendiente Iniciar</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2" style="z-index: 10;">
+                        <!-- ACTION BUTTONS -->
+                        {% if not op.check_in_at and not op.check_out_at %}
+                            <form method="POST" action="{% url 'field_operation_check_in' op.pk %}" onsubmit="return confirm('¿Confirmar el INICIO de este viaje? Se registrará la hora actual en el sistema.');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success fw-bold shadow-sm">
+                                    <i class="fas fa-play me-1"></i> Iniciar Viaje
+                                </button>
+                            </form>
+                        {% elif op.check_in_at and not op.check_out_at %}
+                            <form method="POST" action="{% url 'field_operation_check_out' op.pk %}" onsubmit="return confirm('¿Estás seguro de FINALIZAR este viaje? Esta acción no se puede deshacer.');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger fw-bold shadow-sm">
+                                    <i class="fas fa-stop me-1"></i> Terminar Viaje
+                                </button>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-outline-secondary fw-bold" disabled>
+                                <i class="fas fa-lock me-1"></i> Viaje Cerrado
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="d-flex justify-content-center align-items-center py-5">
+        <div class="text-center text-muted">
+            <i class="fas fa-map-marked-alt fa-4x mb-3 text-secondary" style="opacity: 0.5;"></i>
+            <h4 class="fw-normal">No tienes viajes asignados para este día</h4>
+            <p>Selecciona otra fecha o comunícate con el área de operaciones.</p>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

@@ -149,6 +149,14 @@
       </tr>
     </table>
 
+    <!-- Operator Observation -->
+    {% if custom_message %}
+    <div class="reminder-box" style="background:#f4f9f9; border-color:#2C6E7A; color:#1a4a55;">
+      <strong>{% if lang == 'EN' %}📌 Notes from Operator:{% elif lang == 'PT' %}📌 Observações do Operador:{% else %}📌 Observaciones del Operador:{% endif %}</strong>
+      <p style="margin:8px 0 0; line-height:1.6; white-space:pre-wrap;">{{ custom_message }}</p>
+    </div>
+    {% endif %}
+
     <!-- Reminders -->
     <div class="reminder-box">
       <strong>⚠️ {% if lang == 'EN' %}Important Reminders:{% elif lang == 'PT' %}Lembretes Importantes:{% else %}Recordatorios Importantes:{% endif %}</strong>

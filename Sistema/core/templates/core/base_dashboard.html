@@ -686,7 +686,17 @@
                         <i class="fas fa-home"></i> Resumen
                     </a>
                 </li>
+                
+                {% if user.role == 'CONDUCTOR' or user.role == 'GUIA' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if 'mis-viajes' in request.path %}active{% endif %}"
+                        href="{% url 'field_operations_dashboard' %}">
+                        <i class="fas fa-route"></i> Mis Viajes / Terreno
+                    </a>
+                </li>
+                {% endif %}
 
+                {% if user.role != 'CONDUCTOR' and user.role != 'GUIA' %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle {% if 'sales' in request.path or 'agencie' in request.path %}active{% endif %}"
                         href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -696,6 +706,7 @@
                         <li><a class="dropdown-item rounded py-2" href="{% url 'sales:create' %}"><i class="fas fa-plus me-1"></i> Nueva Venta</a></li>
                     </ul>
                 </li>
+                {% endif %}
 
                 {% if user.is_admin or user.role == 'LOGISTICA' %}
                 <li class="nav-item dropdown">
@@ -708,6 +719,7 @@
                                 href="{% url 'logistics_dashboard' %}"><i
                                     class="fas fa-route me-2"></i>Centro de Operaciones</a></li>
                         <li><a class="dropdown-item rounded py-2" href="{% url 'logistics_vehicle_list' %}"><i class="fas fa-truck me-1"></i> Flota y Vehículos</a></li>
+                        <li><a class="dropdown-item rounded py-2 {% if '/logistics/ocupacion_vehiculos/' in request.path %}active{% endif %}" href="{% url 'logistics_vehicle_occupancy' %}"><i class="fas fa-bus-alt me-1"></i> Mapa de Ocupación</a></li>
                         <li><a class="dropdown-item rounded py-2" href="{% url 'logistics_quotas_manager' %}"><i class="fas fa-ticket-alt me-1"></i> Gestión de Cupos</a></li>
                         {% if user.is_admin %}
                         <li><hr class="dropdown-divider" style="border-color: rgba(44,110,122,0.1)"></li>

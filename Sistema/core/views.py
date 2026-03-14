@@ -25,6 +25,9 @@ def dashboard(request):
     if user.role == 'VENDEDOR':
         return render(request, 'core/dashboard_vendedor.html', _vendedor_context(user))
 
+    if user.role in ['CONDUCTOR', 'GUIA']:
+        return redirect('field_operations_dashboard')
+
     if user.role == 'LOGISTICA':
         return redirect('logistics_dashboard')
 

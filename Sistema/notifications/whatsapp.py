@@ -27,7 +27,7 @@ def get_language_for_nationality(nationality: str) -> str:
 
 
 # ── Message templates ──────────────────────────────────────────────
-def _build_message(sale, lang: str, stops=None) -> str:
+def _build_message(sale, lang: str, stops=None, custom_message: str = None) -> str:
     """Build WhatsApp message. `stops` is an iterable of SaleTour objects.
     If None, all stops of the sale are used."""
     name = f"{sale.client_first_name} {sale.client_last_name}".strip()
@@ -79,6 +79,21 @@ def _build_message(sale, lang: str, stops=None) -> str:
         else:
             pax_text = f"👥 *Pasajeros:* {pax}\n"
 
+    # Format Financials
+    sym = 'US$' if sale.currency == 'USD' else ('R$' if sale.currency == 'BRL' else '$')
+    balance = sale.total_amount - sale.amount_paid
+    if lang == 'PT':
+        fin_text = f"💰 *Pagamento:*\n  • Total: {sym}{sale.total_amount:,.0f}\n  • Pago: {sym}{sale.amount_paid:,.0f}\n" + (f"  • *Saldo devedor:* {sym}{balance:,.0f}\n" if balance > 0 else "")
+    elif lang == 'EN':
+        fin_text = f"💰 *Payment:*\n  • Total: {sym}{sale.total_amount:,.0f}\n  • Paid: {sym}{sale.amount_paid:,.0f}\n" + (f"  • *Balance due:* {sym}{balance:,.0f}\n" if balance > 0 else "")
+    else:
+        fin_text = f"💰 *Pagos:*\n  • Total: {sym}{sale.total_amount:,.0f}\n  • Pagado: {sym}{sale.amount_paid:,.0f}\n" + (f"  • *Saldo pendiente:* {sym}{balance:,.0f}\n" if balance > 0 else "")
+
+    obs_text = ""
+    if custom_message:
+        obs_title = "📌 *Observações:*" if lang == 'PT' else ("📌 *Notes:*" if lang == 'EN' else "📌 *Observaciones:*")
+        obs_text = f"\n{obs_title}\n{custom_message}\n"
+
     if lang == 'PT':
         return (
             f"✈️ *Reserva Confirmada!* — Getaway Chile\n\n"
@@ -87,6 +102,8 @@ def _build_message(sale, lang: str, stops=None) -> str:
             f"{tour_text}\n"
             f"📍 *Endereço de coleta:* {hotel}\n"
             f"{pax_text}\n"
+            f"{fin_text}"
+            f"{obs_text}\n"
             f"Por favor, esteja no local *10 minutos antes* do horário indicado.\n"
             f"Leve documento de identidade ou passaporte válido.\n\n"
             f"Até logo! 🌄\n"
@@ -100,6 +117,8 @@ def _build_message(sale, lang: str, stops=None) -> str:
             f"{tour_text}\n"
             f"📍 *Pick-up address:* {hotel}\n"
             f"{pax_text}\n"
+            f"{fin_text}"
+            f"{obs_text}\n"
             f"Please be ready at the pick-up location *10 minutes early*.\n"
             f"Bring a valid ID or passport.\n\n"
             f"See you soon! 🌄\n"
@@ -113,6 +132,8 @@ def _build_message(sale, lang: str, stops=None) -> str:
             f"{tour_text}\n"
             f"📍 *Dirección de recogida:* {hotel}\n"
             f"{pax_text}\n"
+            f"{fin_text}"
+            f"{obs_text}\n"
             f"Por favor, espera en el lugar indicado *10 minutos antes* de la hora.\n"
             f"Lleva documento de identidad o pasaporte vigente.\n\n"
             f"¡Nos vemos pronto! 🌄\n"

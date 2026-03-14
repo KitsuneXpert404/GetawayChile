@@ -9,7 +9,7 @@ class SaleForm(forms.ModelForm):
     class Meta:
         model = Sale
         fields = [
-            'client_first_name', 'client_last_name', 'client_rut_passport',
+            'client_first_name', 'client_last_name', 'client_age', 'client_rut_passport',
             'client_nationality', 'client_email', 'client_phone', 'hotel_address',
             'origin_channel', 'agency', 'currency',
             'payment_status', 'amount_paid', 'total_amount', 
@@ -20,6 +20,7 @@ class SaleForm(forms.ModelForm):
             'tour_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'onkeydown': 'return false'}),
             'client_first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombres'}),
             'client_last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
+            'client_age': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
             'client_rut_passport': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '12.345.678-9'}),
             'client_nationality': forms.Select(attrs={'class': 'form-control'}),
             'client_email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'nombre@ejemplo.com'}),
@@ -47,10 +48,11 @@ class SaleForm(forms.ModelForm):
 
 PassengerFormSet = inlineformset_factory(
     Sale, Passenger,
-    fields=['first_name', 'last_name', 'rut_passport', 'nationality'],
+    fields=['first_name', 'last_name', 'age', 'rut_passport', 'nationality'],
     widgets={
         'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombres'}),
         'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
+        'age': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
         'rut_passport': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT/Pasaporte'}),
         'nationality': forms.Select(attrs={'class': 'form-select'}),
     },
@@ -60,10 +62,11 @@ PassengerFormSet = inlineformset_factory(
 
 PassengerUpdateFormSet = inlineformset_factory(
     Sale, Passenger,
-    fields=['first_name', 'last_name', 'rut_passport', 'nationality'],
+    fields=['first_name', 'last_name', 'age', 'rut_passport', 'nationality'],
     widgets={
         'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombres'}),
         'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
+        'age': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
         'rut_passport': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT/Pasaporte'}),
         'nationality': forms.Select(attrs={'class': 'form-select'}),
     },

@@ -7,6 +7,7 @@ class Role(models.TextChoices):
     VENDEDOR = "VENDEDOR", "Vendedor"
     LOGISTICA = "LOGISTICA", "Logística"
     CONDUCTOR = "CONDUCTOR", "Conductor"
+    GUIA = "GUIA", "Guía"
     DESARROLLADOR = "DESARROLLADOR", "Desarrollador"
 
 
@@ -55,3 +56,7 @@ class CustomUser(AbstractUser):
     @property
     def is_vendedor(self):
         return self.role == Role.VENDEDOR or self.is_admin
+
+    @property
+    def is_guia(self):
+        return self.role == Role.GUIA or self.is_admin

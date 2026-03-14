@@ -58,7 +58,7 @@
                         {{ form.logistics_notes }}
                     </div>
                     <div class="d-flex justify-content-between">
-                        <a href="{% url 'sales:detail' sale.pk %}" class="btn-gc-outline">Cancelar</a>
+                        <a href="{% url 'logistics_sale_manage' sale.pk %}" class="btn-gc-outline">Cancelar</a>
                         <button type="submit" class="btn-gc-primary px-5">
                             <i class="fas fa-save me-2"></i>Guardar Asignación
                         </button>

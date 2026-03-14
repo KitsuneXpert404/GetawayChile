@@ -115,27 +115,51 @@ class DailyOperation(models.Model):
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True, 
-        related_name="assigned_operations",
-        limit_choices_to={'role': 'CONDUCTOR'} # Assuming 'CONDUCTOR' role key
+        related_name="assigned_driver_operations",
+        limit_choices_to={'role': 'CONDUCTOR'},
+        verbose_name="Conductor"
+    )
+    guide = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name="assigned_guide_operations",
+        limit_choices_to={'role': 'GUIA'},
+        verbose_name="Guía"
+    )
+    vehicle = models.ForeignKey(
+        Vehicle, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name="daily_operations",
+        verbose_name="Vehículo"
     )
     status = models.CharField(
         max_length=20, 
         choices=OperationStatus.choices, 
-        default=OperationStatus.PENDING
+        default=OperationStatus.PENDING,
+        verbose_name="Estado Operativo"
     )
     notes = models.TextField(blank=True, verbose_name="Notas de Logística")
     
+    # Traceability / Check-in
+    check_in_at = models.DateTimeField(null=True, blank=True, verbose_name="Hora de Check-in (Inicio Vaje)")
+    check_in_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="check_ins_made", verbose_name="Iniciado por")
+    check_out_at = models.DateTimeField(null=True, blank=True, verbose_name="Hora de Check-out (Fin Viaje)")
+    check_out_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="check_outs_made", verbose_name="Finalizado por")
+
     # Internal metrics
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "logistics_daily_operation"
-        verbose_name = "Operación Diaria"
-        verbose_name_plural = "Operaciones Diarias"
-        unique_together = ['tour', 'date'] # For now, one operation per tour/date
+        verbose_name = "Operación Diaria (Grupo Viaje)"
+        verbose_name_plural = "Operaciones Diarias (Grupos Viaje)"
         ordering = ['date', 'tour__name']
 
     def __str__(self):
-        return f"{self.date} - {self.tour.name} ({self.get_status_display()})"
+        return f"{self.date} - {self.tour.name} - Vehículo: {self.vehicle.plate if self.vehicle else 'Sin asignar'} ({self.get_status_display()})"
 
