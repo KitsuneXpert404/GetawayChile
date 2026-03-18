@@ -76,7 +76,7 @@ class Sale(models.Model):
     status = models.CharField(
         max_length=20, 
         choices=SaleStatus.choices, 
-        default=SaleStatus.CONFIRMED,
+        default=SaleStatus.PENDING_APPROVAL,
         verbose_name="Estado de Venta"
     )
     voucher_image = models.ImageField(upload_to='vouchers/%Y/%m/', blank=True, null=True, verbose_name="Comprobante 1")

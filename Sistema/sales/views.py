@@ -849,3 +849,60 @@ class StopCancelView(_AdminOrLogisticsRequired, View):
         date_label = stop.tour_date.strftime('%d/%m/%Y') if stop.tour_date else ''
         messages.warning(request, f"Stop '{tour_label} {date_label}' CANCELADO.")
         return redirect('sales:detail', pk=sale_pk)
+
+
+# ============================================================
+# VENDEDOR-EXCLUSIVE SALE MANAGEMENT VIEWS
+# ============================================================
+
+class _VendedorOwnerRequired(LoginRequiredMixin, UserPassesTestMixin):
+    """Mixin: Only for VENDEDOR who owns the sale. 403 for all other roles."""
+    raise_exception = True
+
+    def test_func(self):
+        u = self.request.user
+        if not u.is_authenticated or u.role != 'VENDEDOR':
+            return False
+        sale = get_object_or_404(Sale, pk=self.kwargs.get('pk'))
+        return sale.seller_id == u.pk
+
+
+class VendedorSaleManageView(_VendedorOwnerRequired, View):
+    """
+    Exclusive Vendedor dashboard to manage their own sale:
+    - View sale details (read-only)
+    - Confirm the sale
+    - Cancel the sale with a reason
+    - Add observations/notes for logistics
+    """
+    template_name = 'sales/vendedor_sale_manage.html'
+
+    def get(self, request, pk):
+        sale = get_object_or_404(Sale, pk=pk)
+        ctx = {
+            'sale': sale,
+            'stops': sale.tour_stops.select_related('tour').order_by('order', 'id'),
+            'passengers': sale.passengers.all(),
+            'can_confirm': sale.status == SaleStatus.PENDING_APPROVAL,
+            'can_cancel': sale.status != SaleStatus.CANCELLED,
+        }
+        return render(request, self.template_name, ctx)
+
+
+class VendedorSaleObservationsView(_VendedorOwnerRequired, View):
+    """POST only: Vendedor saves internal observations for logistics."""
+
+    def test_func(self):
+        u = self.request.user
+        if not u.is_authenticated or u.role != 'VENDEDOR':
+            return False
+        sale = get_object_or_404(Sale, pk=self.kwargs.get('pk'))
+        return sale.seller_id == u.pk
+
+    def post(self, request, pk):
+        sale = get_object_or_404(Sale, pk=pk)
+        observations = request.POST.get('logistics_notes', '').strip()
+        sale.logistics_notes = observations
+        sale.save(update_fields=['logistics_notes'])
+        messages.success(request, "📝 Observaciones guardadas para el equipo de logística.")
+        return redirect('sales:vendedor_manage', pk=pk)

@@ -156,13 +156,12 @@
                         <th style="width:18%;">Vehículo</th>
                         <th style="width:14%;">Estado</th>
                         <th style="width:14%;">Pago</th>
-                        <th class="text-end pe-4" style="width:110px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for tour_name, data in day_data.tours.items %}
                     <tr class="tour-divider">
-                        <td colspan="7" class="ps-4 py-2">
+                        <td colspan="6" class="ps-4 py-2">
                             <span class="fw-bold" style="color:var(--gc-teal);font-size:1rem;">{{ tour_name }}</span>
                             <span class="badge ms-2" style="background:var(--gc-teal);">{{ data.total_pax }} Pax total</span>
                             {% if data.cupo_disponible is not None %}
@@ -206,11 +205,7 @@
                             {% else %}<span class="badge bg-secondary px-2 shadow-sm">Pendiente</span>
                             {% endif %}
                         </td>
-                        <td class="text-end pe-4">
-                            <a href="/dashboard/logistics/venta/{{ sale.id }}/" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Ver"><i class="fas fa-eye"></i></a>
-                            <a href="{% url 'logistics_stop_assign' sale.id stop.pk %}" class="btn btn-sm btn-gc-primary py-1 px-2 ms-1" title="Asignar Logística"><i class="fas fa-route"></i></a>
-                        </td>
-                    </tr>
+                        </tr>
                     {% endwith %}{% endfor %}
                     {% endfor %}
                 </tbody>

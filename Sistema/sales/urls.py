@@ -17,6 +17,9 @@ urlpatterns = [
     # Per-stop confirm / cancel
     path('ver/<int:sale_pk>/stop/<int:stop_pk>/confirmar/', views.StopConfirmView.as_view(), name='stop_confirm'),
     path('ver/<int:sale_pk>/stop/<int:stop_pk>/cancelar/', views.StopCancelView.as_view(), name='stop_cancel'),
+    # Vendedor-exclusive management panel
+    path('gestionar-vendedor/<int:pk>/', views.VendedorSaleManageView.as_view(), name='vendedor_manage'),
+    path('gestionar-vendedor/<int:pk>/observaciones/', views.VendedorSaleObservationsView.as_view(), name='vendedor_obs'),
     # API
     path('api/tour-details/<int:tour_id>/', views.get_tour_details, name='api_tour_details'),
     path('api/check-availability/', views.check_availability, name='api_check_availability'),

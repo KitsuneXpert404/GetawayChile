@@ -1,4 +1,4 @@
-﻿{% extends role_base_template %}
+{% extends role_base_template %}
 {% load humanize %}
 
 {% block title %}Mis Ventas | Getaway Chile{% endblock %}
@@ -90,6 +90,7 @@
                     <th class="text-center">Pax</th>
                     <th>Total</th>
                     <th>Estado Pago</th>
+                    <th>Estado Venta</th>
                     <th class="text-end pe-4">Acciones</th>
                 </tr>
             </thead>
@@ -152,12 +153,31 @@
                         <span class="gc-badge gc-badge-red"><i class="fas fa-hourglass-half"></i> Pendiente</span>
                         {% endif %}
                     </td>
+                    <td>
+                        {% if sale.status == 'CONFIRMADA' %}
+                        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle"></i> Confirmada</span>
+                        {% elif sale.status == 'CANCELADA' %}
+                        <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle"></i> Cancelada</span>
+                        {% else %}
+                        <span class="gc-badge" style="background:#fef3c7;color:#92400e;"><i class="fas fa-hourglass-half"></i> Por Confirmar</span>
+                        {% endif %}
+                    </td>
                     <td class="text-end pe-4">
-                        <div class="d-flex gap-1 justify-content-end">
+                        <div class="d-flex gap-1 justify-content-end flex-wrap">
                             <a href="{% url 'sales:detail' sale.pk %}" class="btn-gc-outline"
-                                style="font-size:.72rem;padding:.3rem .65rem;" title="Ver">
+                                style="font-size:.72rem;padding:.3rem .65rem;" title="Ver Detalle">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            {% if user.role == 'VENDEDOR' %}
+                            <a href="{% url 'sales:update' sale.pk %}" class="btn-gc-outline"
+                                style="font-size:.72rem;padding:.3rem .65rem;border-color:var(--gc-gold);color:var(--gc-gold);" title="Editar">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <a href="{% url 'sales:vendedor_manage' sale.pk %}" class="btn-gc-outline"
+                                style="font-size:.72rem;padding:.3rem .65rem;background:var(--gc-teal);color:#fff;border-color:var(--gc-teal);" title="Gestionar Venta">
+                                <i class="fas fa-tasks"></i> Gestionar
+                            </a>
+                            {% endif %}
                             {% if user.is_admin or user.role == 'LOGISTICA' %}
                             <a href="{% url 'sales:delete' sale.pk %}"
                                 style="font-size:.72rem;padding:.3rem .65rem;background:#c0392b;color:#fff;border-radius:6px;border:0;text-decoration:none;display:inline-flex;align-items:center;"

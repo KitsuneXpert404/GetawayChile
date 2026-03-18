@@ -7,7 +7,7 @@
     <div>
         <h1 class="gc-page-title mb-0"><i class="fas fa-chart-line me-2" style="color:var(--gc-gold);"></i>Mi Panel de
             Ventas</h1>
-        <p class="gc-page-sub mb-0">{{ month_name }} Â· Actualizado {{ updated_time }}</p>
+        <p class="gc-page-sub mb-0">{{ month_name }} &middot; Actualizado {{ updated_time }}</p>
     </div>
     <a href="{% url 'sales:create' %}" class="btn-gc-gold">
         <i class="fas fa-plus"></i> Registrar Venta
@@ -90,12 +90,8 @@
                 </div>
                 <div class="d-flex gap-3 mt-3 flex-wrap justify-content-center">
                     <span class="gc-badge gc-badge-green"><i class="fas fa-circle"></i> Pagados ({{ kpis.paid }})</span>
-                    <span class="gc-badge gc-badge-gold"><i class="fas fa-circle"></i> Abonados ({{ kpis.partial
-                        }})</span>
-
-                    <span class="gc-badge gc-badge-red"><i class="fas fa-circle"></i> Pendientes ({{ kpis.pending_pay
-                        }})</span>
-
+                    <span class="gc-badge gc-badge-gold"><i class="fas fa-circle"></i> Abonados ({{ kpis.partial }})</span>
+                    <span class="gc-badge gc-badge-red"><i class="fas fa-circle"></i> Pendientes ({{ kpis.pending_pay }})</span>
                 </div>
             </div>
         </div>
@@ -104,8 +100,8 @@
 
 <div class="gc-card">
     <div class="gc-card-header d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-clock-rotate-left me-1"></i> Mis Ultimas Ventas</span>
-        <a href="{% url 'sales:list' %}" class="btn-gc-outline" style="font-size:.78rem;padding:.3rem .8rem;">
+        <span><i class="fas fa-clock-rotate-left me-1"></i> Mis Últimas Ventas</span>
+        <a href="{% url 'sales:list' %}" class="btn-gc-gold" style="font-size:.78rem;padding:.4rem .9rem;">
             Ver todo <i class="fas fa-arrow-right ms-1"></i>
         </a>
     </div>
@@ -119,7 +115,7 @@
                     <th>Fecha Viaje</th>
                     <th>Total</th>
                     <th>Pago</th>
-                    <th class="text-end pe-4">Accion</th>
+                    <th class="text-end pe-4">Estado Confirmación</th>
                 </tr>
             </thead>
             <tbody>
@@ -134,7 +130,7 @@
                         <small class="text-muted">{{ sale.passengers_count }} Pax</small>
                     </td>
                     <td>{{ sale.tour.name }}</td>
-                    <td>{{ sale.tour_date|date:"d/m/Y"|default:"â€”" }}</td>
+                    <td>{{ sale.tour_date|date:"d/m/Y"|default:"&mdash;" }}</td>
                     <td>
                         <span class="fw-bold">{% if sale.currency == 'USD' %}US${% elif sale.currency == 'BRL' %}R${%
                             else %}${% endif %}{{ sale.total_amount|floatformat:0 }}</span>
@@ -149,30 +145,13 @@
                         {% endif %}
                     </td>
                     <td class="text-end pe-4">
-                        <div class="d-flex justify-content-end gap-1">
-                            <a href="{% url 'sales:detail' sale.id %}" class="btn-gc-outline" title="Ver Venta"
-                                style="font-size:.75rem;padding:.3rem .5rem;">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            
-                            {% if sale.status == 'PENDIENTE' %}
-                            <form method="POST" action="{% url 'sales:confirm' sale.id %}" style="display:inline;" onsubmit="return confirm('¿Confirmar esta venta?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-success" title="Confirmar Venta" style="font-size:.75rem;padding:.3rem .5rem;">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                            
-                            {% if sale.status != 'CANCELADA' %}
-                            <form method="POST" action="{% url 'sales:cancel' sale.id %}" style="display:inline;" onsubmit="return confirm('¿Cancelar esta venta definitvamente?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-danger" title="Cancelar Venta" style="font-size:.75rem;padding:.3rem .5rem;">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
+                        {% if sale.status == 'CONFIRMADA' %}
+                        <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>Confirmada</span>
+                        {% elif sale.status == 'CANCELADA' %}
+                        <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>Cancelada</span>
+                        {% else %}
+                        <span class="gc-badge" style="background:#fef3c7;color:#92400e;"><i class="fas fa-hourglass-half me-1"></i>Por Confirmar</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

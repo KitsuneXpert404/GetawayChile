@@ -41,7 +41,7 @@
         <a href="{{ back_url }}" class="btn-gc-outline">
             <i class="fas fa-arrow-left me-1"></i> Volver
         </a>
-        <a href="/dashboard/logistics/venta/{{ sale.pk }}/" class="btn btn-sm btn-outline-secondary px-3">
+        <a href="{% url 'logistics_sale_detail' sale.pk %}" class="btn btn-sm btn-outline-secondary px-3">
             <i class="fas fa-eye me-1"></i> Ver (solo lectura)
         </a>
     </div>
@@ -85,6 +85,113 @@
     </button>
     {% if sale.client_notified %}<span class="text-muted small"><i class="fas fa-check text-success me-1"></i>Notificado {{ sale.client_notified_at|date:"d/m H:i" }}</span>{% endif %}
     {% endif %}
+</div>
+{% endif %}
+
+{# ── VIAJE EXITOSO BANNER ────────────────────────────────── #}
+{% if sale_trip_completed %}
+<div class="alert mb-4 d-flex align-items-center gap-3 rounded-3 shadow-sm"
+     style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);border:none;border-left:5px solid #059669;">
+    <i class="fas fa-trophy fa-2x" style="color:#059669;"></i>
+    <div>
+        <div class="fw-bold fs-5" style="color:#065f46;">¡Viaje Exitoso! 🎉</div>
+        <div class="small" style="color:#047857;">Todos los viajes de esta venta han sido completados con check-out registrado.</div>
+    </div>
+</div>
+{% endif %}
+
+{# ── CONTROL DE VIAJE (Check-in / Check-out panel) ────────── #}
+{% if trip_operations %}
+<div class="gc-card mb-4">
+    <div class="gc-card-header d-flex align-items-center gap-2" style="background:linear-gradient(135deg,#1e4f5a,#2C6E7A);">
+        <i class="fas fa-route"></i> Control de Viaje en Terreno
+        <span class="ms-auto gc-badge" style="background:rgba(255,255,255,.15);color:#fff;font-size:.72rem;">
+            {{ trip_operations|length }} operación{{ trip_operations|length|pluralize:"es" }}
+        </span>
+    </div>
+    <div class="p-3">
+        <div class="row g-3">
+            {% for item in trip_operations %}
+            {% with op=item.op stop=item.stop %}
+            <div class="col-md-6">
+                <div class="rounded-3 border p-3 h-100
+                    {% if op.check_out_at %}border-success bg-success bg-opacity-10
+                    {% elif op.check_in_at %}border-warning bg-warning bg-opacity-10
+                    {% else %}border-secondary bg-light{% endif %}">
+
+                    {# Status badge #}
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="fw-bold" style="font-size:.9rem;color:var(--gc-teal);">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ stop.tour.name|default:"Tour Privado" }}
+                        </span>
+                        {% if op.check_out_at %}
+                        <span class="gc-badge" style="background:#d1fae5;color:#065f46;">
+                            <i class="fas fa-flag-checkered"></i> Completado
+                        </span>
+                        {% elif op.check_in_at %}
+                        <span class="gc-badge" style="background:#fef3c7;color:#92400e;">
+                            <i class="fas fa-play"></i> En Curso
+                        </span>
+                        {% else %}
+                        <span class="gc-badge gc-badge-gray">
+                            <i class="fas fa-clock"></i> Pendiente
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {# Vehicle + driver info #}
+                    <div class="small text-muted mb-3">
+                        <i class="fas fa-car me-1"></i> {{ op.vehicle.plate|default:"—" }} &nbsp;·&nbsp;
+                        <i class="fas fa-calendar me-1"></i> {{ op.date|date:"d/m/Y" }}
+                        {% if op.driver %}&nbsp;·&nbsp; <i class="fas fa-user me-1"></i>{{ op.driver.get_full_name }}{% endif %}
+                    </div>
+
+                    {# Timestamps #}
+                    <div class="mb-3" style="font-size:.8rem;">
+                        {% if op.check_in_at %}
+                        <div class="text-success fw-semibold">
+                            <i class="fas fa-play-circle me-1"></i> Check-in: {{ op.check_in_at|date:"d/m H:i" }}
+                            {% if op.check_in_by %}<span class="text-muted fw-normal">por {{ op.check_in_by.get_full_name }}</span>{% endif %}
+                        </div>
+                        {% endif %}
+                        {% if op.check_out_at %}
+                        <div class="mt-1" style="color:#065f46;font-weight:600;">
+                            <i class="fas fa-flag-checkered me-1"></i> Check-out: {{ op.check_out_at|date:"d/m H:i" }}
+                            {% if op.check_out_by %}<span class="text-muted fw-normal">por {{ op.check_out_by.get_full_name }}</span>{% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {# Action buttons #}
+                    <div class="d-flex gap-2">
+                        {% if not op.check_in_at %}
+                        <form method="POST" action="{{ item.check_in_url }}"
+                              onsubmit="return confirm('¿Iniciar viaje {{ stop.tour.name }}? Se registrará la hora actual.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm fw-bold shadow-sm">
+                                <i class="fas fa-play me-1"></i> Iniciar Viaje
+                            </button>
+                        </form>
+                        {% elif op.check_in_at and not op.check_out_at %}
+                        <form method="POST" action="{{ item.check_out_url }}"
+                              onsubmit="return confirm('¿Finalizar viaje {{ stop.tour.name }}? Esta acción no se puede deshacer.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm fw-bold shadow-sm">
+                                <i class="fas fa-stop me-1"></i> Terminar Viaje
+                            </button>
+                        </form>
+                        {% else %}
+                        <button class="btn btn-outline-success btn-sm fw-bold" disabled>
+                            <i class="fas fa-trophy me-1"></i> Viaje Exitoso
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
 </div>
 {% endif %}
 

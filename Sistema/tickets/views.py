@@ -39,7 +39,9 @@ class TicketListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['status_choices'] = TicketStatus.choices
+        # Explicitly convert to plain (str, str) tuples so the template
+        # {% for val, label in status_choices %} unpacks correctly.
+        context['status_choices'] = [(str(v), str(l)) for v, l in TicketStatus.choices]
         context['current_status'] = self.request.GET.get('status', '')
         return context
 

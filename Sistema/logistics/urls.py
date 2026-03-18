@@ -36,6 +36,9 @@ urlpatterns = [
     # Logistics sale manage (full management: confirm, cancel, assign, notify, traceability)
     path('gestionar/<int:pk>/', views.LogisticsSaleManageView.as_view(), name='logistics_sale_manage'),
 
+    # Logistics Exclusive Sales List (Ventas tab)
+    path('ventas/', views.LogisticsSaleListView.as_view(), name='logistics_sale_list'),
+
     # Field Operations (Guides and Conductors)
     path('mis-viajes/', views.FieldOperationsDashboardView.as_view(), name='field_operations_dashboard'),
     path('viajes/<int:pk>/check-in/', views.FieldOperationCheckInView.as_view(), name='field_operation_check_in'),

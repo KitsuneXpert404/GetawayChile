@@ -1,0 +1,297 @@
+{% extends role_base_template %}
+{% load humanize %}
+
+{% block title %}Gestionar Venta #{{ sale.id }} | Getaway Chile{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .status-banner {
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1rem;
+    }
+    .status-banner.confirmed { background: #d1fae5; color: #065f46; border: 1.5px solid #6ee7b7; }
+    .status-banner.pending   { background: #fef3c7; color: #92400e; border: 1.5px solid #fbbf24; }
+    .status-banner.cancelled { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
+
+    .action-section {
+        border-left: 4px solid var(--gc-teal);
+        padding-left: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+    .action-section.danger { border-color: #e53e3e; }
+    .action-section.note   { border-color: var(--gc-gold); }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="gc-page-title mb-0">
+            <i class="fas fa-tasks me-2" style="color:var(--gc-gold);"></i>Gestionar Venta
+            <span class="text-muted fw-normal fs-5 ms-2">#{{ sale.id }}</span>
+        </h1>
+        <p class="gc-page-sub mb-0">Panel de gestión exclusivo del vendedor &middot; No comparte acciones con Logística</p>
+    </div>
+    <a href="{% url 'sales:list' %}" class="btn-gc-outline">
+        <i class="fas fa-arrow-left me-1"></i> Volver a Mis Ventas
+    </a>
+</div>
+
+<!-- Status Banner -->
+<div class="mb-4">
+    {% if sale.status == 'CONFIRMADA' %}
+    <div class="status-banner confirmed">
+        <i class="fas fa-check-circle fa-lg"></i>
+        Esta venta está <strong>CONFIRMADA</strong>
+        {% if sale.confirmed_by %} · Confirmada por {{ sale.confirmed_by.get_full_name }}{% endif %}
+        {% if sale.confirmed_at %} el {{ sale.confirmed_at|date:"d/m/Y H:i" }}{% endif %}
+    </div>
+    {% elif sale.status == 'CANCELADA' %}
+    <div class="status-banner cancelled">
+        <i class="fas fa-times-circle fa-lg"></i>
+        Esta venta está <strong>CANCELADA</strong>
+        {% if sale.cancellation_reason %} · Motivo: {{ sale.cancellation_reason }}{% endif %}
+    </div>
+    {% else %}
+    <div class="status-banner pending">
+        <i class="fas fa-hourglass-half fa-lg"></i>
+        Esta venta está <strong>PENDIENTE DE CONFIRMACIÓN</strong>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+
+    <!-- LEFT: Sale Info -->
+    <div class="col-lg-7">
+
+        <!-- Client & Tour Data -->
+        <div class="gc-card mb-4">
+            <div class="gc-card-header">
+                <i class="fas fa-user me-2"></i>Datos del Cliente y Reserva
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="small text-muted">Cliente</div>
+                        <div class="fw-bold">{{ sale.client_first_name }} {{ sale.client_last_name }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">RUT / Pasaporte</div>
+                        <div class="fw-bold">{{ sale.client_rut_passport|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Teléfono</div>
+                        <div>{{ sale.client_phone|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Email</div>
+                        <div>{{ sale.client_email|default:"—" }}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="small text-muted">Hotel / Dirección de Recogida</div>
+                        <div>{{ sale.hotel_address|default:"—" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tour Stops -->
+        <div class="gc-card mb-4">
+            <div class="gc-card-header">
+                <i class="fas fa-route me-2"></i>Destinos / Stops
+                {% if stops|length > 1 %}
+                <span class="ms-2 gc-badge gc-badge-gold">Multi-destino</span>
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="gc-table" style="font-size:0.88rem;">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Tour</th>
+                            <th>Fecha</th>
+                            <th>Idioma</th>
+                            <th>Pax</th>
+                            <th>Subtotal</th>
+                            <th>Estado Stop</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stop in stops %}
+                        <tr>
+                            <td class="ps-3 fw-semibold">{{ stop.tour.name|default:"Tour Privado" }}</td>
+                            <td>{{ stop.tour_date|date:"d/m/Y"|default:"—" }}</td>
+                            <td>{{ stop.tour_language|upper }}</td>
+                            <td>{{ stop.pax_adults }} ad. {% if stop.pax_infants %}/ {{ stop.pax_infants }} inf.{% endif %}</td>
+                            <td class="fw-bold" style="color:var(--gc-teal);">
+                                ${{ stop.subtotal|intcomma }}
+                            </td>
+                            <td>
+                                {% if stop.stop_status == 'CONFIRMADA' %}
+                                <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>Confirmado</span>
+                                {% elif stop.stop_status == 'CANCELADA' %}
+                                <span class="gc-badge gc-badge-red"><i class="fas fa-times-circle me-1"></i>Cancelado</span>
+                                {% else %}
+                                <span class="gc-badge" style="background:#fef3c7;color:#92400e;"><i class="fas fa-hourglass-half me-1"></i>Pendiente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-3 d-flex justify-content-end gap-3 border-top" style="background:#f8fafc;">
+                <div class="text-muted small">Total:</div>
+                <div class="fw-bold" style="color:var(--gc-teal);">
+                    {% if sale.currency == 'USD' %}US$ {{ sale.total_amount }}
+                    {% elif sale.currency == 'BRL' %}R$ {{ sale.total_amount }}
+                    {% else %}${{ sale.total_amount|intcomma }}{% endif %}
+                    ({{ sale.currency }})
+                </div>
+            </div>
+        </div>
+
+        <!-- Passengers -->
+        {% if passengers %}
+        <div class="gc-card mb-4">
+            <div class="gc-card-header">
+                <i class="fas fa-users me-2"></i>Pasajeros ({{ passengers|length }})
+            </div>
+            <div class="p-3">
+                {% for p in passengers %}
+                <div class="d-flex gap-3 align-items-center py-2 border-bottom" style="font-size:0.88rem;">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center fw-bold"
+                        style="width:32px;height:32px;color:var(--gc-teal);font-size:0.8rem;border:1.5px solid rgba(44,110,122,.2);">
+                        {{ forloop.counter }}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</div>
+                        <div class="text-muted small">{{ p.nationality }} &middot; {{ p.age }} años</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- RIGHT: Actions Panel -->
+    <div class="col-lg-5">
+        <div class="gc-card">
+            <div class="gc-card-header" style="background:linear-gradient(135deg,var(--gc-teal),#1a4a55); color:white;">
+                <i class="fas fa-bolt me-2"></i>Acciones del Vendedor
+            </div>
+            <div class="p-4">
+
+                <!-- CONFIRMAR VENTA -->
+                <div class="action-section mb-4">
+                    <h6 class="fw-bold text-gc-teal-dark mb-1"><i class="fas fa-check-circle me-2 text-success"></i>Confirmar Venta</h6>
+                    <p class="text-muted small mb-3">Confirma que esta reserva es válida y está lista para ser procesada por el equipo de logística.</p>
+                    {% if can_confirm %}
+                    <form method="post" action="{% url 'sales:confirm' sale.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-gc-primary w-100 justify-content-center"
+                            onclick="return confirm('¿Confirmar la Venta #{{ sale.id }}?')">
+                            <i class="fas fa-check me-2"></i>Confirmar esta Venta
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="small text-muted p-2 rounded" style="background:#f1f5f9;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {% if sale.status == 'CONFIRMADA' %}La venta ya fue confirmada.{% else %}La venta está cancelada, no se puede confirmar.{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- CANCELAR VENTA -->
+                <div class="action-section danger mb-4">
+                    <h6 class="fw-bold text-danger mb-1"><i class="fas fa-times-circle me-2"></i>Cancelar Venta</h6>
+                    <p class="text-muted small mb-3">Cancela esta venta. El equipo de logística será notificado del cambio.</p>
+                    {% if can_cancel %}
+                    <form method="post" action="{% url 'sales:cancel' sale.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <label class="gc-label">Motivo de Cancelación <span class="text-danger">*</span></label>
+                            <textarea name="cancellation_reason" class="gc-input" rows="2"
+                                placeholder="Ej: Cliente solicitó cancelar, error en fecha..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 justify-content-center"
+                            style="background:#c0392b;color:#fff;border:0;border-radius:8px;padding:.6rem 1.2rem;font-weight:600;"
+                            onclick="return confirm('¿Seguro que deseas CANCELAR la Venta #{{ sale.id }}? Esta acción no se puede deshacer fácilmente.')">
+                            <i class="fas fa-ban me-2"></i>Cancelar esta Venta
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="small text-muted p-2 rounded" style="background:#fff5f5;">
+                        <i class="fas fa-info-circle me-1"></i>La venta ya está cancelada.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- OBSERVACIONES PARA LOGÍSTICA -->
+                <div class="action-section note">
+                    <h6 class="fw-bold mb-1" style="color:#92400e;"><i class="fas fa-clipboard me-2"></i>Observaciones para Logística</h6>
+                    <p class="text-muted small mb-3">Deja notas internas que solo el equipo de logística podrá ver al gestionar esta venta (ej: necesidades especiales del cliente, instrucciones de recogida).</p>
+                    <form method="post" action="{% url 'sales:vendedor_obs' sale.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <textarea name="logistics_notes" class="gc-input" rows="4"
+                                placeholder="Ej: El cliente necesita asistencia para movilidad. Recoger antes de las 08:00 am en Lobby...">{{ sale.logistics_notes }}</textarea>
+                        </div>
+                        <button type="submit" class="btn-gc-outline w-100 justify-content-center">
+                            <i class="fas fa-save me-2"></i>Guardar Observaciones
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Payment summary card -->
+        <div class="gc-card mt-4">
+            <div class="gc-card-header">
+                <i class="fas fa-credit-card me-2"></i>Resumen de Pago
+            </div>
+            <div class="p-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Estado de Pago</span>
+                    {% if sale.payment_status == 'PAGADO' %}
+                    <span class="gc-badge gc-badge-green"><i class="fas fa-check-circle me-1"></i>Pagado</span>
+                    {% elif sale.payment_status == 'ABONADO' %}
+                    <span class="gc-badge gc-badge-gold"><i class="fas fa-clock me-1"></i>Abonado</span>
+                    {% else %}
+                    <span class="gc-badge gc-badge-red"><i class="fas fa-hourglass-half me-1"></i>Pendiente</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total</span>
+                    <span class="fw-bold" style="color:var(--gc-teal);">
+                        {% if sale.currency == 'USD' %}US$ {{ sale.total_amount }}
+                        {% elif sale.currency == 'BRL' %}R$ {{ sale.total_amount }}
+                        {% else %}${{ sale.total_amount|intcomma }}{% endif %}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Monto Pagado</span>
+                    <span class="fw-bold text-success">
+                        {% if sale.currency == 'USD' %}US$ {{ sale.amount_paid }}
+                        {% elif sale.currency == 'BRL' %}R$ {{ sale.amount_paid }}
+                        {% else %}${{ sale.amount_paid|intcomma }}{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

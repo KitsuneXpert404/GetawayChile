@@ -357,7 +357,7 @@ class LogisticsDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 'client_full_name': f'{sale.client_first_name} {sale.client_last_name}',
                 'client_email_short': (sale.client_email or '')[:22],
                 'client_phone': sale.client_phone or '—',
-                'detail_url': f'/dashboard/logistics/venta/{sale.pk}/',
+                'detail_url': reverse('logistics_sale_detail', args=[sale.pk]),
                 'manage_url': f'/dashboard/logistics/gestionar/{sale.pk}/',
                 'confirm_url': reverse('sales:confirm', args=[sale.pk]),
                 'cancel_url': reverse('sales:cancel', args=[sale.pk]),
@@ -651,7 +651,40 @@ class LogisticsSaleManageView(LoginRequiredMixin, LogisticsRequiredMixin, Detail
             events.append({'icon': 'fa-times-circle', 'color': '#dc2626', 'label': 'Venta cancelada', 'dt': sale.cancelled_at, 'by': '—'})
         events.sort(key=lambda e: e['dt'])
         ctx['trace_events'] = events
+
+        # ── Trip Operations: auto-create DailyOperation for today's stops with vehicle ──
+        trip_ops = []
+        today_date = datetime.date.today()
+        for stop in sale.tour_stops.all():
+            # Only show check-in for today's trips that have a vehicle assigned
+            if stop.assigned_vehicle and stop.tour and stop.tour_date and stop.tour_date == today_date:
+                op, _ = DailyOperation.objects.get_or_create(
+                    tour=stop.tour,
+                    date=stop.tour_date,
+                    vehicle=stop.assigned_vehicle,
+                    defaults={'status': 'PENDIENTE'}
+                )
+                # Re-fetch with select_related to get user names
+                op = DailyOperation.objects.select_related(
+                    'driver', 'guide', 'vehicle', 'check_in_by', 'check_out_by'
+                ).get(pk=op.pk)
+                trip_ops.append({
+                    'op': op,
+                    'stop': stop,
+                    'check_in_url': reverse('field_operation_check_in', args=[op.pk]),
+                    'check_out_url': reverse('field_operation_check_out', args=[op.pk]),
+                })
+        ctx['trip_operations'] = trip_ops
+        ctx['is_today'] = any(
+            stop.tour_date == today_date
+            for stop in sale.tour_stops.all()
+            if stop.assigned_vehicle and stop.tour_date
+        )
+        # "Viaje Exitoso": all today stops with ops have check_out done
+        all_checked_out = len(trip_ops) > 0 and all(t['op'].check_out_at for t in trip_ops)
+        ctx['sale_trip_completed'] = all_checked_out
         return ctx
+
 
 
 # ----------------- LOGISTICS / QUOTAS VIEWS -----------------
@@ -946,5 +979,158 @@ class VehicleOccupancyDashboardView(LoginRequiredMixin, LogisticsRequiredMixin, 
         ctx['prev_date'] = (target_date - datetime.timedelta(days=1)).isoformat()
         ctx['next_date'] = (target_date + datetime.timedelta(days=1)).isoformat()
         ctx['ops_data'] = ops_data
+        return ctx
+
+
+# ============================================================
+# LOGISTICS-EXCLUSIVE SALES LIST VIEW
+# ============================================================
+from django.db.models import Sum, Count, Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from sales.models import SaleStatus
+
+
+class LogisticsSaleListView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """
+    Exclusive sales management list for LOGISTICA role.
+    Shows all sales with advanced filters and KPI cards.
+    Does NOT touch Admin or Vendedor views/templates.
+    """
+    template_name = 'logistics/logistics_sale_list.html'
+
+    def test_func(self):
+        u = self.request.user
+        return u.is_authenticated and u.role in ['LOGISTICA', 'ADMIN']
+
+    def get_context_data(self, **kwargs):
+        from users.models import CustomUser
+        ctx = super().get_context_data(**kwargs)
+        today = datetime.date.today()
+        first_of_month = today.replace(day=1)
+        GET = self.request.GET
+
+        # ── Base queryset (all sales, newest first) ──────────────────
+        qs = Sale.objects.select_related(
+            'tour', 'seller', 'assigned_vehicle'
+        ).prefetch_related(
+            'tour_stops__tour',
+            'tour_stops__assigned_vehicle',
+        ).order_by('-created_at')
+
+        # ── Filters ──────────────────────────────────────────────────
+        q = GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(client_first_name__icontains=q) |
+                Q(client_last_name__icontains=q) |
+                Q(client_rut_passport__icontains=q) |
+                Q(client_phone__icontains=q) |
+                Q(client_email__icontains=q) |
+                Q(hotel_address__icontains=q) |
+                Q(tour__name__icontains=q)
+            )
+
+        status_filter = GET.get('status', '')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+
+        payment_filter = GET.get('payment', '')
+        if payment_filter:
+            qs = qs.filter(payment_status=payment_filter)
+
+        seller_filter = GET.get('seller', '')
+        if seller_filter:
+            qs = qs.filter(seller_id=seller_filter)
+
+        date_from = GET.get('date_from', '')
+        if date_from:
+            try:
+                qs = qs.filter(created_at__date__gte=datetime.date.fromisoformat(date_from))
+            except ValueError:
+                pass
+
+        date_to = GET.get('date_to', '')
+        if date_to:
+            try:
+                qs = qs.filter(created_at__date__lte=datetime.date.fromisoformat(date_to))
+            except ValueError:
+                pass
+
+        tour_date_filter = GET.get('tour_date', '')
+        if tour_date_filter:
+            try:
+                qs = qs.filter(tour_date=datetime.date.fromisoformat(tour_date_filter))
+            except ValueError:
+                pass
+
+        vehicle_filter = GET.get('vehicle', '')
+        if vehicle_filter == 'sin_asignar':
+            # Exclude sales where at least one stop has a vehicle assigned
+            qs = qs.exclude(tour_stops__assigned_vehicle__isnull=False)
+
+        # ── KPIs (always over ALL sales this month, unfiltered) ──────
+        all_this_month = Sale.objects.filter(created_at__date__gte=first_of_month)
+        kpis = {
+            'total': all_this_month.count(),
+            'confirmadas': all_this_month.filter(status='CONFIRMADA').count(),
+            'pendientes': all_this_month.filter(status='PENDIENTE').count(),
+            'canceladas': all_this_month.filter(status='CANCELADA').count(),
+            'revenue_clp': all_this_month.filter(currency='CLP').aggregate(
+                t=Sum('total_amount'))['t'] or 0,
+            'sin_vehiculo': Sale.objects.filter(
+                assigned_vehicle__isnull=True,
+                status='CONFIRMADA',
+                tour_date__gte=today
+            ).count(),
+            'sin_notificar': Sale.objects.filter(
+                client_notified=False,
+                status='CONFIRMADA'
+            ).count(),
+        }
+
+        # ── Pagination ───────────────────────────────────────────────
+        paginator = Paginator(qs, 20)
+        page_num = GET.get('page', 1)
+        try:
+            page_obj = paginator.page(page_num)
+        except (PageNotAnInteger, EmptyPage):
+            page_obj = paginator.page(1)
+
+        # ── Filter option lists ──────────────────────────────────────
+        sellers = CustomUser.objects.filter(
+            role='VENDEDOR', is_active=True
+        ).order_by('first_name')
+
+        ctx.update({
+            'page_obj': page_obj,
+            'sales': page_obj.object_list,
+            'kpis': kpis,
+            # Active filter values (to repopulate form)
+            'q': q,
+            'status_filter': status_filter,
+            'payment_filter': payment_filter,
+            'seller_filter': seller_filter,
+            'date_from': date_from,
+            'date_to': date_to,
+            'tour_date_filter': tour_date_filter,
+            'vehicle_filter': vehicle_filter,
+            # Options
+            'sellers_options': sellers,
+            'status_options': [
+                ('', 'Todos los estados'),
+                ('PENDIENTE', 'Por Confirmar'),
+                ('CONFIRMADA', 'Confirmada'),
+                ('CANCELADA', 'Cancelada'),
+            ],
+            'payment_options': [
+                ('', 'Todos los pagos'),
+                ('PAGADO', 'Pagado'),
+                ('ABONADO', 'Abonado'),
+                ('PENDIENTE', 'Pendiente'),
+            ],
+            'month_name': ['', 'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                           'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][today.month],
+            'total_count': qs.count(),
+        })
         return ctx
 
