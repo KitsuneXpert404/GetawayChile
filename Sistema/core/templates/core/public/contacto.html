@@ -1,0 +1,162 @@
+{% extends 'core/public/base_public.html' %}
+{% load static %}
+
+{% block title %}Contacto — Getaway Chile{% endblock %}
+{% block meta_description %}Escríbenos a contacto@getawaychile.cl o al WhatsApp +56 9 9415 5655 para resolver dudas sobre tours y transportes privados en el sur de Chile.{% endblock %}
+
+{% block extra_css %}
+.contact-hero {
+    background: var(--dark); padding: 6rem 0 4rem; text-align: center; color: #fff;
+    position: relative; overflow: hidden;
+}
+.contact-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1510133744874-0968945faef9?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover; background-position: center; opacity: .15;
+}
+
+.contact-layout {
+    display: grid; grid-template-columns: 1fr 1.5fr; gap: 4rem;
+    margin-top: -3rem; position: relative; z-index: 10;
+}
+
+.ct-info-card {
+    background: #fff; border-radius: var(--r); padding: 2.5rem 2rem;
+    box-shadow: var(--shadow-md); border: 1px solid var(--border);
+}
+.ct-item { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 2rem; }
+.ct-item:last-child { margin-bottom: 0; }
+.ct-ico {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(10,76,94,.08); color: var(--teal); font-size: 1.2rem;
+}
+.ct-item h4 { font-family: 'Lora', serif; font-size: 1.1rem; color: var(--ink); margin-bottom: .2rem; }
+.ct-item p, .ct-item a { font-size: .95rem; color: var(--ink-2); line-height: 1.6; }
+.ct-item a:hover { color: var(--teal); text-decoration: underline; }
+
+.ct-form-card {
+    background: #fff; border-radius: var(--r); padding: 3rem;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+}
+.ct-form-card h2 { font-family: 'Lora', serif; font-size: 1.8rem; color: var(--ink); margin-bottom: .5rem; }
+.ct-form-card > p { font-size: .95rem; color: var(--ink-2); margin-bottom: 2rem; }
+
+.gc-form-group { margin-bottom: 1.5rem; }
+.gc-label { display: block; font-size: .85rem; font-weight: 700; color: var(--ink); margin-bottom: .5rem; }
+.gc-input, .gc-select, .gc-textarea {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 12px;
+    padding: .9rem 1rem; font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: .95rem; color: var(--ink); background: #fff; transition: border-color .2s, box-shadow .2s;
+}
+.gc-input:focus, .gc-select:focus, .gc-textarea:focus {
+    outline: none; border-color: var(--teal); background: #fff;
+    box-shadow: 0 0 0 4px rgba(10,76,94,.1);
+}
+.gc-textarea { resize: vertical; min-height: 120px; }
+
+@media(max-width:900px){
+    .contact-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+    .ct-form-card { padding: 2rem 1.5rem; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="contact-hero">
+    <div class="wrap" style="position:relative;z-index:2;" data-reveal>
+        <span class="eyebrow" style="color:var(--gold-lite);" data-t>Atención al Cliente</span>
+        <h1 class="display-title light" data-t>¿En qué podemos ayudarte?</h1>
+        <p style="color:rgba(255,255,255,.65);margin-top:1rem;" data-t>Estamos aquí para responder tus dudas sobre cualquier servicio o destino.</p>
+    </div>
+</section>
+
+<section style="padding-bottom:6rem;background:var(--paper);">
+    <div class="wrap contact-layout">
+        
+        <!-- Info -->
+        <div data-reveal-l>
+            <div class="ct-info-card">
+                <div class="ct-item">
+                    <div class="ct-ico" style="background:rgba(37,211,102,.1);color:#25d366;"><i class="fab fa-whatsapp"></i></div>
+                    <div>
+                        <h4 data-t>WhatsApp 24/7</h4>
+                        <p data-t>Disponibilidad inmediata para cotizaciones y emergencias en ruta.</p>
+                        <a href="https://wa.link/61i97u" target="_blank" style="color:#25d366;font-weight:700;">+56 9 9415 5655</a>
+                    </div>
+                </div>
+                <div class="ct-item">
+                    <div class="ct-ico"><i class="fas fa-envelope"></i></div>
+                    <div>
+                        <h4 data-t>Email Comercial</h4>
+                        <p data-t>Escríbenos y un asesor te responderá el mismo día.</p>
+                        <a href="mailto:contacto@getawaychile.cl">contacto@getawaychile.cl</a>
+                    </div>
+                </div>
+                <div class="ct-item">
+                    <div class="ct-ico" style="background:rgba(198,143,58,.1);color:var(--gold);"><i class="fas fa-map-marker-alt"></i></div>
+                    <div>
+                        <h4 data-t>Oficina Comercial</h4>
+                        <p>Teatinos 371, Santiago<br>Región Metropolitana, Chile</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div data-reveal-r>
+            <div class="ct-form-card">
+                <h2 data-t>Envíanos un mensaje</h2>
+                <p data-t>Completa el formulario y nos pondremos en contacto contigo a la brevedad.</p>
+
+                {% if messages %}
+                <div style="background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:12px;padding:1rem;color:#1e8d46;font-size:.9rem;margin-bottom:2rem;display:flex;gap:.8rem;align-items:center;">
+                    <i class="fas fa-check-circle" style="font-size:1.2rem;"></i>
+                    <div>
+                        {% for m in messages %}
+                        <strong>{{ m }}</strong>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <form action="{% url 'public_contacto' %}" method="POST">
+                    {% csrf_token %}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="gc-form-group">
+                            <label class="gc-label" data-t>Nombre Completo</label>
+                            <input type="text" class="gc-input" name="nombre" placeholder="Ej: Camila González" required>
+                        </div>
+                        <div class="gc-form-group">
+                            <label class="gc-label">Email</label>
+                            <input type="email" class="gc-input" name="email" placeholder="tu@email.com" required>
+                        </div>
+                    </div>
+                    <div class="gc-form-group">
+                        <label class="gc-label" data-t>Teléfono / WhatsApp</label>
+                        <input type="text" class="gc-input" name="telefono" placeholder="+56 9 1234 5678">
+                    </div>
+                    <div class="gc-form-group">
+                        <label class="gc-label" data-t>Asunto</label>
+                        <select class="gc-select" name="asunto">
+                            <option value="Duda General" data-t>Consulta general</option>
+                            <option value="Tours" data-t>Duda sobre un Tour</option>
+                            <option value="Servicio Privado" data-t>Cotización Servicio Privado</option>
+                            <option value="Transporte Aeropuerto" data-t>Transporte Aeropuerto PMC</option>
+                            <option value="Empresas" data-t>Atención Empresas</option>
+                        </select>
+                    </div>
+                    <div class="gc-form-group">
+                        <label class="gc-label" data-t>Tu Mensaje</label>
+                        <textarea class="gc-textarea" name="mensaje" placeholder="Escribe tu consulta aquí..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:.9rem;">
+                        <i class="fas fa-paper-plane"></i> <span data-t>Enviar Mensaje</span>
+                    </button>
+                    <p style="text-align:center;font-size:.8rem;color:var(--ink-2);margin-top:1rem;" data-t>Nos comprometemos a responder en menos de 12 horas hábiles.</p>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends 'core/public/base_public.html' %}
+{% load static humanize %}
+
+{% block title %}{{ tour.name }} — Getaway Chile{% endblock %}
+{% block meta_description %}{{ tour.description|truncatewords:20 }}{% endblock %}
+
+{% block extra_css %}
+.td-hero {
+    position: relative; overflow: hidden;
+    min-height: 48vh; padding: 5rem 0 3rem;
+    display: flex; align-items: flex-end; color: #fff;
+}
+.td-hero::before {
+    content: ''; position: absolute; inset: 0; z-index: -2;
+    {% if tour.image_1 %}
+    background-image: url('{{ tour.image_1.url }}');
+    {% else %}
+        {% if ph_index == 1 %}background-image: url('https://images.unsplash.com/photo-1518632619955-1c8f6d929f0d?auto=format&fit=crop&w=1920&q=80');
+        {% elif ph_index == 2 %}background-image: url('https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1920&q=80');
+        {% elif ph_index == 3 %}background-image: url('https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1920&q=80');
+        {% elif ph_index == 4 %}background-image: url('https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=1920&q=80');
+        {% elif ph_index == 5 %}background-image: url('https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?auto=format&fit=crop&w=1920&q=80');
+        {% else %}background-image: url('https://images.unsplash.com/photo-1541336032412-2048a678540d?auto=format&fit=crop&w=1920&q=80');
+        {% endif %}
+    {% endif %}
+    background-size: cover; background-position: center;
+}
+.td-hero::after {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    background: linear-gradient(180deg, rgba(7,21,32,.85) 0%, rgba(10,48,68,.65) 60%, rgba(10,48,68,.2) 100%);
+}
+
+.td-layout {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    padding: 3.5rem 0; align-items: start;
+}
+@media(min-width: 992px) {
+    .td-layout { grid-template-columns: 1.15fr .85fr; gap: 3.5rem; }
+}
+
+/* Left side panels */
+.td-img-panel {
+    border-radius: var(--r); overflow: hidden; height: 420px;
+    box-shadow: var(--shadow-md); margin-bottom: 2rem;
+}
+.td-img-panel img { width: 100%; height: 100%; object-fit: cover; }
+
+.td-box {
+    background: #fff; border: 1.5px solid var(--border); border-radius: var(--r);
+    padding: 2.2rem; margin-bottom: 1.5rem;
+}
+.td-box h3 { font-family: 'Lora', serif; font-size: 1.25rem; color: var(--ink); margin-bottom: 1rem; }
+.td-box p { font-size: .95rem; color: var(--ink-2); line-height: 1.8; margin: 0; }
+
+.perks-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .7rem; }
+.perks-list li { display: flex; gap: .8rem; align-items: flex-start; font-size: .9rem; color: var(--ink-2); line-height: 1.6; }
+.perks-list li i { margin-top: .25rem; font-size: .9rem; flex-shrink: 0; }
+.i-inc { color: var(--teal); }
+.i-exc { color: #d05c5c; }
+
+/* Right side sticky */
+.td-aside { position: sticky; top: 100px; }
+.price-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .8rem 0; border-bottom: 1px dashed var(--border);
+    font-size: .9rem; color: var(--ink-2);
+}
+.price-row:last-child { border-bottom: none; }
+.price-row strong { color: var(--ink); font-weight: 700; }
+
+@media(max-width: 991px) {
+    .td-layout { grid-template-columns: 1fr; }
+    .td-aside { position: static; }
+    .td-img-panel { height: 320px; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="td-hero">
+    <div class="wrap" style="position:relative;z-index:1;" data-reveal>
+        <span class="eyebrow" style="color:var(--gold-lite);">
+            {% if tour.tour_type == 'PRIVADO' %}TOUR PRIVADO{% else %}TOUR REGULAR{% endif %}
+            {% if tour.destination %} · {{ tour.destination|upper }}{% endif %}
+        </span>
+        <h1 class="display-title light" style="font-size:clamp(2.2rem, 5vw, 3.5rem); margin:.5rem 0 1rem;">{{ tour.name }}</h1>
+        <p style="color:rgba(255,255,255,.75); max-width:650px; font-size:1.05rem; line-height:1.75;">
+            {{ tour.description|truncatewords:20 }}
+        </p>
+    </div>
+</section>
+
+<section style="background:var(--paper); padding-bottom:4rem;">
+    <div class="wrap td-layout">
+        
+        <!-- LEFT COLUMN -->
+        <div data-reveal-l>
+            <div class="td-img-panel">
+                {% if tour.image_1 %}
+                <img src="{{ tour.image_1.url }}" alt="{{ tour.name }}">
+                {% else %}
+                    {% if ph_index == 1 %}<img src="https://images.unsplash.com/photo-1518632619955-1c8f6d929f0d?auto=format&fit=crop&w=1200&q=80">
+                    {% elif ph_index == 2 %}<img src="https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80">
+                    {% elif ph_index == 3 %}<img src="https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1200&q=80">
+                    {% elif ph_index == 4 %}<img src="https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=1200&q=80">
+                    {% elif ph_index == 5 %}<img src="https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?auto=format&fit=crop&w=1200&q=80">
+                    {% else %}<img src="https://images.unsplash.com/photo-1541336032412-2048a678540d?auto=format&fit=crop&w=1200&q=80">
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="td-box">
+                <h3 data-t>Descripción</h3>
+                <p>{{ tour.description }}</p>
+            </div>
+
+            <div class="td-box">
+                <h3 data-t>Incluye</h3>
+                <ul class="perks-list">
+                    <li><i class="fas fa-check-circle i-inc"></i> <span data-t>Transporte desde lugar de alojamiento u hotel central</span></li>
+                    <li><i class="fas fa-check-circle i-inc"></i> <span data-t>Conductor y guía profesional bilingüe</span></li>
+                    <li><i class="fas fa-check-circle i-inc"></i> <span data-t>Paradas de contemplación y fotografía</span></li>
+                    <li><i class="fas fa-check-circle i-inc"></i> <span data-t>Asistencia continua durante todo el trayecto</span></li>
+                    {% if tour.tour_type == 'PRIVADO' %}
+                    <li><i class="fas fa-check-circle i-inc"></i> <span data-t>Horario de salida adaptado a tu preferencia</span></li>
+                    <li><i class="fas fa-check-circle i-inc"></i> <span data-t>Privacidad al 100% solo para ti y tus acompañantes</span></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="td-box">
+                <h3 data-t>No incluye</h3>
+                <ul class="perks-list">
+                    <li><i class="fas fa-times-circle i-exc"></i> <span data-t>Almuerzos ni cenas (paradas programadas en restaurantes recomendados)</span></li>
+                    <li><i class="fas fa-times-circle i-exc"></i> <span data-t>Tickets de entrada a Parques Nacionales (salvo configuración especial)</span></li>
+                    <li><i class="fas fa-times-circle i-exc"></i> <span data-t>Snacks personales</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- RIGHT STRIP -->
+        <div class="td-aside" data-reveal-r>
+            <div class="td-box" style="padding:2rem;">
+                <h3 style="color:var(--teal); font-size:1.15rem; margin-bottom:1.2rem;" data-t>Detalle comercial</h3>
+                
+                <div class="price-row">
+                    <span data-t>Tarifa referencial</span>
+                    {% if tour.precio_clp %}
+                    <strong>${{ tour.precio_clp|intcomma }} CLP</strong>
+                    {% else %}
+                    <strong data-t>Consultar</strong>
+                    {% endif %}
+                </div>
+                
+                <div class="price-row">
+                    <span data-t>Duración</span>
+                    <strong>{% if tour.duration %}{{ tour.duration }}{% else %}Full Day{% endif %}</strong>
+                </div>
+
+                <div class="price-row">
+                    <span data-t>Idiomas del guía</span>
+                    <strong>{% if tour.languages %}{{ tour.languages }}{% else %}ES / EN / PT{% endif %}</strong>
+                </div>
+
+                <div class="price-row">
+                    <span data-t>Políticas de anulación</span>
+                    <strong data-t>Hasta 48 hrs antes</strong>
+                </div>
+
+                <div class="price-row">
+                    <span data-t>Tipo de experiencia</span>
+                    <strong>{% if tour.tour_type == 'PRIVADO' %}Privada{% else %}Grupal (Compartido){% endif %}</strong>
+                </div>
+            </div>
+
+            <div class="td-box" style="padding:2rem;">
+                <h3 data-t>Recomendaciones</h3>
+                <ul class="perks-list">
+                    <li><i class="fas fa-asterisk" style="color:var(--gold-lite);"></i> <span data-t>Abrigo para cambios de temperatura repentinos propios de la región.</span></li>
+                    <li><i class="fas fa-asterisk" style="color:var(--gold-lite);"></i> <span data-t>Mantener buena hidratación y bloqueador solar.</span></li>
+                    <li><i class="fas fa-asterisk" style="color:var(--gold-lite);"></i> <span data-t>Calzado cómodo y con buen agarre, apto para terreno natural.</span></li>
+                </ul>
+            </div>
+
+            <!-- Main CTA -->
+            <a class="btn-primary" href="{% url 'public_reservar' %}?tour={{ tour.pk }}" style="width:100%; justify-content:center; padding:1.2rem; font-size:1.1rem; box-shadow:0 12px 30px rgba(10,40,60,.18);">
+                <i class="fas fa-calendar-check"></i> <span data-t>Reservar este tour</span>
+            </a>
+            <p style="text-align:center; font-size:.8rem; color:var(--ink-2); margin-top:.8rem;">
+                <i class="fas fa-exclamation-circle"></i> <span data-t>El cobro solo se realiza después de confirmar la disponibilidad con nuestro equipo.</span>
+            </p>
+        </div>
+        
+    </div>
+</section>
+{% endblock %}

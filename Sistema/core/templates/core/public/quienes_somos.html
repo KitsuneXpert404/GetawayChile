@@ -1,0 +1,131 @@
+{% extends 'core/public/base_public.html' %}
+{% load static %}
+
+{% block title %}Nosotros — Getaway Chile{% endblock %}
+{% block meta_description %}Conoce al equipo detrás de Getaway Chile. Pasión por el turismo, años de experiencia y dedicación a crear viajes inolvidables en el sur y todo Chile.{% endblock %}
+
+{% block extra_css %}
+.page-hero {
+    position: relative; overflow: hidden;
+    min-height: 50vh; display: flex; align-items: center; justify-content: center;
+    padding: 4rem 0; text-align: center;
+}
+.page-hero::before {
+    content: ''; position: absolute; inset: 0; z-index: -2;
+    background-image: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover; background-position: center;
+}
+.page-hero::after {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    background: rgba(7,21,32,.75);
+}
+
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-bottom: 5rem; }
+.about-img {
+    position: relative; border-radius: var(--r); overflow: hidden;
+    box-shadow: var(--shadow-md); height: 500px;
+}
+.about-img img { width:100%; height:100%; object-fit:cover; }
+.about-badge {
+    position: absolute; bottom: 1.5rem; right: 1.5rem;
+    background: #fff; border-radius: 12px; padding: 1.2rem;
+    display: flex; gap: 1rem; align-items: center;
+    box-shadow: 0 10px 30px rgba(10,40,60,.15);
+}
+.ab-n { font-family: 'Lora', serif; font-size: 2rem; font-weight: 700; color: var(--gold-lite); line-height: 1; }
+.ab-t { font-size: .8rem; font-weight: 700; color: var(--ink); text-transform: uppercase; line-height: 1.2; letter-spacing: .5px; }
+
+.about-prose h2 { font-family: 'Lora', serif; font-size: 2.2rem; color: var(--ink); margin-bottom: 1.2rem; }
+.about-prose p  { font-size: .95rem; color: var(--ink-2); line-height: 1.85; margin-bottom: 1rem; }
+
+.values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.val-card {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: var(--r); padding: 2.5rem 2rem; text-align: center;
+    transition: transform .3s, box-shadow .3s;
+}
+.val-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+.val-ico {
+    width: 64px; height: 64px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem; font-size: 1.5rem;
+}
+.val-card h3 { font-family: 'Lora', serif; font-size: 1.2rem; margin-bottom: .8rem; }
+.val-card p  { font-size: .88rem; color: var(--ink-2); line-height: 1.7; margin: 0; }
+
+@media(max-width:900px){
+    .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    .about-img { height: 350px; order: -1; }
+    .values-grid { grid-template-columns: 1fr; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="wrap" style="color:#fff;" data-reveal>
+        <span class="eyebrow" style="color:var(--gold-lite);" data-t>Nuestra Historia</span>
+        <h1 class="display-title light" data-t>Quiénes Somos</h1>
+        <p style="color:rgba(255,255,255,.7);max-width:600px;margin:.8rem auto 0;font-size:1.1rem;" data-t>Pasión por viajar y mostrar lo mejor de nuestro país al mundo.</p>
+    </div>
+</section>
+
+<section style="padding:6rem 0;background:var(--paper);">
+    <div class="wrap">
+        <div class="about-grid">
+            <div class="about-prose" data-reveal-l>
+                <span class="eyebrow" data-t>Nuestra Esencia</span>
+                <h2 data-t>Más que un tour, una experiencia humana</h2>
+                <p data-t>En Getaway Chile somos un equipo de apasionados por el turismo y nuestro país. Empezamos con el objetivo de compartir la magia del sur de Chile y, gracias a la confianza de nuestros viajeros, hemos logrado expandir nuestras experiencias.</p>
+                <p data-t>Nuestro enfoque siempre ha sido claro: no vendemos cupos en un bus, diseñamos experiencias donde tú eres el protagonista. Creemos en un turismo responsable, cercano y honesto. Conocemos cada ruta, cada destino y a las personas que hacen de cada lugar algo especial.</p>
+                <p data-t>Ya sea un traslado corporativo al aeropuerto o un tour privado familiar a los Parques Nacionales, nuestra dedicación es la misma. Cuidamos cada detalle logístico para que tú solo tengas que enfocarte en disfrutar el momento, crear recuerdos y conectar con tu destino.</p>
+                
+                <div style="margin-top:2rem;display:flex;gap:1.5rem;align-items:center;">
+                    <img src="{% static 'img/logo_black.png' %}" alt="Getaway Chile" style="height:40px;opacity:.8;filter: grayscale(100%);">
+                    <div style="height:40px;width:1px;background:var(--border);"></div>
+                    <div>
+                        <strong style="display:block;font-size:.9rem;color:var(--ink);" data-t>Equipo Getaway</strong>
+                        <span style="font-size:.8rem;color:var(--ink-2);" data-t>Fundadores</span>
+                    </div>
+                </div>
+            </div>
+            <div class="about-img" data-reveal-r>
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1000&q=80" alt="Equipo turismo">
+                <div class="about-badge">
+                    <span class="ab-n" data-counter="5" data-suffix="+">0</span>
+                    <span class="ab-t" data-t>Años creando<br>viajes</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align:center;margin-bottom:3rem;" data-reveal>
+            <h2 class="display-title" data-t>Nuestros Pilares</h2>
+        </div>
+        <div class="values-grid">
+            <div class="val-card" data-reveal>
+                <div class="val-ico" style="background:rgba(10,76,94,.1);color:var(--teal);"><i class="fas fa-handshake"></i></div>
+                <h3 data-t>Compromiso</h3>
+                <p data-t>Cumplimos nuestra palabra en cada reserva, en cada horario y con cada recorrido. La confianza de nuestros clientes es nuestro mayor activo.</p>
+            </div>
+            <div class="val-card" data-reveal>
+                <div class="val-ico" style="background:rgba(198,143,58,.1);color:var(--gold);"><i class="fas fa-heart"></i></div>
+                <h3 data-t>Pasión</h3>
+                <p data-t>Amamos lo que hacemos. Transmitimos esa energía en cada saludo, en cada historia que contamos sobre la región y en la asistencia que brindamos.</p>
+            </div>
+            <div class="val-card" data-reveal>
+                <div class="val-ico" style="background:rgba(10,76,94,.1);color:var(--teal);"><i class="fas fa-shield-alt"></i></div>
+                <h3 data-t>Seguridad</h3>
+                <p data-t>Vehículos modernos, revisiones al día, conductores certificados y monitoreo en ruta 24/7. Tu bienestar siempre será lo primero.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section style="padding:5rem 0;background:linear-gradient(135deg,var(--teal),var(--teal-mid));text-align:center;">
+    <div class="wrap" data-reveal>
+        <h2 class="display-title light" style="margin-bottom:1rem;" data-t>Confía tu próximo viaje en expertos</h2>
+        <p style="color:rgba(255,255,255,.7);margin:0 auto 2rem;max-width:500px;" data-t>Estamos listos para asesorarte y diseñar la ruta que mejor se adapte a ti.</p>
+        <a class="btn-gold" href="{% url 'public_contacto' %}"><i class="fas fa-envelope"></i> <span data-t>Escríbenos</span></a>
+    </div>
+</section>
+{% endblock %}

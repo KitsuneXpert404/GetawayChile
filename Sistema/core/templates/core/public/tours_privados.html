@@ -1,0 +1,274 @@
+{% extends 'core/public/base_public.html' %}
+{% load static %}
+
+{% block title %}Tours Privados & Transporte Privado — Getaway Chile{% endblock %}
+{% block meta_description %}Transporte privado para parques acuáticos, empresas, viajes a la playa, matrimonios y más. Vans modernas, conductores profesionales. Reserva: +56 9 9415 5655{% endblock %}
+
+{% block extra_css %}
+.page-hero {
+    position: relative; overflow: hidden;
+    min-height: 55vh; display: flex; align-items: flex-end; padding: 3.5rem 0;
+}
+.page-hero::before {
+    content: ''; position: absolute; inset: 0; z-index: -2;
+    background-image: url('https://images.unsplash.com/photo-1503220317375-aaad61436b1b?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover; background-position: center 30%;
+}
+.page-hero::after {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    background: linear-gradient(to top, rgba(7,21,32,.92) 0%, rgba(7,21,32,.45) 65%, transparent 100%);
+}
+
+/* SERVICES GRID */
+.services-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.5rem; margin-top: 2.5rem; }
+.srv-card {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: var(--r); overflow: hidden;
+    box-shadow: 0 8px 28px rgba(10,40,60,.08);
+    transition: transform .3s, box-shadow .3s;
+    display: flex; flex-direction: column;
+}
+.srv-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
+.srv-card-img {
+    height: 220px; overflow: hidden; position: relative; flex-shrink: 0;
+}
+.srv-card-img img { width:100%;height:100%;object-fit:cover;transition:transform .5s ease; }
+.srv-card:hover .srv-card-img img { transform: scale(1.06); }
+.srv-card-img-overlay {
+    position:absolute;inset:0;
+    background:linear-gradient(to top, rgba(7,21,32,.5) 0%, transparent 60%);
+}
+.srv-card-tag {
+    position: absolute; top: 1rem; left: 1rem;
+    background: rgba(198,143,58,.9); color: #fff;
+    font-size: .68rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: .28rem .8rem; border-radius: 999px;
+}
+.srv-card-body { padding: 1.8rem; flex: 1; display: flex; flex-direction: column; }
+.srv-card-ico {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    margin-bottom: 1rem; flex-shrink: 0;
+}
+.srv-card h3 { font-family:'Lora',serif; font-size:1.2rem; color:var(--ink); margin-bottom:.5rem; }
+.srv-card p  { font-size:.9rem; color:var(--ink-2); line-height:1.75; flex:1; }
+.srv-card-perks {
+    margin: 1rem 0; list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .4rem;
+}
+.srv-card-perks li {
+    display: flex; gap: .5rem; align-items: flex-start;
+    font-size: .83rem; color: var(--ink-2);
+}
+.srv-card-perks li i { color: var(--teal); margin-top: .15rem; flex-shrink: 0; }
+.srv-card-actions { display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.5rem; }
+
+/* Ideal for strip */
+.ideal-strip {
+    display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem;
+}
+.ideal-pill {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: rgba(10,76,94,.07); border: 1px solid rgba(10,76,94,.12);
+    color: var(--teal); border-radius: 999px; padding: .3rem .8rem; font-size: .75rem; font-weight: 700;
+}
+
+@media(max-width:800px){
+    .services-grid { grid-template-columns: 1fr; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="wrap" data-reveal>
+        <span class="eyebrow" style="color:var(--gold-lite);" data-t>Servicios Privados</span>
+        <h1 class="display-title light" style="font-size:clamp(2rem,5vw,3rem);" data-t>Tours Privados & Transporte a Medida</h1>
+        <p style="color:rgba(255,255,255,.65);max-width:580px;margin:.8rem 0 1.5rem;line-height:1.75;" data-t>Parques acuáticos, viajes a la playa, eventos de empresa, matrimonios y más. Diseñamos cada traslado para que solo te preocupes de disfrutar.</p>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <a class="btn-gold" href="{% url 'public_reservar' %}"><i class="fas fa-calendar-check"></i> <span data-t>Solicitar cotización</span></a>
+            <a class="btn-primary" href="https://wa.link/61i97u" target="_blank" style="background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+        </div>
+    </div>
+</section>
+
+<!-- SERVICES -->
+<section style="padding:5rem 0;background:var(--paper);">
+    <div class="wrap">
+        <div data-reveal style="margin-bottom:.5rem;">
+            <span class="eyebrow" data-t>Nuestros Servicios Privados</span>
+            <h2 class="display-title" data-t>Transporte privado para cada ocasión</h2>
+            <p class="section-sub" data-t>Flota de vans modernas, climatizadas y amplias. Conductores profesionales y puntuales. Tú eliges el destino, nosotros nos encargamos del resto.</p>
+        </div>
+
+        <div class="services-grid">
+
+            <!-- PARQUE ACUÁTICO -->
+            <div class="srv-card" data-reveal>
+                <div class="srv-card-img">
+                    <img src="https://images.unsplash.com/photo-1602526212974-d5a81bff8cff?auto=format&fit=crop&w=900&q=80" alt="Transporte parque acuático">
+                    <div class="srv-card-img-overlay"></div>
+                    <span class="srv-card-tag" data-t>Familia & Grupos</span>
+                </div>
+                <div class="srv-card-body">
+                    <div class="srv-card-ico" style="background:rgba(10,76,94,.1);color:var(--teal);"><i class="fas fa-water"></i></div>
+                    <h3 data-t>Transporte a Parques Acuáticos</h3>
+                    <p data-t>Servicio de transporte privado a parques acuáticos en Santiago. Vans cómodas y climatizadas para familias, grupos de amigos, colegios o empresas. Nos adaptamos a los horarios del parque, evitando esperas innecesarias y asegurando un viaje fluido, especialmente en temporada alta.</p>
+                    <ul class="srv-card-perks">
+                        <li><i class="fas fa-check"></i> <span data-t>Retiro y regreso desde tu domicilio u hotel</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Conductores con experiencia en traslados recreativos</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Espacio para mochilas, bolsos y accesorios de playa</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Ambiente agradable para llegar con energía</span></li>
+                    </ul>
+                    <div class="ideal-strip">
+                        <span class="ideal-pill"><i class="fas fa-users"></i> <span data-t>Familias</span></span>
+                        <span class="ideal-pill"><i class="fas fa-school"></i> <span data-t>Colegios</span></span>
+                        <span class="ideal-pill"><i class="fas fa-user-friends"></i> <span data-t>Amigos</span></span>
+                    </div>
+                    <div class="srv-card-actions">
+                        <a class="btn-primary" href="{% url 'public_reservar' %}?servicio=parque_acuatico"><span data-t>Solicitar cotización</span></a>
+                        <a class="btn-ghost" href="https://wa.link/61i97u" target="_blank"><i class="fab fa-whatsapp"></i> <span data-t>WhatsApp</span></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EMPRESAS -->
+            <div class="srv-card" data-reveal>
+                <div class="srv-card-img">
+                    <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80" alt="Transporte corporativo empresas">
+                    <div class="srv-card-img-overlay"></div>
+                    <span class="srv-card-tag" data-t>Corporativo</span>
+                </div>
+                <div class="srv-card-body">
+                    <div class="srv-card-ico" style="background:rgba(198,143,58,.1);color:var(--gold);"><i class="fas fa-building"></i></div>
+                    <h3 data-t>Transporte Privado para Empresas</h3>
+                    <p data-t>Soluciones de movilidad para empresas: viajes de incentivo, reuniones de trabajo, eventos corporativos y traslados regulares. Vehículos de alta gama — SUVs, furgonetas 7–15 pasajeros — equipados para que tu equipo viaje con estilo y confort.</p>
+                    <ul class="srv-card-perks">
+                        <li><i class="fas fa-check"></i> <span data-t>Flota de lujo: SUVs, minibuses y vans ejecutivas</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Conductores puntuales y altamente capacitados</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Rutas personalizadas y horarios flexibles</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Traslados a aeropuerto para ejecutivos</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Facturación corporativa y tarifas a medida</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Viajes de incentivo, team building y eventos</span></li>
+                    </ul>
+                    <div class="ideal-strip">
+                        <span class="ideal-pill"><i class="fas fa-briefcase"></i> <span data-t>Ejecutivos</span></span>
+                        <span class="ideal-pill"><i class="fas fa-calendar-alt"></i> <span data-t>Eventos</span></span>
+                        <span class="ideal-pill"><i class="fas fa-handshake"></i> <span data-t>Corporativo</span></span>
+                    </div>
+                    <div class="srv-card-actions">
+                        <a class="btn-primary" href="{% url 'public_reservar' %}?servicio=empresa"><span data-t>Solicitar cotización</span></a>
+                        <a class="btn-ghost" href="https://wa.link/61i97u" target="_blank"><i class="fab fa-whatsapp"></i> <span data-t>WhatsApp</span></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLAYA -->
+            <div class="srv-card" data-reveal>
+                <div class="srv-card-img">
+                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80" alt="Viajes a la playa litoral central">
+                    <div class="srv-card-img-overlay"></div>
+                    <span class="srv-card-tag" data-t>Litoral Central</span>
+                </div>
+                <div class="srv-card-body">
+                    <div class="srv-card-ico" style="background:rgba(10,76,94,.1);color:var(--teal);"><i class="fas fa-umbrella-beach"></i></div>
+                    <h3 data-t>Viajes Privados a la Playa</h3>
+                    <p data-t>Servicio exclusivo hacia las playas más hermosas del Litoral Central y la Quinta Región. Sin horarios rígidos, sin estrés, sin compartir el espacio. Viña del Mar, Valparaíso, Reñaca, Concón, Zapallar, Maitencillo y más destinos a tu ritmo.</p>
+                    <ul class="srv-card-perks">
+                        <li><i class="fas fa-check"></i> <span data-t>Viña del Mar, Valparaíso, Reñaca, Concón</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Zapallar, Cachagua y Maitencillo</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Recogida en tu domicilio, hotel o punto acordado</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Sin horarios rígidos, tú decides cuánto quedarte</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Opción de guía turístico local</span></li>
+                    </ul>
+                    <div class="ideal-strip">
+                        <span class="ideal-pill"><i class="fas fa-heart"></i> <span data-t>Parejas</span></span>
+                        <span class="ideal-pill"><i class="fas fa-users"></i> <span data-t>Grupos</span></span>
+                        <span class="ideal-pill"><i class="fas fa-globe"></i> <span data-t>Turistas</span></span>
+                    </div>
+                    <div class="srv-card-actions">
+                        <a class="btn-primary" href="{% url 'public_reservar' %}?servicio=playa"><span data-t>Solicitar cotización</span></a>
+                        <a class="btn-ghost" href="https://wa.link/61i97u" target="_blank"><i class="fab fa-whatsapp"></i> <span data-t>WhatsApp</span></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MATRIMONIOS -->
+            <div class="srv-card" data-reveal>
+                <div class="srv-card-img">
+                    <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=900&q=80" alt="Transporte matrimonios eventos">
+                    <div class="srv-card-img-overlay"></div>
+                    <span class="srv-card-tag" data-t>Eventos</span>
+                </div>
+                <div class="srv-card-body">
+                    <div class="srv-card-ico" style="background:rgba(198,143,58,.1);color:var(--gold);"><i class="fas fa-rings-wedding" style="font-size:1rem;"></i><i class="fas fa-gem" style="font-size:.85rem;margin-left:.15rem;"></i></div>
+                    <h3 data-t>Transporte para Matrimonios</h3>
+                    <p data-t>Logística elegante y segura para el día más especial. Traslado de novios, invitados, fiesta y proveedores con puntualidad y discreción. Vehículos impecables y conductores formales para que todo salga perfectamente.</p>
+                    <ul class="srv-card-perks">
+                        <li><i class="fas fa-check"></i> <span data-t>Traslado de novios con vehículo decorado</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Flota para invitados y grupos grandes</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Coordinación de horarios con el evento</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Conductores de formalidad y discreción</span></li>
+                        <li><i class="fas fa-check"></i> <span data-t>Traslado al salón, iglesia y despedida</span></li>
+                    </ul>
+                    <div class="ideal-strip">
+                        <span class="ideal-pill"><i class="fas fa-heart"></i> <span data-t>Novios</span></span>
+                        <span class="ideal-pill"><i class="fas fa-users"></i> <span data-t>Invitados</span></span>
+                        <span class="ideal-pill"><i class="fas fa-camera"></i> <span data-t>Proveedores</span></span>
+                    </div>
+                    <div class="srv-card-actions">
+                        <a class="btn-primary" href="{% url 'public_reservar' %}?servicio=matrimonio"><span data-t>Solicitar cotización</span></a>
+                        <a class="btn-ghost" href="https://wa.link/61i97u" target="_blank"><i class="fab fa-whatsapp"></i> <span data-t>WhatsApp</span></a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- DB PRIVATE TOURS -->
+{% if tours %}
+<section style="padding:5rem 0;background:#fff;">
+    <div class="wrap">
+        <div data-reveal>
+            <span class="eyebrow" data-t>Catálogo Privado</span>
+            <h2 class="display-title" data-t>Tours Privados Disponibles</h2>
+            <p class="section-sub" data-t>Experiencias diseñadas exclusivamente para tu grupo. Tu horario, tu ritmo.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:2rem;">
+            {% for tour in tours %}
+            <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:transform .25s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''" data-reveal>
+                <div style="height:190px;overflow:hidden;position:relative;">
+                    {% if tour.image_1 %}
+                    <img src="{{ tour.image_1.url }}" alt="{{ tour.name }}" style="width:100%;height:100%;object-fit:cover;">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1541336032412-2048a678540d?auto=format&fit=crop&w=600&q=70" alt="{{ tour.name }}" style="width:100%;height:100%;object-fit:cover;">
+                    {% endif %}
+                    <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,21,32,.4),transparent);"></div>
+                </div>
+                <div style="padding:1.2rem;">
+                    <h3 style="font-family:'Lora',serif;font-size:1rem;color:var(--ink);margin-bottom:.4rem;">{{ tour.name }}</h3>
+                    {% if tour.destination %}<p style="font-size:.78rem;color:var(--teal);font-weight:700;margin-bottom:.5rem;"><i class="fas fa-map-pin"></i> {{ tour.destination }}</p>{% endif %}
+                    <p style="font-size:.87rem;color:var(--ink-2);line-height:1.65;margin-bottom:1rem;">{{ tour.description|truncatechars:100 }}</p>
+                    <a class="btn-primary" href="{% url 'public_tour_detail' tour.pk %}" style="font-size:.83rem;padding:.55rem 1rem;"><span data-t>Ver detalles</span></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA -->
+<section style="padding:5rem 0;background:var(--dark);text-align:center;">
+    <div class="wrap" data-reveal>
+        <span class="eyebrow" style="color:rgba(255,255,255,.35);" data-t>¿Tienes una necesidad especial?</span>
+        <h2 class="display-title light" style="margin:.6rem 0 1rem;" data-t>Diseñamos el traslado perfecto para ti</h2>
+        <p style="color:rgba(255,255,255,.5);max-width:480px;margin:0 auto 2rem;line-height:1.8;" data-t>Cuéntanos tu caso. Nos adaptamos a grupos, rutas especiales, eventos particulares y cualquier necesidad de transporte privado.</p>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+            <a class="btn-gold" href="{% url 'public_reservar' %}"><i class="fas fa-calendar-check"></i> <span data-t>Solicitar cotización</span></a>
+            <a class="btn-ghost" href="https://wa.link/61i97u" target="_blank" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7);"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

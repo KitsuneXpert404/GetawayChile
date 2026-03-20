@@ -192,8 +192,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Auth redirections
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'  # Splash screen → auto-redirects to dashboard
-LOGOUT_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'dashboard'  # Auto-redirects to role specifics
+LOGOUT_REDIRECT_URL = 'public_home'
 
 # Dominio público (opcional). Para enlaces en correos; en Render suele bastar la URL del servicio.
 SITE_DOMAIN = os.environ.get("SITE_DOMAIN", "").strip()

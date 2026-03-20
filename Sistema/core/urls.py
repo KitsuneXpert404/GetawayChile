@@ -5,9 +5,19 @@ from . import views
 from users import views_admin
 from . import views_history
 from . import views_reports
+from . import views_public
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    # ── PUBLIC (Client Website) ──────────────────────────────────────
+    path('', views_public.PublicHomeView.as_view(), name='public_home'),
+    path('tours/', views_public.PublicToursView.as_view(), name='public_tours'),
+    path('tour/<int:pk>/', views_public.PublicTourDetailView.as_view(), name='public_tour_detail'),
+    path('tours-privados/', views_public.PublicToursPrivadosView.as_view(), name='public_tours_privados'),
+    path('transporte/', views_public.PublicTransporteView.as_view(), name='public_transporte'),
+    path('quienes-somos/', views_public.PublicQuienesSomosView.as_view(), name='public_quienes_somos'),
+    path('contacto/', views_public.PublicContactoView.as_view(), name='public_contacto'),
+    path('reservar/', views_public.PublicReservarView.as_view(), name='public_reservar'),
+
     path('dashboard/', views.dashboard, name='dashboard'),
     
     # Auth

@@ -1,0 +1,718 @@
+{% extends 'core/public/base_public.html' %}
+{% load static humanize %}
+
+{% block title %}Getaway Chile — Tours y Transporte Privado en Chile{% endblock %}
+{% block meta_description %}Getaway Chile: tours, transporte privado al aeropuerto y experiencias en todo Chile. Santiago, Litoral Central, Sur de Chile. Reserva rápida, guías bilingües, 24/7.{% endblock %}
+
+{% block extra_css %}
+
+/* ══════════════ HERO ══════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex; align-items: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+/* The actual background image — this ALWAYS renders */
+.hero::before {
+  content: '';
+  position: absolute; inset: 0; z-index: -2;
+  background-image: url('https://images.unsplash.com/photo-1541336032412-2048a678540d?auto=format&fit=crop&w=1920&q=80');
+  background-size: cover;
+  background-position: center 40%;
+  transition: transform 20s linear;
+}
+/* Dark gradient overlay */
+.hero::after {
+  content: '';
+  position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(
+    100deg,
+    rgba(7,21,32,.82) 0%,
+    rgba(10,48,68,.65) 55%,
+    rgba(10,40,58,.3) 100%
+  );
+}
+
+.hero-wrap {
+  width: min(1200px, calc(100% - 2.5rem));
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 2rem;
+  align-items: center;
+  padding: 8rem 0 6rem;
+}
+
+/* Hero text */
+.hero-text { color: #fff; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: .6rem;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  backdrop-filter: blur(8px);
+  color: rgba(255,255,255,.9);
+  font-size: .72rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: .4rem 1rem; border-radius: 999px;
+  margin-bottom: 1.6rem;
+  animation: fadeUp .6s .1s both;
+}
+.hero-tag .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold-lite);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(217,169,79,.5)} 70%{box-shadow:0 0 0 8px rgba(217,169,79,0)} }
+
+.hero-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 700; line-height: 1.06;
+  margin-bottom: 1.4rem;
+  animation: fadeUp .7s .2s both;
+}
+.hero-title em { font-style: italic; color: var(--gold-lite); }
+
+.hero-desc {
+  font-size: 1.1rem; line-height: 1.8;
+  color: rgba(255,255,255,.72);
+  max-width: 520px; margin-bottom: 2rem;
+  animation: fadeUp .7s .3s both;
+}
+
+.hero-actions {
+  display: flex; gap: 1rem; flex-wrap: wrap;
+  animation: fadeUp .7s .4s both;
+}
+
+.hero-checks {
+  margin-top: 2.5rem;
+  display: flex; flex-direction: column; gap: .6rem;
+  animation: fadeUp .7s .5s both;
+}
+.hero-check {
+  display: flex; align-items: center; gap: .6rem;
+  font-size: .88rem; color: rgba(255,255,255,.7);
+}
+.hero-check i { color: var(--gold-lite); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+
+/* Hero right — glass panel */
+.hero-panel {
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 24px;
+  padding: 1.8rem;
+  animation: fadeUp .8s .35s both;
+}
+.hero-panel-title {
+  font-family: 'Lora', serif; font-size: 1.2rem; color: #fff;
+  margin-bottom: .4rem;
+}
+.hero-panel-sub { font-size: .82rem; color: rgba(255,255,255,.55); margin-bottom: 1.4rem; }
+.hp-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: .6rem; }
+.hp-stat {
+  background: rgba(7,21,32,.35); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 14px; padding: .9rem .7rem; text-align: center;
+}
+.hp-stat-n {
+  font-family: 'Lora', serif; font-size: 1.5rem; font-weight: 700;
+  color: #fff; display: block; line-height: 1;
+}
+.hp-stat-l { font-size: .72rem; color: rgba(255,255,255,.5); margin-top: .25rem; display: block; }
+
+.wa-online {
+  margin-top: 1rem;
+  background: rgba(37,211,102,.12);
+  border: 1px solid rgba(37,211,102,.25);
+  border-radius: 14px; padding: 1rem;
+  display: flex; flex-direction: column; gap: .7rem;
+}
+.wa-badge-g {
+  display: inline-flex; align-items: center; gap: .45rem;
+  font-size: .78rem; font-weight: 700; color: rgba(255,255,255,.9);
+}
+.wa-badge-g::before {
+  content: '';
+  width: 8px; height: 8px; border-radius: 50%; background: #1fcf6f;
+  box-shadow: 0 0 0 0 rgba(31,207,111,.5);
+  animation: wpulse 2s infinite;
+}
+@keyframes wpulse { 0%{box-shadow:0 0 0 0 rgba(31,207,111,.5)} 70%{box-shadow:0 0 0 10px rgba(31,207,111,0)} 100%{box-shadow:0 0 0 0 rgba(31,207,111,0)} }
+.wa-online p { font-size: .83rem; color: rgba(255,255,255,.6); margin: 0; }
+.wa-online .btn-wa {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: #25d366; color: #fff;
+  border-radius: 999px; padding: .6rem 1.2rem;
+  font-weight: 700; font-size: .85rem;
+  box-shadow: 0 6px 20px rgba(37,211,102,.4);
+  transition: transform .2s, box-shadow .2s;
+}
+.wa-online .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(37,211,102,.55); }
+
+/* Scroll arrow */
+.scroll-arrow {
+  position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  color: rgba(255,255,255,.35); font-size: .68rem; letter-spacing: 1.5px; text-transform: uppercase;
+  cursor: pointer; transition: color .2s;
+}
+.scroll-arrow:hover { color: rgba(255,255,255,.65); }
+.arrow-circle {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.22);
+  display: flex; align-items: center; justify-content: center;
+  animation: bounce 2.2s ease-in-out infinite;
+}
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(7px)} }
+
+/* ══════════════ STATS BAR ═════════════════ */
+.stats-bar {
+  background: linear-gradient(110deg, var(--teal), var(--teal-mid));
+  padding: 2rem 0;
+}
+.stats-inner {
+  display: flex; align-items: center; justify-content: space-around;
+  flex-wrap: wrap; gap: 1.5rem;
+}
+.stat-item { text-align: center; }
+.stat-num {
+  font-family: 'Lora', serif; font-size: 2.2rem; font-weight: 700;
+  color: #fff; display: block; line-height: 1;
+}
+.stat-lab { font-size: .77rem; color: rgba(255,255,255,.55); letter-spacing: 1px; text-transform: uppercase; margin-top: .25rem; }
+
+/* ══════════════ TOURS GRID ════════════════ */
+.tours-section { padding: 6rem 0; background: var(--paper); }
+.tours-section .section-header { margin-bottom: 2.5rem; }
+
+.tours-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+.tc { position: relative; border-radius: var(--r); overflow: hidden; cursor: pointer; }
+.tc img, .tc .tc-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; transition: transform .5s ease;
+}
+.tc .tc-bg {
+  background: linear-gradient(135deg, var(--teal), var(--teal-lite));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 4rem; color: rgba(255,255,255,.15);
+}
+.tc:hover img { transform: scale(1.07); }
+.tc-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(7,21,32,.88) 0%, rgba(7,21,32,.18) 55%, transparent 100%);
+}
+.tc-body {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 1.4rem; color: #fff; z-index: 1;
+}
+.tc-dest { font-size: .7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-lite); margin-bottom: .35rem; }
+.tc-name { font-family: 'Lora', serif; font-size: 1.15rem; font-weight: 600; margin-bottom: .5rem; }
+.tc-price { font-size: .8rem; color: rgba(255,255,255,.6); }
+.tc-cta {
+  display: inline-flex; align-items: center; gap: .3rem;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+  color: #fff; border-radius: 999px; padding: .35rem .9rem;
+  font-size: .75rem; font-weight: 700;
+  backdrop-filter: blur(8px);
+  transition: background .2s; margin-top: .6rem;
+}
+.tc-cta:hover { background: rgba(255,255,255,.22); color: #fff; }
+
+.span-7 { grid-column: span 7; min-height: 400px; }
+.span-5 { grid-column: span 5; min-height: 400px; }
+.span-4 { grid-column: span 4; min-height: 260px; }
+.span-3x { grid-column: span 4; min-height: 260px; }
+.tc-badge {
+  position: absolute; top: 1rem; right: 1rem; z-index: 2;
+  font-size: .62rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  background: rgba(198,143,58,.9); color: #fff;
+  padding: .28rem .7rem; border-radius: 999px; backdrop-filter: blur(6px);
+}
+.tc-badge.priv { background: rgba(198,143,58,.9); }
+
+/* ══════════════ WHY US ════════════════════ */
+.why-section { padding: 6rem 0; background: #fff; }
+.why-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.2rem; margin-top: 2.5rem; }
+.why-card {
+  padding: 2rem 1.5rem;
+  border: 1.5px solid transparent;
+  border-radius: var(--r);
+  background: var(--paper);
+  transition: border-color .3s, box-shadow .3s, transform .3s;
+  position: relative; overflow: hidden;
+}
+.why-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .35s ease;
+}
+.why-card:hover { border-color: rgba(10,76,94,.12); box-shadow: var(--shadow); transform: translateY(-5px); }
+.why-card:hover::before { transform: scaleX(1); }
+.why-ico {
+  width: 56px; height: 56px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; margin-bottom: 1.1rem;
+  flex-shrink: 0;
+}
+.why-name { font-family: 'Lora', serif; font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: .5rem; }
+.why-desc { font-size: .88rem; color: var(--ink-2); line-height: 1.7; }
+
+/* ══════════════ TRANSPORT ═════════════════ */
+.transport-section { padding: 6rem 0; background: var(--paper); }
+.transport-inner {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4rem; align-items: center;
+}
+.transport-img-wrap {
+  position: relative; border-radius: var(--r); overflow: hidden;
+  box-shadow: var(--shadow-md);
+  height: 480px;
+}
+.transport-img-wrap img { width:100%;height:100%;object-fit:cover; }
+.transport-badge {
+  position: absolute; bottom: 1.5rem; left: 1.5rem;
+  background: rgba(7,21,32,.85); backdrop-filter: blur(10px);
+  color: #fff; border: 1px solid rgba(255,255,255,.15);
+  border-radius: 14px; padding: 1rem 1.2rem;
+  display: flex; gap: 1.5rem;
+}
+.tb-item { text-align: center; }
+.tb-num { font-family: 'Lora', serif; font-size: 1.6rem; font-weight: 700; color: var(--gold-lite); display: block; }
+.tb-lab { font-size: .7rem; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: 1px; }
+
+.transport-feats { display: flex; flex-direction: column; gap: .8rem; margin: 2rem 0; }
+.t-feat {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: 1rem 1.2rem; border-radius: var(--r-sm);
+  background: #fff; border: 1px solid var(--border);
+  transition: border-color .2s, box-shadow .2s;
+}
+.t-feat:hover { border-color: rgba(10,76,94,.2); box-shadow: 0 6px 20px rgba(10,40,60,.08); }
+.t-feat-ico {
+  width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+
+/* ══════════════ CTA SECTION ═══════════════ */
+.cta-section {
+  position: relative; overflow: hidden;
+  padding: 7rem 0; text-align: center; isolation: isolate;
+}
+.cta-section::before {
+  content: '';
+  position: absolute; inset: 0; z-index: -2;
+  background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80');
+  background-size: cover; background-position: center;
+}
+.cta-section::after {
+  content: '';
+  position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(180deg, rgba(7,21,32,.88) 0%, rgba(10,48,68,.82) 100%);
+}
+.cta-section .display-title.light { text-shadow: 0 2px 20px rgba(0,0,0,.3); }
+.cta-sub { color: rgba(255,255,255,.62); margin: 1rem auto 2.5rem; max-width: 480px; line-height: 1.8; }
+
+/* ══════════════ RESPONSIVE ════════════════ */
+@media (max-width: 960px) {
+  .hero-wrap { grid-template-columns: 1fr; padding: 7rem 0 4rem; }
+  .hero-panel { display: none; }
+  .hero-title { font-size: clamp(2.2rem,8vw,3.5rem); }
+  .stats-inner { gap: 2rem; }
+  .tours-grid { display: flex; flex-direction: column; }
+  .span-7,.span-5,.span-4 { min-height: 280px; }
+  .why-grid { grid-template-columns: 1fr 1fr; }
+  .transport-inner { grid-template-columns: 1fr; }
+  .transport-img-wrap { height: 320px; }
+}
+@media (max-width: 600px) {
+  .why-grid { grid-template-columns: 1fr; }
+  .stats-inner { flex-direction: column; gap: 1.5rem; }
+  .hero-actions { flex-direction: column; }
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ HERO ════════════════════════════════ -->
+<section class="hero" id="hero-top">
+  <div class="hero-wrap wrap">
+    <!-- Left -->
+    <div class="hero-text">
+      <div class="hero-tag">
+        <span class="dot"></span>
+        <span data-t>Turismo y Transporte en todo Chile</span>
+      </div>
+      <h1 class="hero-title">
+        <span data-t>Descubre</span><br>
+        <em data-t>los mejores rincones</em><br>
+        <span data-t>de nuestro país</span>
+      </h1>
+      <p class="hero-desc" data-t>Experiencias auténticas, tours regulares, traslados privados y servicios corporativos diseñados a tu medida. Viaja con comodidad y seguridad.</p>
+      <div class="hero-actions">
+        <a class="btn-gold" href="{% url 'public_reservar' %}">
+          <i class="fas fa-calendar-check"></i>
+          <span data-t>Reservar ahora</span>
+        </a>
+        <a class="btn-primary" href="{% url 'public_tours' %}" style="background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25);backdrop-filter:blur(8px);">
+          <i class="fas fa-compass"></i>
+          <span data-t>Ver tours</span>
+        </a>
+      </div>
+      <div class="hero-checks">
+        <div class="hero-check"><i class="fas fa-check-circle"></i> <span data-t>Atención directa por WhatsApp 24/7</span></div>
+        <div class="hero-check"><i class="fas fa-check-circle"></i> <span data-t>Guías bilingües español, inglés y portugués</span></div>
+        <div class="hero-check"><i class="fas fa-check-circle"></i> <span data-t>Flota premium para grupos, familias y corporativos</span></div>
+      </div>
+    </div>
+
+    <!-- Right: glass panel -->
+    <div class="hero-panel">
+      <p class="hero-panel-title" data-t>Cotización en minutos</p>
+      <p class="hero-panel-sub" data-t>Cuéntanos destino, fecha y pasajeros. Respuesta rápida y propuesta transparente.</p>
+      <div class="hp-stats">
+        <div class="hp-stat">
+          <span class="hp-stat-n" data-counter="2500" data-suffix="+">2000</span>
+          <span class="hp-stat-l" data-t>viajeros</span>
+        </div>
+        <div class="hp-stat">
+          <span class="hp-stat-n" data-counter="98" data-suffix="%">95</span>
+          <span class="hp-stat-l" data-t>satisfacción</span>
+        </div>
+        <div class="hp-stat">
+          <span class="hp-stat-n" data-counter="3" data-suffix="">1</span>
+          <span class="hp-stat-l">ES·EN·PT</span>
+        </div>
+      </div>
+      <div class="wa-online">
+        <span class="wa-badge-g" data-t>Asesor disponible ahora</span>
+        <p data-t>Tu ejecutiva responde al instante para disponibilidad y precios.</p>
+        <a class="btn-wa" href="https://wa.link/61i97u" target="_blank" rel="noopener">
+          <i class="fab fa-whatsapp"></i>
+          <span data-t>Hablar ahora</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll cue -->
+  <div class="scroll-arrow wrap" onclick="document.getElementById('tours-start').scrollIntoView({behavior:'smooth'})">
+    <div class="arrow-circle"><i class="fas fa-chevron-down fa-xs"></i></div>
+    <span data-t>Explorar</span>
+  </div>
+</section>
+
+<!-- ══ STATS BAR ═══════════════════════════ -->
+<div class="stats-bar">
+  <div class="wrap stats-inner">
+    <div class="stat-item">
+      <span class="stat-num" data-counter="2500" data-suffix="+">2000</span>
+      <span class="stat-lab" data-t>Viajeros felices</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" data-counter="3" data-suffix="">1</span>
+      <span class="stat-lab" data-t>Idiomas</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">24/7</span>
+      <span class="stat-lab" data-t>Soporte</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" data-counter="{{ total_tours }}" data-suffix="">0</span>
+      <span class="stat-lab" data-t>Tours activos</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" data-counter="98" data-suffix="%">95</span>
+      <span class="stat-lab" data-t>Satisfacción</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOURS GRID ══════════════════════════ -->
+<section class="tours-section" id="tours-start">
+  <div class="wrap">
+    <div class="section-header" data-reveal>
+      <span class="eyebrow" data-t>Destinos Destacados</span>
+      <h2 class="display-title" data-t>Solo una muestra del catálogo</h2>
+      <p class="section-sub" data-t>Tours diseñados para viajeros que buscan lo auténtico. En la sección Tours encontrarás el catálogo completo.</p>
+    </div>
+
+    <div class="tours-grid">
+      {% for tour in featured_tours %}
+        {% if forloop.counter == 1 %}
+        <div class="tc span-7" data-reveal>
+          {% if tour.image_1 %}
+          <img src="{{ tour.image_1.url }}" alt="{{ tour.name }}">
+          {% else %}
+          <div class="tc-bg"><i class="fas fa-mountain"></i></div>
+          <img src="https://images.unsplash.com/photo-1518632619955-1c8f6d929f0d?auto=format&fit=crop&w=1200&q=80" alt="{{ tour.name }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+          {% endif %}
+          <div class="tc-gradient"></div>
+          <div class="tc-body">
+            {% if tour.destination %}<p class="tc-dest"><i class="fas fa-map-pin me-1"></i>{{ tour.destination }}</p>{% endif %}
+            <h3 class="tc-name">{{ tour.name }}</h3>
+            {% if tour.precio_clp %}<p class="tc-price" data-t>desde ${{ tour.precio_clp|intcomma }} CLP</p>{% endif %}
+            <a class="tc-cta" href="{% url 'public_tour_detail' tour.pk %}" data-t>Conocer tour <i class="fas fa-arrow-right fa-xs"></i></a>
+          </div>
+        </div>
+
+        {% elif forloop.counter == 2 %}
+        <div class="tc span-5" data-reveal>
+          {% if tour.image_1 %}
+          <img src="{{ tour.image_1.url }}" alt="{{ tour.name }}">
+          {% else %}
+          <img src="https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=900&q=80" alt="{{ tour.name }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+          {% endif %}
+          <div class="tc-gradient"></div>
+          <div class="tc-body">
+            {% if tour.destination %}<p class="tc-dest"><i class="fas fa-map-pin me-1"></i>{{ tour.destination }}</p>{% endif %}
+            <h3 class="tc-name">{{ tour.name }}</h3>
+            {% if tour.precio_clp %}<p class="tc-price" data-t>desde ${{ tour.precio_clp|intcomma }} CLP</p>{% endif %}
+            <a class="tc-cta" href="{% url 'public_tour_detail' tour.pk %}" data-t>Conocer tour <i class="fas fa-arrow-right fa-xs"></i></a>
+          </div>
+        </div>
+
+        {% else %}
+        <div class="tc span-4" data-reveal>
+          {% if tour.image_1 %}
+          <img src="{{ tour.image_1.url }}" alt="{{ tour.name }}">
+          {% else %}
+          <img src="https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=800&q=80" alt="{{ tour.name }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+          {% endif %}
+          <div class="tc-gradient"></div>
+          {% if tour.tour_type == 'PRIVADO' %}<span class="tc-badge priv" data-t>Privado</span>{% endif %}
+          <div class="tc-body">
+            {% if tour.destination %}<p class="tc-dest">{{ tour.destination }}</p>{% endif %}
+            <h3 class="tc-name">{{ tour.name }}</h3>
+            <a class="tc-cta" href="{% url 'public_tour_detail' tour.pk %}" data-t>Reservar <i class="fas fa-arrow-right fa-xs"></i></a>
+          </div>
+        </div>
+        {% endif %}
+      {% empty %}
+      <!-- Fallback cards showcasing the region -->
+      <div class="tc span-7" data-reveal>
+        <img src="https://images.unsplash.com/photo-1518632619955-1c8f6d929f0d?auto=format&fit=crop&w=1200&q=80" alt="Volcán Osorno" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+        <div class="tc-gradient"></div>
+        <div class="tc-body">
+          <p class="tc-dest"><i class="fas fa-map-pin me-1"></i>Los Lagos</p>
+          <h3 class="tc-name">Volcán Osorno</h3>
+          <p class="tc-price" data-t>Tour icónico del sur</p>
+          <a class="tc-cta" href="{% url 'public_reservar' %}" data-t>Conocer tour <i class="fas fa-arrow-right fa-xs"></i></a>
+        </div>
+      </div>
+      <div class="tc span-5" data-reveal>
+        <img src="https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=900&q=80" alt="Frutillar" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+        <div class="tc-gradient"></div>
+        <div class="tc-body">
+          <p class="tc-dest"><i class="fas fa-map-pin me-1"></i>Los Lagos</p>
+          <h3 class="tc-name">Frutillar</h3>
+          <p class="tc-price" data-t>Ciudad alemana junto al lago</p>
+          <a class="tc-cta" href="{% url 'public_reservar' %}" data-t>Conocer tour <i class="fas fa-arrow-right fa-xs"></i></a>
+        </div>
+      </div>
+      <div class="tc span-4" data-reveal>
+        <img src="https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=800&q=80" alt="Chiloé" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+        <div class="tc-gradient"></div>
+        <div class="tc-body">
+          <p class="tc-dest">Chiloé</p>
+          <h3 class="tc-name" data-t>Archipiélago de Chiloé</h3>
+          <a class="tc-cta" href="{% url 'public_reservar' %}" data-t>Reservar</a>
+        </div>
+      </div>
+      <div class="tc span-4" data-reveal>
+        <img src="https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=800&q=80" alt="Puerto Varas" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+        <div class="tc-gradient"></div>
+        <div class="tc-body">
+          <p class="tc-dest">Los Lagos</p>
+          <h3 class="tc-name">Puerto Varas</h3>
+          <a class="tc-cta" href="{% url 'public_reservar' %}" data-t>Reservar</a>
+        </div>
+      </div>
+      <div class="tc span-4" data-reveal>
+        <img src="https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?auto=format&fit=crop&w=800&q=80" alt="Sur de Chile" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+        <div class="tc-gradient"></div>
+        <span class="tc-badge priv" data-t>Privado</span>
+        <div class="tc-body">
+          <p class="tc-dest" data-t>Tour Exclusivo</p>
+          <h3 class="tc-name" data-t>Tours Privados</h3>
+          <a class="tc-cta" href="{% url 'public_tours_privados' %}" data-t>Ver más</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="text-align:center;margin-top:2.5rem;" data-reveal>
+      <a class="btn-primary" href="{% url 'public_tours' %}">
+        <i class="fas fa-compass"></i>
+        <span data-t>Ver todos los tours</span>
+      </a>
+      <a class="btn-ghost" href="{% url 'public_tours_privados' %}" style="margin-left:1rem;margin-top:.5rem;">
+        <i class="fas fa-star"></i>
+        <span data-t>Tours Privados</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ WHY US ══════════════════════════════ -->
+<section class="why-section">
+  <div class="wrap">
+    <div data-reveal>
+      <span class="eyebrow" data-t>¿Por qué Getaway Chile?</span>
+      <h2 class="display-title" data-t>Tu experiencia, nuestra prioridad</h2>
+      <p class="section-sub" data-t>Combinamos pasión local, tecnología y atención humana para crear viajes que superan expectativas.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card" data-reveal>
+        <div class="why-ico" style="background:rgba(10,76,94,.1);color:var(--teal);"><i class="fas fa-shield-alt"></i></div>
+        <h4 class="why-name" data-t>Viaje 100% Seguro</h4>
+        <p class="why-desc" data-t>Conductores certificados, vehículos asegurados y protocolos de seguridad en cada ruta.</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <div class="why-ico" style="background:rgba(198,143,58,.1);color:var(--gold);"><i class="fas fa-users"></i></div>
+        <h4 class="why-name" data-t>Guías Locales Expertos</h4>
+        <p class="why-desc" data-t>Nativos del sur de Chile con años de experiencia compartiendo la cultura y los paisajes únicos de la región.</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <div class="why-ico" style="background:rgba(10,76,94,.1);color:var(--teal);"><i class="fas fa-globe-americas"></i></div>
+        <h4 class="why-name">Español · English · Português</h4>
+        <p class="why-desc" data-t>Atención y guías en 3 idiomas. La barrera del idioma nunca es un obstáculo para vivir una gran experiencia.</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <div class="why-ico" style="background:rgba(198,143,58,.1);color:var(--gold);"><i class="fas fa-clock"></i></div>
+        <h4 class="why-name" data-t>Soporte 24/7</h4>
+        <p class="why-desc" data-t>Logística monitoreando cada servicio en tiempo real. Estamos disponibles antes, durante y después de tu viaje.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TRANSPORT ═══════════════════════════ -->
+<section class="transport-section">
+  <div class="wrap transport-inner">
+    <div class="transport-img-wrap" data-reveal-l>
+      <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=900&q=80" alt="Transfer aeropuerto">
+      <div class="transport-badge">
+        <div class="tb-item"><span class="tb-num">24/7</span><span class="tb-lab" data-t>disponible</span></div>
+        <div class="tb-item"><span class="tb-num">100%</span><span class="tb-lab" data-t>puntual</span></div>
+        <div class="tb-item"><span class="tb-num"><i class="fas fa-plane"></i></span><span class="tb-lab" data-t>traslados</span></div>
+      </div>
+    </div>
+    <div data-reveal-r>
+      <span class="eyebrow" data-t>Transfer Ejecutivo</span>
+      <h2 class="display-title" data-t>Transporte al Aeropuerto</h2>
+      <p class="section-sub" data-t>Traslados privados hacia y desde el aeropuerto. Viaja con la tranquilidad de que un conductor profesional te estará esperando. Monitoreamos tu vuelo en tiempo real para estar siempre a tiempo.</p>
+      <div class="transport-feats">
+        <div class="t-feat">
+          <div class="t-feat-ico" style="background:rgba(10,76,94,.1);color:var(--teal);"><i class="fas fa-plane-arrival"></i></div>
+          <div>
+            <strong style="font-size:.92rem;color:var(--ink);" data-t>Seguimiento de vuelo en tiempo real</strong>
+            <p style="font-size:.85rem;color:var(--ink-2);margin:.2rem 0 0;" data-t>Nunca más esperas por retrasos de vuelo.</p>
+          </div>
+        </div>
+        <div class="t-feat">
+          <div class="t-feat-ico" style="background:rgba(198,143,58,.1);color:var(--gold);"><i class="fas fa-user-tie"></i></div>
+          <div>
+            <strong style="font-size:.92rem;color:var(--ink);" data-t>Conductor con tu nombre en la puerta</strong>
+            <p style="font-size:.85rem;color:var(--ink-2);margin:.2rem 0 0;" data-t>Recepción profesional en la salida del terminal.</p>
+          </div>
+        </div>
+        <div class="t-feat">
+          <div class="t-feat-ico" style="background:rgba(10,76,94,.1);color:var(--teal);"><i class="fas fa-tag"></i></div>
+          <div>
+            <strong style="font-size:.92rem;color:var(--ink);" data-t>Tarifa fija, sin sorpresas</strong>
+            <p style="font-size:.85rem;color:var(--ink-2);margin:.2rem 0 0;" data-t>Precio acordado antes del viaje, sin extras.</p>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <a class="btn-primary" href="{% url 'public_transporte' %}"><span data-t>Más información</span></a>
+        <a class="btn-ghost" href="{% url 'public_reservar' %}?servicio=transporte"><span data-t>Reservar traslado</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CTA FINAL ═══════════════════════════ -->
+<section class="cta-section">
+  <div class="wrap" data-reveal>
+    <span class="eyebrow" style="color:rgba(255,255,255,.45);" data-t>¿Listo para la aventura?</span>
+    <h2 class="display-title light" style="margin-top:.5rem;" data-t>Tu próximo tour en Chile empieza aquí</h2>
+    <p class="cta-sub" data-t>Completa el formulario y en menos de 24 horas nuestro equipo te contactará con las mejores opciones para tu viaje.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a class="btn-gold" href="{% url 'public_reservar' %}" style="font-size:1rem;padding:.8rem 2rem;">
+        <i class="fas fa-calendar-check"></i>
+        <span data-t>Reservar ahora</span>
+      </a>
+      <a class="btn-primary" href="https://wa.link/61i97u" target="_blank" style="background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);font-size:1rem;padding:.8rem 2rem;">
+        <i class="fab fa-whatsapp"></i>
+        <span data-t>WhatsApp directo</span>
+      </a>
+      <a class="btn-ghost" href="{% url 'public_contacto' %}" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7);font-size:1rem;">
+        <span data-t>Escribirnos</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Animated counters */
+(function(){
+  var done=false;
+  var run=function(){
+    if(done)return; done=true;
+    document.querySelectorAll('[data-counter]').forEach(function(el){
+      var target=parseInt(el.dataset.counter)||0;
+      var suffix=el.dataset.suffix||'';
+      var step=Math.max(1,Math.ceil(target/60));
+      var cur=0;
+      var t=setInterval(function(){
+        cur=Math.min(cur+step,target);
+        el.textContent=cur+suffix;
+        if(cur>=target)clearInterval(t);
+      },22);
+    });
+  };
+  var obs=new IntersectionObserver(function(e){if(e[0].isIntersecting)run();},{threshold:.3});
+  var bar=document.querySelector('.stats-bar');
+  if(bar)obs.observe(bar);
+  else run();
+})();
+
+/* Tour card tilt */
+document.querySelectorAll('.tc').forEach(function(c){
+  c.addEventListener('mousemove',function(e){
+    var r=c.getBoundingClientRect();
+    var x=(e.clientX-r.left)/r.width-.5;
+    var y=(e.clientY-r.top)/r.height-.5;
+    c.style.transform='perspective(800px) rotateY('+(x*5)+'deg) rotateX('+(-y*4)+'deg) scale(1.02)';
+    c.style.transition='transform .1s';
+    c.style.zIndex='2';
+  });
+  c.addEventListener('mouseleave',function(){
+    c.style.transform='';
+    c.style.transition='transform .4s ease';
+    c.style.zIndex='';
+  });
+});
+
+/* Subtle hero parallax */
+window.addEventListener('scroll',function(){
+  var hero=document.querySelector('.hero::before');
+  /* We animate the section instead */
+}, {passive:true});
+</script>
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends 'core/public/base_public.html' %}
+{% load static %}
+
+{% block title %}Reserva tu Aventura — Getaway Chile{% endblock %}
+{% block meta_description %}Formulario de cotización y reserva para tours regulares, privados y transporte al aeropuerto. Respuesta rápida por asesores de Getaway Chile.{% endblock %}
+
+{% block extra_css %}
+.book-hero {
+    background: var(--dark);
+    padding: 7rem 0 5rem;
+    text-align: center; color: #fff;
+    position: relative; overflow: hidden;
+}
+.book-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% -20%, rgba(10,76,94,.8) 0%, transparent 60%);
+    opacity: .7;
+}
+
+.form-wrapper {
+    max-width: 800px; margin: -3rem auto 5rem;
+    background: #fff; border-radius: var(--r); padding: 3.5rem 4rem;
+    box-shadow: var(--shadow-md); border: 1px solid var(--border);
+    position: relative; z-index: 10;
+}
+.fw-head { text-align: center; margin-bottom: 2.5rem; }
+.fw-head h2 { font-family: 'Lora', serif; font-size: 1.8rem; color: var(--ink); margin-bottom: .4rem; }
+.fw-head p { font-size: .95rem; color: var(--ink-2); }
+
+.gc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.gc-form-group { margin-bottom: 1.5rem; }
+.gc-label { display: block; font-size: .85rem; font-weight: 700; color: var(--ink); margin-bottom: .6rem; }
+.gc-input, .gc-select, .gc-textarea {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 1rem 1.2rem; font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: .95rem; color: var(--ink); background: #fbfdfd;
+    transition: background .2s, border-color .2s, box-shadow .2s;
+}
+.gc-input:focus, .gc-select:focus, .gc-textarea:focus {
+    outline: none; background: #fff; border-color: var(--teal);
+    box-shadow: 0 0 0 4px rgba(10,76,94,.1);
+}
+.gc-textarea { resize: vertical; min-height: 120px; }
+
+/* Radio cards for Service Type */
+.st-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.st-label {
+    display: flex; flex-direction: column; align-items: center; gap: .8rem;
+    border: 1.5px solid var(--border); background: #fbfdfd; border-radius: 14px;
+    padding: 1.5rem 1rem; cursor: pointer; text-align: center; transition: all .2s;
+    user-select: none;
+}
+.st-label i { font-size: 1.5rem; color: var(--ink-2); transition: color .2s; }
+.st-label span { font-size: .85rem; font-weight: 700; color: var(--ink); transition: color .2s; }
+.st-radio { display: none; }
+.st-radio:checked + .st-label {
+    border-color: var(--teal); background: rgba(10,76,94,.05);
+    box-shadow: 0 8px 20px rgba(10,40,60,.06);
+}
+.st-radio:checked + .st-label i { color: var(--teal); }
+
+.alert-s {
+    background: rgba(37,211,102,.1); border: 1px solid rgba(37,211,102,.3);
+    border-radius: 12px; padding: 1.2rem; color: #1e8d46; font-size: .95rem;
+    margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-start;
+}
+.alert-s i { font-size: 1.2rem; margin-top: .15rem; }
+
+@media(max-width:768px){
+    .form-wrapper { padding: 2.5rem 2rem; }
+    .gc-grid-2 { grid-template-columns: 1fr; gap: 1rem; }
+    .st-grid { grid-template-columns: 1fr; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="book-hero">
+    <div class="wrap" data-reveal>
+        <span class="eyebrow" style="color:var(--gold-lite);" data-t>Cotización y Reserva</span>
+        <h1 class="display-title light" data-t>Tu aventura empieza aquí</h1>
+        <p style="color:rgba(255,255,255,.65);max-width:540px;margin:1rem auto 0;font-size:1.05rem;" data-t>Sin pagos automáticos sorpresa. Solicitas tu cupo, confirmamos disponibilidad en minutos y enviamos el detalle de pago.</p>
+    </div>
+</section>
+
+<section style="background:var(--paper);padding-bottom:5rem;">
+    <div class="wrap" data-reveal>
+        <div class="form-wrapper">
+            
+            <div class="fw-head">
+                <h2 data-t>Formulario de Solicitud</h2>
+                <p data-t>Completar esto toma menos de 2 minutos.</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert-s">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <strong style="display:block;margin-bottom:.2rem;">¡Solicitud Recibida!</strong>
+                        {{ message }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <form action="{% url 'public_reservar' %}" method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="gc-form-group">
+                        <label class="gc-label" data-t>Motivo de tu viaje</label>
+                        <div class="st-grid">
+                            {% for c, lbl in form.fields.tipo_servicio.choices %}
+                                {% if c %}
+                                <input type="radio" name="tipo_servicio" id="ts_{{ c }}" value="{{ c }}" class="st-radio"
+                                       {% if form.tipo_servicio.value == c %}checked{% elif not form.tipo_servicio.value and forloop.counter == 2 %}checked{% endif %}>
+                                <label for="ts_{{ c }}" class="st-label">
+                                    {% if c == 'tour' %}<i class="fas fa-compass"></i>
+                                    {% elif c == 'privado' %}<i class="fas fa-star" style="color:var(--gold);"></i>
+                                    {% elif c == 'transporte' %}<i class="fas fa-plane"></i>
+                                    {% elif c == 'parque_acuatico' %}<i class="fas fa-water"></i>
+                                    {% elif c == 'empresa' %}<i class="fas fa-building"></i>
+                                    {% elif c == 'playa' %}<i class="fas fa-umbrella-beach"></i>
+                                    {% elif c == 'matrimonio' %}<i class="fas fa-rings-wedding"></i>
+                                    {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+                                    <span data-t>{{ lbl }}</span>
+                                </label>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="gc-form-group" id="div_tour_field" {% if not form.tour.value %}style="display:none;"{% endif %}>
+                        <label class="gc-label" data-t>¿Qué tour te interesa?</label>
+                        <select name="tour" class="gc-select" id="id_tour">
+                            <option value="">Selecciona un tour (Opcional si aún no decides)</option>
+                            {% for c, lbl in form.fields.tour.choices %}
+                                {% if c %}<option value="{{ c }}" {% if form.tour.value|stringformat:"s" == c|stringformat:"s" %}selected{% endif %}>{{ lbl }}</option>{% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="gc-grid-2">
+                        <div class="gc-form-group" style="margin:0;">
+                            <label class="gc-label" data-t>Fecha estimada</label>
+                            <input type="date" name="fecha" class="gc-input" value="{{ form.fecha.value|default_if_none:'' }}">
+                        </div>
+                        <div class="gc-form-group" style="margin:0;">
+                            <label class="gc-label" data-t>Cantidad de Pasajeros</label>
+                            <input type="number" name="pasajeros" class="gc-input" min="1" value="{{ form.pasajeros.value|default_if_none:'1' }}">
+                        </div>
+                    </div>
+
+                    <div class="gc-grid-2">
+                        <div class="gc-form-group" style="margin:0;">
+                            <label class="gc-label" data-t>Nombre de contacto *</label>
+                            <input type="text" name="nombre" class="gc-input" required placeholder="Juana Pérez" value="{{ form.nombre.value|default_if_none:'' }}">
+                        </div>
+                        <div class="gc-form-group" style="margin:0;">
+                            <label class="gc-label">Email *</label>
+                            <input type="email" name="email" class="gc-input" required placeholder="tu@email.com" value="{{ form.email.value|default_if_none:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="gc-form-group">
+                        <label class="gc-label" data-t>Teléfono / WhatsApp *</label>
+                        <input type="text" name="telefono" class="gc-input" required placeholder="+56 9 1234 5678" value="{{ form.telefono.value|default_if_none:'' }}">
+                    </div>
+
+                    <div class="gc-form-group">
+                        <label class="gc-label" data-t>Detalles adicionales</label>
+                        <textarea name="mensaje" class="gc-textarea" placeholder="Escribe aquí tu hotel de recogida, peticiones especiales como asientos de bebé, o si tienes horarios específicos para el aeropuerto..." data-t>{{ form.mensaje.value|default_if_none:'' }}</textarea>
+                    </div>
+
+                    <div style="margin-top:2.5rem;display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
+                        <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:1.1rem;font-size:1.05rem;">
+                            <i class="fas fa-paper-plane"></i> <span data-t>Enviar Solicitud</span>
+                        </button>
+                        <div style="text-align:center;font-size:.85rem;color:var(--ink-2);">
+                            <i class="fas fa-lock" style="color:var(--teal);margin-right:.2rem;"></i>
+                            <span data-t>Tus datos están seguros. Un asesor revisará disponibilidad.</span>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const rads = document.querySelectorAll('input[name="tipo_servicio"]');
+        const dTour = document.getElementById('div_tour_field');
+        const selTour = document.getElementById('id_tour');
+
+        function toggleTour() {
+            let val = document.querySelector('input[name="tipo_servicio"]:checked');
+            if(val && (val.value === 'tour' || val.value === 'privado')) {
+                dTour.style.display = 'block';
+            } else {
+                dTour.style.display = 'none';
+                selTour.value = '';
+            }
+        }
+
+        rads.forEach(r => r.addEventListener('change', toggleTour));
+        toggleTour();
+    });
+</script>
+{% endblock %}

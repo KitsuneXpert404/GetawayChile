@@ -1,0 +1,492 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" id="gc-html">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="{% block meta_description %}Getaway Chile — Tours y transporte privado en el sur de Chile.{% endblock %}">
+<title>{% block title %}Getaway Chile{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ════════════════════════════════════════════
+   GETAWAY CHILE — Design System
+════════════════════════════════════════════ */
+:root {
+  --teal:      #0A4C5E;
+  --teal-mid:  #0f6f88;
+  --teal-lite: #1a8fa8;
+  --gold:      #C68F3A;
+  --gold-lite: #d9a94f;
+  --dark:      #071520;
+  --dark-2:    #0d2233;
+  --ink:       #0f2535;
+  --ink-2:     #3a5568;
+  --paper:     #f6fafb;
+  --white:     #ffffff;
+  --border:    #dce9ee;
+  --r:         18px;
+  --r-sm:      12px;
+  --shadow:    0 12px 40px rgba(10,40,60,.12);
+  --shadow-md: 0 20px 60px rgba(10,40,60,.18);
+  --c:         1200px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--ink);
+  background: #f6fafb;
+  overflow-x: hidden;
+}
+body.nav-open { overflow: hidden; }
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+.wrap {
+  width: min(var(--c), calc(100% - 2.5rem));
+  margin-inline: auto;
+}
+
+/* ── Scroll bar ── */
+#gc-bar {
+  position: fixed; top: 0; left: 0; z-index: 300;
+  height: 3px; width: 0;
+  background: linear-gradient(90deg, var(--teal-lite), var(--gold));
+}
+
+/* ── NAVBAR ─────────────────────────────── */
+.gc-nav {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(10,76,94,.1);
+  transition: box-shadow .3s;
+}
+.gc-nav.inked { box-shadow: 0 4px 24px rgba(7,21,32,.1); }
+.gc-nav-inner {
+  display: flex; align-items: center;
+  gap: 1.5rem; padding: .9rem 0;
+}
+.gc-logo img {
+  height: 40px; width: auto;
+  filter: brightness(0) saturate(100%) invert(20%) sepia(90%) saturate(600%) hue-rotate(168deg);
+}
+.gc-logo span {
+  font-family: 'Lora', serif; font-size: 1.25rem; font-weight: 700;
+  color: var(--teal); letter-spacing: -.5px;
+}
+
+.gc-nav-links {
+  display: flex; align-items: center; gap: 1.8rem;
+  margin-left: 1rem; flex: 1;
+}
+.gc-nav-links a {
+  font-size: .88rem; font-weight: 600; color: var(--ink-2);
+  padding: .3rem 0; border-bottom: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+}
+.gc-nav-links a:hover, .gc-nav-links a.active {
+  color: var(--teal); border-color: var(--gold);
+}
+
+.gc-nav-end {
+  display: flex; align-items: center; gap: .8rem;
+  margin-left: auto; flex-shrink: 0;
+}
+
+/* Language pill */
+.lp {
+  display: inline-flex; align-items: center; gap: .15rem;
+  background: rgba(10,76,94,.06);
+  border: 1px solid rgba(10,76,94,.14);
+  border-radius: 999px; padding: .2rem .25rem;
+}
+.lp-btn {
+  border: none; background: none; cursor: pointer;
+  border-radius: 999px; padding: .25rem .55rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: .7rem; font-weight: 700; color: var(--teal);
+  transition: background .2s, color .2s;
+}
+.lp-btn.on {
+  background: var(--teal); color: #fff;
+}
+
+/* Buttons */
+.btn-primary, .btn-ghost {
+  display: inline-flex; align-items: center; gap: .45rem;
+  border-radius: 999px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: .88rem;
+  padding: .65rem 1.35rem; border: 2px solid transparent;
+  cursor: pointer; transition: transform .2s, box-shadow .2s, background .2s;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(110deg, var(--teal), var(--teal-mid) 55%, var(--teal-lite));
+  color: #fff; box-shadow: 0 8px 24px rgba(10,76,94,.3);
+}
+.btn-primary:hover { color:#fff; transform: translateY(-2px); box-shadow: 0 14px 32px rgba(10,76,94,.38); }
+.btn-ghost {
+  background: transparent; color: var(--teal);
+  border-color: rgba(10,76,94,.3);
+}
+.btn-ghost:hover { background: rgba(10,76,94,.06); transform: translateY(-2px); }
+.btn-gold {
+  display: inline-flex; align-items: center; gap: .45rem;
+  border-radius: 999px; padding: .65rem 1.35rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: .88rem;
+  background: linear-gradient(110deg, var(--gold), var(--gold-lite));
+  color: #fff; border: none; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(198,143,58,.35);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-gold:hover { color:#fff; transform: translateY(-2px); box-shadow: 0 14px 32px rgba(198,143,58,.5); }
+
+/* Hamburger */
+.gc-ham {
+  display: none; flex-direction: column; gap: 5px;
+  width: 42px; height: 42px; align-items: center; justify-content: center;
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); cursor: pointer;
+}
+.gc-ham span {
+  width: 20px; height: 2.5px; background: var(--teal);
+  border-radius: 99px; transition: transform .3s, opacity .3s;
+}
+
+/* Mobile overlay */
+.gc-mobile {
+  display: none; position: fixed; inset: 0; z-index: 190;
+  background: rgba(7,21,32,.97); backdrop-filter: blur(8px);
+  flex-direction: column; padding: 5.5rem 2rem 2rem;
+  gap: 1.2rem;
+}
+.gc-mobile.show { display: flex; }
+.gc-mobile a {
+  color: rgba(255,255,255,.85); font-size: 1.3rem; font-weight: 700;
+  padding: .8rem 0; border-bottom: 1px solid rgba(255,255,255,.08);
+  transition: color .2s;
+}
+.gc-mobile a:hover { color: var(--gold-lite); }
+.gc-mobile .lp { margin: .5rem 0; }
+.gc-mobile .btn-primary { margin-top: 1rem; width: 100%; justify-content: center; }
+.gc-mobile-close {
+  position: absolute; top: 1.2rem; right: 1.5rem;
+  background: none; border: none; color: rgba(255,255,255,.5);
+  font-size: 1.6rem; cursor: pointer; line-height: 1;
+}
+.gc-mobile-login {
+  font-size: .78rem; color: rgba(255,255,255,.28);
+  margin-top: auto; text-align: center;
+}
+
+/* ── Reveal ── */
+[data-reveal] {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity .65s ease, transform .65s ease;
+}
+[data-reveal].seen { opacity: 1; transform: none; }
+[data-reveal-l] {
+  opacity: 0; transform: translateX(-28px);
+  transition: opacity .65s ease, transform .65s ease;
+}
+[data-reveal-l].seen { opacity: 1; transform: none; }
+[data-reveal-r] {
+  opacity: 0; transform: translateX(28px);
+  transition: opacity .65s ease, transform .65s ease;
+}
+[data-reveal-r].seen { opacity: 1; transform: none; }
+
+/* ── FOOTER ─────────────────────────────── */
+.gc-footer {
+  background: var(--dark); color: rgba(255,255,255,.55);
+  padding: 4rem 0 2rem;
+}
+.gc-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 3rem; margin-bottom: 3rem;
+}
+.gc-footer-brand img { height: 38px; margin-bottom: 1rem; filter: brightness(0) invert(1); }
+.gc-footer-brand p { font-size: .88rem; line-height: 1.75; max-width: 300px; }
+.gc-footer h4 {
+  font-size: .8rem; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: rgba(255,255,255,.3);
+  margin-bottom: 1rem;
+}
+.gc-footer a {
+  display: block; font-size: .9rem; color: rgba(255,255,255,.55);
+  margin-bottom: .6rem; transition: color .2s;
+}
+.gc-footer a:hover { color: var(--gold-lite); }
+.gc-footer-bottom {
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top: 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .78rem; color: rgba(255,255,255,.25);
+  flex-wrap: wrap; gap: .5rem;
+}
+.gc-footer-bottom a { color: rgba(255,255,255,.3); }
+.gc-footer-bottom a:hover { color: var(--gold-lite); }
+
+/* ── WhatsApp float ── */
+.wa-fab {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 180;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #25d366;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 28px rgba(37,211,102,.45);
+  transition: transform .25s, box-shadow .25s;
+}
+.wa-fab:hover { transform: scale(1.12); box-shadow: 0 14px 40px rgba(37,211,102,.6); }
+.wa-fab svg { width: 30px; height: 30px; fill: #fff; }
+
+/* ── Headings ── */
+.eyebrow {
+  display: inline-block;
+  font-size: .72rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--teal); margin-bottom: .8rem;
+}
+.display-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 700; line-height: 1.12; color: var(--ink);
+}
+.display-title.light { color: #fff; }
+.section-sub {
+  font-size: 1rem; color: var(--ink-2);
+  line-height: 1.75; max-width: 600px; margin-top: .75rem;
+}
+
+/* ── Hide Google Translate UI ── */
+body { top: 0 !important; }
+.skiptranslate iframe,
+.goog-te-banner-frame { display: none !important; }
+
+{% block extra_css %}{% endblock %}
+
+/* ── Responsive nav ── */
+@media (max-width: 920px) {
+  .gc-nav-links, .gc-nav-end { display: none; }
+  .gc-ham { display: flex; margin-left: auto; }
+}
+@media (max-width: 640px) {
+  .gc-footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+}
+</style>
+{% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<div id="gc-bar"></div>
+
+<!-- NAV -->
+<header class="gc-nav" id="gcNav">
+  <div class="wrap gc-nav-inner">
+    <a href="{% url 'public_home' %}" class="gc-logo">
+      <img src="{% static 'img/logo_black.png' %}" alt="Getaway Chile"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <span style="display:none">Getaway Chile</span>
+    </a>
+
+    <nav class="gc-nav-links">
+      <a href="{% url 'public_home' %}" data-t>Inicio</a>
+      <a href="{% url 'public_tours' %}" data-t>Tours</a>
+      <a href="{% url 'public_tours_privados' %}" data-t>Tours Privados</a>
+      <a href="{% url 'public_transporte' %}" data-t>Transporte</a>
+      <a href="{% url 'public_quienes_somos' %}" data-t>Nosotros</a>
+      <a href="{% url 'public_contacto' %}" data-t>Contacto</a>
+    </nav>
+
+    <div class="gc-nav-end">
+      <div class="lp">
+        <button class="lp-btn" id="l-es" onclick="setLang('es')">ES</button>
+        <button class="lp-btn" id="l-en" onclick="setLang('en')">EN</button>
+        <button class="lp-btn" id="l-pt" onclick="setLang('pt')">PT</button>
+      </div>
+      <a class="btn-primary" href="{% url 'public_reservar' %}" data-t>Reservar</a>
+      <a href="{% url 'login' %}" style="opacity:.35;font-size:.8rem;color:var(--ink-2);" title="Acceso empleados">
+        <i class="fas fa-lock"></i>
+      </a>
+    </div>
+
+    <button class="gc-ham" id="gcHam" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile overlay -->
+<div class="gc-mobile" id="gcMobile">
+  <button class="gc-mobile-close" id="gcClose">&#215;</button>
+  <a href="{% url 'public_home' %}" data-t>Inicio</a>
+  <a href="{% url 'public_tours' %}" data-t>Tours</a>
+  <a href="{% url 'public_tours_privados' %}" data-t>Tours Privados</a>
+  <a href="{% url 'public_transporte' %}" data-t>Transporte</a>
+  <a href="{% url 'public_quienes_somos' %}" data-t>Nosotros</a>
+  <a href="{% url 'public_contacto' %}" data-t>Contacto</a>
+  <div class="lp">
+    <button class="lp-btn" id="ml-es" onclick="setLang('es')">ES</button>
+    <button class="lp-btn" id="ml-en" onclick="setLang('en')">EN</button>
+    <button class="lp-btn" id="ml-pt" onclick="setLang('pt')">PT</button>
+  </div>
+  <a class="btn-primary" href="{% url 'public_reservar' %}" data-t>Reservar Ahora</a>
+  <a href="{% url 'login' %}" class="gc-mobile-login" data-t>Acceso Empleados <i class="fas fa-lock fa-xs"></i></a>
+</div>
+
+<div class="wrap text-center py-2" style="font-size:12px;opacity:0.6;">
+  <!-- Google Translate Hidden Element -->
+  <div id="google_translate_element" style="display:none;"></div>
+</div>
+
+<main>{% block content %}{% endblock %}</main>
+
+<!-- FOOTER -->
+<footer class="gc-footer">
+  <div class="wrap">
+    <div class="gc-footer-grid">
+      <div class="gc-footer-brand">
+        <img src="{% static 'img/logo_white.png' %}" alt="Getaway Chile"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <h3 style="display:none;color:#fff;font-family:'Lora',serif;font-size:1.2rem;margin-bottom:1rem;">Getaway Chile</h3>
+        <p data-t>Turismo y transporte privado en el sur de Chile. Volcán Osorno, Frutillar, Chiloé y más destinos únicos.</p>
+        <div style="margin-top:1.2rem;display:flex;gap:.8rem;">
+          <a href="https://wa.link/61i97u" target="_blank" style="color:#4ddd8a;font-size:1.3rem;"><i class="fab fa-whatsapp"></i></a>
+          <a href="#" style="color:rgba(255,255,255,.3);font-size:1.3rem;"><i class="fab fa-instagram"></i></a>
+          <a href="#" style="color:rgba(255,255,255,.3);font-size:1.3rem;"><i class="fab fa-facebook"></i></a>
+        </div>
+      </div>
+      <div>
+        <h4 data-t>Servicios</h4>
+        <a href="{% url 'public_tours' %}" data-t>Tours Full Day</a>
+        <a href="{% url 'public_tours_privados' %}" data-t>Tours Privados</a>
+        <a href="{% url 'public_transporte' %}" data-t>Transfer Aeropuerto</a>
+        <a href="{% url 'public_reservar' %}" data-t>Reservas</a>
+      </div>
+      <div>
+        <h4 data-t>Contacto</h4>
+        <a href="mailto:contacto@getawaychile.cl">contacto@getawaychile.cl</a>
+        <a href="tel:+56994155655">+56 9 9415 5655</a>
+        <p style="font-size:.85rem;margin-top:.5rem;color:rgba(255,255,255,.35);">Teatinos 371, Santiago<br>Región Metropolitana</p>
+      </div>
+    </div>
+    <div class="gc-footer-bottom">
+      <span>© <span id="gc-yr"></span> Getaway Chile. <span data-t>Todos los derechos reservados.</span></span>
+      <a href="{% url 'login' %}" data-t>Acceso Empleados</a>
+    </div>
+  </div>
+</footer>
+
+<!-- WhatsApp FAB -->
+<a class="wa-fab" href="https://wa.link/61i97u" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M20.5 3.5A11.5 11.5 0 0 0 2.6 17.3L1 23l5.9-1.5A11.5 11.5 0 1 0 20.5 3.5Zm-8.9 17a9.2 9.2 0 0 1-4.7-1.3l-.3-.2-3.5.9.9-3.4-.2-.3a9.2 9.2 0 1 1 7.8 4.3Zm5-6.8c-.3-.2-1.7-.9-2-.9-.3-.1-.4-.2-.6.2-.2.3-.7.9-.8 1.1-.2.2-.3.2-.6.1-.3-.2-1.2-.4-2.2-1.3-.8-.7-1.3-1.6-1.4-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2.1-.4 0-.5-.1-.2-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-1 1-1 2.4s1.1 2.8 1.2 3c.2.2 2.1 3.2 5.1 4.5.7.3 1.2.4 1.7.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.3.1-1.4-.1-.1-.3-.2-.6-.4Z"/></svg>
+</a>
+
+<script>
+/* ── Progress bar ── */
+(function(){
+  var b=document.getElementById('gc-bar');
+  window.addEventListener('scroll',function(){
+    var p=(window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
+    b.style.width=p+'%';
+  },{passive:true});
+})();
+
+/* ── Navbar shadow ── */
+(function(){
+  var n=document.getElementById('gcNav');
+  window.addEventListener('scroll',function(){
+    n.classList.toggle('inked',window.scrollY>40);
+  },{passive:true});
+})();
+
+/* ── Mobile nav ── */
+(function(){
+  var h=document.getElementById('gcHam');
+  var m=document.getElementById('gcMobile');
+  var c=document.getElementById('gcClose');
+  var open=function(){m.classList.add('show');document.body.classList.add('nav-open');};
+  var shut=function(){m.classList.remove('show');document.body.classList.remove('nav-open');};
+  h.addEventListener('click',function(){m.classList.contains('show')?shut():open();});
+  c.addEventListener('click',shut);
+  m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',shut);});
+})();
+
+/* ── Active link ── */
+(function(){
+  var p=window.location.pathname;
+  document.querySelectorAll('.gc-nav-links a').forEach(function(a){
+    if(a.getAttribute('href')===p)a.classList.add('active');
+  });
+})();
+
+/* ── Scroll reveal ── */
+(function(){
+  var obs=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('seen');obs.unobserve(e.target);}});
+  },{threshold:.1});
+  document.querySelectorAll('[data-reveal],[data-reveal-l],[data-reveal-r]').forEach(function(el){obs.observe(el);});
+})();
+
+/* ── Year ── */
+document.getElementById('gc-yr').textContent=new Date().getFullYear();
+
+/* ══ TRANSLATION (Google Translate Integration) ══════════════════════ */
+function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+        pageLanguage: 'es',
+        includedLanguages: 'es,en,pt',
+        autoDisplay: false
+    }, 'google_translate_element');
+}
+
+function setLang(l) {
+    localStorage.setItem('gc_lang', l);
+    
+    // Update button states immediately for UI feedback
+    ['es','en','pt'].forEach(function(x) {
+        ['l-','ml-'].forEach(function(p) {
+            var b = document.getElementById(p + x);
+            if(b) b.classList.toggle('on', x === l);
+        });
+    });
+
+    // Trigger Google Translate select change
+    var selectField = document.querySelector('.goog-te-combo');
+    if (selectField) {
+        selectField.value = l;
+        selectField.dispatchEvent(new Event('change'));
+    } else {
+        // Retry if script hasn't loaded yet
+        setTimeout(function() { setLang(l); }, 300);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var _lang = localStorage.getItem('gc_lang') || 'es';
+    
+    // Initial UI state
+    ['es','en','pt'].forEach(function(x) {
+        ['l-','ml-'].forEach(function(p) {
+            var b = document.getElementById(p + x);
+            if(b) b.classList.toggle('on', x === _lang);
+        });
+    });
+
+    // Wait slightly for Google Translate to inject its dropdown, then translate if needed
+    if (_lang !== 'es') {
+        setTimeout(function() { setLang(_lang); }, 1000);
+    }
+});
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
