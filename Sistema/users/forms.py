@@ -124,6 +124,27 @@ Equipo Administrativo de Getaway Chile.
                 except Exception as e:
                     logger.error(f"Error enviando correo a usuario nuevo {user_obj.email}: {e}")
 
+                # WhatsApp de Bienvenida
+                try:
+                    from notifications.whatsapp import _twilio_send, _normalize_phone
+                    if user_obj.phone:
+                        phone = _normalize_phone(user_obj.phone, 'Chilena') # Default Chile para empleados
+                        if phone:
+                            wa_body = (
+                                f"👋 *¡Bienvenido al equipo de Getaway Chile!*\n\n"
+                                f"Hola {user_obj.first_name}, tu cuenta de {user_obj.get_role_display()} "
+                                f"ha sido activada exitosamente.\n\n"
+                                f"🔑 *Tus credenciales:*\n"
+                                f"• Email: {user_obj.email}\n"
+                                f"• Contraseña Temporal: {password}\n\n"
+                                f"Accede al sistema aquí: https://sistemagetawaychile.cl/login/\n\n"
+                                f"⚠️ _El sistema te pedirá cambiar esta contraseña provisoria al ingresar por primera vez._"
+                            )
+                            # Passing None for sale, not needed just for twilio auth
+                            _twilio_send(user_obj, phone, wa_body, 'ES')
+                except Exception as wa_e:
+                    logger.error(f"Error enviando WhatsApp a usuario nuevo {user_obj.email}: {wa_e}")
+
             # Lanzar el envío de correo en un hilo paralelo para no congelar la pantalla de creación
             email_thread = threading.Thread(target=enviar_correo_bienvenida, args=(user, generated_password))
             email_thread.daemon = True

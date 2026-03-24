@@ -207,7 +207,8 @@ if not DEBUG:
     # Producción: forzar backend SMTP para que los correos se envíen de verdad
     _email_backend = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 else:
-    _email_backend = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+    # Si quieres verlos en consola usa: django.core.mail.backends.console.EmailBackend
+    _email_backend = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 
 EMAIL_BACKEND = _email_backend
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
