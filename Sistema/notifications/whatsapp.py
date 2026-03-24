@@ -172,26 +172,44 @@ def _normalize_phone(phone: str, nationality: str) -> str | None:
 
 
 # ── Main send functions ──────────────────────────────────────────────
-def _twilio_send(sale, to_phone: str, body: str, lang: str) -> tuple[bool, str]:
-    """Low-level Twilio send. Returns (success, message)."""
-    account_sid = os.environ.get('TWILIO_ACCOUNT_SID', '')
-    auth_token = os.environ.get('TWILIO_AUTH_TOKEN', '')
-    from_number = os.environ.get('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886')
-    if not account_sid or not auth_token:
-        return False, 'Twilio no configurado (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN vacíos)'
+def _ultramsg_send(sale, to_phone: str, body: str, lang: str) -> tuple[bool, str]:
+    """Low-level Ultramsg send. Returns (success, message)."""
+    import urllib.request
+    import urllib.parse
+    
+    instance_id = os.environ.get('ULTRAMSG_INSTANCE_ID', '')
+    token = os.environ.get('ULTRAMSG_TOKEN', '')
+    
+    if not instance_id or not token:
+        return False, 'Ultramsg no configurado (ULTRAMSG_INSTANCE_ID / ULTRAMSG_TOKEN vacíos)'
+        
+    # Ultramsg needs the phone number without the leading '+'
+    if to_phone.startswith('+'):
+        to_phone = to_phone[1:]
+        
+    url = f"https://api.ultramsg.com/{instance_id}/messages/chat"
+    data = urllib.parse.urlencode({
+        'token': token,
+        'to': to_phone,
+        'body': body
+    }).encode('utf-8')
+    
     try:
-        from twilio.rest import Client
-        client = Client(account_sid, auth_token)
-        message = client.messages.create(
-            body=body,
-            from_=from_number,
-            to=f'whatsapp:{to_phone}',
-        )
-        lang_name = 'Español' if lang == 'ES' else ('Inglés' if lang == 'EN' else 'Portugués')
-        logger.info(f'WhatsApp sent to {to_phone} (SID: {message.sid}) — lang={lang}')
-        return True, f'WhatsApp enviado a {to_phone} en {lang_name}'
+        req = urllib.request.Request(url, data=data)
+        req.add_header('content-type', 'application/x-www-form-urlencoded')
+        
+        response = urllib.request.urlopen(req)
+        if response.getcode() == 200:
+            lang_name = 'Español' if lang == 'ES' else ('Inglés' if lang == 'EN' else 'Portugués')
+            sale_info = f" (Sale #{sale.pk})" if sale and hasattr(sale, 'pk') else ""
+            logger.info(f'WhatsApp (Ultramsg) sent to {to_phone}{sale_info} — lang={lang}')
+            return True, f'WhatsApp enviado a {to_phone} en {lang_name}'
+        else:
+            return False, f'Error HTTP de Ultramsg: {response.getcode()}'
+            
     except Exception as exc:
-        logger.error(f'WhatsApp send failed for sale #{sale.pk}: {exc}')
+        sale_info = f" sale #{sale.pk}" if sale and hasattr(sale, 'pk') else ""
+        logger.error(f'WhatsApp (Ultramsg) send failed for{sale_info}: {exc}')
         return False, str(exc)
 
 
@@ -204,7 +222,7 @@ def send_whatsapp_notification(sale) -> tuple[bool, str]:
         return False, f'Número de teléfono inválido: {sale.client_phone}'
     lang = get_language_for_nationality(sale.client_nationality)
     body = _build_message(sale, lang)
-    return _twilio_send(sale, to_phone, body, lang)
+    return _ultramsg_send(sale, to_phone, body, lang)
 
 
 def send_whatsapp_notification_for_stops(sale, stops, lang: str) -> tuple[bool, str]:
@@ -218,4 +236,4 @@ def send_whatsapp_notification_for_stops(sale, stops, lang: str) -> tuple[bool, 
     if not to_phone:
         return False, f'Número de teléfono inválido: {sale.client_phone}'
     body = _build_message(sale, lang, stops=stops)
-    return _twilio_send(sale, to_phone, body, lang)
+    return _ultramsg_send(sale, to_phone, body, lang)

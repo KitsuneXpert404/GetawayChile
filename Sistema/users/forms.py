@@ -126,7 +126,7 @@ Equipo Administrativo de Getaway Chile.
 
                 # WhatsApp de Bienvenida
                 try:
-                    from notifications.whatsapp import _twilio_send, _normalize_phone
+                    from notifications.whatsapp import _ultramsg_send, _normalize_phone
                     if user_obj.phone:
                         phone = _normalize_phone(user_obj.phone, 'Chilena') # Default Chile para empleados
                         if phone:
@@ -141,7 +141,7 @@ Equipo Administrativo de Getaway Chile.
                                 f"⚠️ _El sistema te pedirá cambiar esta contraseña provisoria al ingresar por primera vez._"
                             )
                             # Passing None for sale, not needed just for twilio auth
-                            _twilio_send(user_obj, phone, wa_body, 'ES')
+                            _ultramsg_send(user_obj, phone, wa_body, 'ES')
                 except Exception as wa_e:
                     logger.error(f"Error enviando WhatsApp a usuario nuevo {user_obj.email}: {wa_e}")
 
