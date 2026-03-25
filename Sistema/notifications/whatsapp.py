@@ -177,8 +177,8 @@ def _ultramsg_send(sale, to_phone: str, body: str, lang: str) -> tuple[bool, str
     import urllib.request
     import urllib.parse
     
-    instance_id = os.environ.get('ULTRAMSG_INSTANCE_ID', '')
-    token = os.environ.get('ULTRAMSG_TOKEN', '')
+    instance_id = os.environ.get('ULTRAMSG_INSTANCE_ID', '').strip()
+    token = os.environ.get('ULTRAMSG_TOKEN', '').strip()
     
     if not instance_id or not token:
         return False, 'Ultramsg no configurado (ULTRAMSG_INSTANCE_ID / ULTRAMSG_TOKEN vacíos)'
@@ -197,6 +197,7 @@ def _ultramsg_send(sale, to_phone: str, body: str, lang: str) -> tuple[bool, str
     try:
         req = urllib.request.Request(url, data=data)
         req.add_header('content-type', 'application/x-www-form-urlencoded')
+        req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
         
         # Agregamos timeout de 10 segundos para evitar que Render se quede colgado (502)
         response = urllib.request.urlopen(req, timeout=10)
