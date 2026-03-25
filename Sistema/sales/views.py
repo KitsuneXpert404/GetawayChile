@@ -755,74 +755,67 @@ class SaleNotifyClientView(_AdminOrLogisticsRequired, View):
 
         custom_message = request.POST.get('custom_message', '').strip()
 
-        # ── Background Thread for Notifications ─────────────────────────────────────
-        import threading
-        import logging
+        # ── Enviar Notificaciones Síncronamente ───────────────────────────────────
         from django.core.mail import send_mail
         from django.template.loader import render_to_string
         from django.conf import settings as django_settings
+        import logging
 
         logger = logging.getLogger(__name__)
 
-        def enviar_notificaciones_cliente(sale_obj, stops_list, do_em, do_wa, lang_code, custom_msg, stop_lbl):
-            # Emails
-            if do_em:
-                context = {
-                    'sale': sale_obj,
-                    'stops': stops_list,
-                    'passengers': sale_obj.passengers.all(),
-                    'lang': lang_code,
-                    'custom_message': custom_msg,
-                }
-                _subjects = {
-                    'EN': f"✈️ Booking Confirmed #{sale_obj.pk}{' — ' + stop_lbl if stop_lbl else ''} — Getaway Chile",
-                    'PT': f"✈️ Reserva Confirmada #{sale_obj.pk}{' — ' + stop_lbl if stop_lbl else ''} — Getaway Chile",
-                    'ES': f"✈️ Confirmación de Reserva #{sale_obj.pk}{' — ' + stop_lbl if stop_lbl else ''} — Getaway Chile",
-                }
-                subject = _subjects.get(lang_code, _subjects['ES'])
-                html_message = render_to_string('sales/email_client_confirmation.html', context)
-                plain_message = (
-                    f"Hola {sale_obj.client_first_name},\n\n"
-                    f"Tu reserva #{sale_obj.pk} ha sido CONFIRMADA.\n"
-                    f"Hora de recogida: {sale_obj.pickup_time or 'Por confirmar'}\n"
-                    f"Hotel/Dirección: {sale_obj.hotel_address or 'Sin especificar'}\n\n"
-                    + (f"Observaciones: {custom_msg}\n\n" if custom_msg else "") +
-                    f"¡Muchas gracias por elegir Getaway Chile!"
+        # Emails
+        if do_email:
+            context = {
+                'sale': sale,
+                'stops': selected_stops,
+                'passengers': sale.passengers.all(),
+                'lang': lang,
+                'custom_message': custom_message,
+            }
+            _subjects = {
+                'EN': f"✈️ Booking Confirmed #{sale.pk}{' — ' + stop_label if stop_label else ''} — Getaway Chile",
+                'PT': f"✈️ Reserva Confirmada #{sale.pk}{' — ' + stop_label if stop_label else ''} — Getaway Chile",
+                'ES': f"✈️ Confirmación de Reserva #{sale.pk}{' — ' + stop_label if stop_label else ''} — Getaway Chile",
+            }
+            subject = _subjects.get(lang, _subjects['ES'])
+            html_message = render_to_string('sales/email_client_confirmation.html', context)
+            plain_message = (
+                f"Hola {sale.client_first_name},\n\n"
+                f"Tu reserva #{sale.pk} ha sido CONFIRMADA.\n"
+                f"Hora de recogida: {sale.pickup_time or 'Por confirmar'}\n"
+                f"Hotel/Dirección: {sale.hotel_address or 'Sin especificar'}\n\n"
+                + (f"Observaciones: {custom_message}\n\n" if custom_message else "") +
+                f"¡Muchas gracias por elegir Getaway Chile!"
+            )
+            try:
+                send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    html_message=html_message,
+                    from_email=django_settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[sale.client_email],
+                    fail_silently=False,
                 )
-                try:
-                    send_mail(
-                        subject=subject,
-                        message=plain_message,
-                        html_message=html_message,
-                        from_email=django_settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[sale_obj.client_email],
-                        fail_silently=False,
-                    )
-                    logger.info(f"Email asíncrono enviado con éxito a {sale_obj.client_email}")
-                except Exception as e:
-                    logger.error(f"Error asíncrono al enviar email a {sale_obj.client_email}: {e}")
+                logger.info(f"Email enviado con éxito a {sale.client_email}")
+                messages.success(request, f"📧 Email enviado a {sale.client_email} correctamente.")
+            except Exception as e:
+                logger.error(f"Error al enviar email a {sale.client_email}: {e}")
+                messages.error(request, f"Error al enviar el email: {e}")
 
-            # WhatsApp
-            if do_wa:
-                try:
-                    from notifications.whatsapp import send_whatsapp_notification_for_stops
-                    ok, detail = send_whatsapp_notification_for_stops(sale_obj, stops_list, lang_code, custom_msg)
-                    if not ok:
-                        logger.warning(f"Error asíncrono WhatsApp para {sale_obj.client_phone}: {detail}")
-                    else:
-                        logger.info(f"WhatsApp asíncrono enviado con éxito a {sale_obj.client_phone}")
-                except Exception as e:
-                    logger.error(f"Error de código al enviar WhatsApp a {sale_obj.client_phone}: {e}")
-
-        # Iniciar hilo
-        thread = threading.Thread(
-            target=enviar_notificaciones_cliente,
-            args=(sale, selected_stops, do_email, do_whatsapp, lang, custom_message, stop_label)
-        )
-        thread.daemon = True
-        thread.start()
-
-        messages.success(request, f"¡Las notificaciones para el cliente están siendo procesadas en segundo plano! 🚀")
+        # WhatsApp
+        if do_whatsapp:
+            try:
+                from notifications.whatsapp import send_whatsapp_notification_for_stops
+                ok, detail = send_whatsapp_notification_for_stops(sale, selected_stops, lang, custom_message)
+                if not ok:
+                    logger.warning(f"Error WhatsApp para {sale.client_phone}: {detail}")
+                    messages.warning(request, f"⚠️ WhatsApp no enviado: {detail}")
+                else:
+                    logger.info(f"WhatsApp enviado con éxito a {sale.client_phone}")
+                    messages.success(request, f"💬 WhatsApp enviado: {detail}")
+            except Exception as e:
+                logger.error(f"Error de código al enviar WhatsApp a {sale.client_phone}: {e}")
+                messages.error(request, f"Error interno enviando WhatsApp: {e}")
 
         # ── Mark as notified ───────────────────────────────────────
         sale.client_notified = True

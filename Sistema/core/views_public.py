@@ -137,28 +137,19 @@ class PublicContactoView(View):
             f"Mensaje:\n{mensaje}\n"
         )
 
-        # Email to team via Thread
-        import threading
-        def _send_contact_email(sbj, bdy):
-            try:
-                from django.core.mail import send_mail
-                from django.conf import settings
-                send_mail(
-                    subject=sbj,
-                    message=bdy,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
-                    fail_silently=True,
-                )
-            except Exception:
-                pass
-                
-        contact_thread = threading.Thread(
-            target=_send_contact_email, 
-            args=(f"[Web] Consulta de {full_name}", body)
-        )
-        contact_thread.daemon = True
-        contact_thread.start()
+        # Email to team
+        from django.core.mail import send_mail
+        from django.conf import settings
+        try:
+            send_mail(
+                subject=f"[Web] Consulta de {full_name}",
+                message=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
 
         # In-app notification to all sellers + admins
         notif_msg = (
@@ -255,28 +246,19 @@ class PublicReservarView(View):
             f"Responder a: {email}\n"
         )
 
-        # Email to team via Thread
-        import threading
-        def _send_reservation_email(sbj, bdy):
-            try:
-                from django.core.mail import send_mail
-                from django.conf import settings
-                send_mail(
-                    subject=sbj,
-                    message=bdy,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
-                    fail_silently=True,
-                )
-            except Exception:
-                pass
-                
-        res_thread = threading.Thread(
-            target=_send_reservation_email,
-            args=(f"🗓️ [RESERVA WEB] {full_name} → {tour_name} ({fecha})", body)
-        )
-        res_thread.daemon = True
-        res_thread.start()
+        # Email to team
+        from django.core.mail import send_mail
+        from django.conf import settings
+        try:
+            send_mail(
+                subject=f"🗓️ [RESERVA WEB] {full_name} → {tour_name} ({fecha})",
+                message=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
 
         # In-app notification to all sellers + admins with full client contact
         notif_msg = (

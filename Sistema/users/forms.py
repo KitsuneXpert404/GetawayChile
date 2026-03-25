@@ -85,26 +85,24 @@ class CustomUserCreationForm(forms.ModelForm):
         if commit:
             user.save()
             
-            # === 3. Enviar Correo de Bienvenida con Credenciales (Asíncrono) ===
+            # === 3. Enviar Correo de Bienvenida con Credenciales (Síncrono) ===
             from django.core.mail import send_mail
             import logging
-            import threading
             
             logger = logging.getLogger(__name__)
             
-            def enviar_correo_bienvenida(user_obj, password):
-                from django.conf import settings
-                asunto = "Bienvenido al Equipo | Credenciales de Acceso Getaway Chile"
-                mensaje = f"""Hola {user_obj.first_name},
+            from django.conf import settings
+            asunto = "Bienvenido al Equipo | Credenciales de Acceso Getaway Chile"
+            mensaje = f"""Hola {user.first_name},
 
 ¡Bienvenido al ERP de Getaway Chile!
-Se ha creado tu perfil en el sistema corporativo con el rol de {user_obj.get_role_display()}.
+Se ha creado tu perfil en el sistema corporativo con el rol de {user.get_role_display()}.
 
 A continuación, tus credenciales de acceso iniciales:
 
-URL de Acceso: https://sistemagetawaychile.cl/dashboard/
-Email / Usuario: {user_obj.email}
-Contraseña Temporal: {password}
+URL de Acceso: https://sistemagetawaychile.cl/login/
+Email / Usuario: {user.email}
+Contraseña Temporal: {generated_password}
 
 IMPORTANTE: 
 1. Al iniciar sesión por primera vez, el sistema te exigirá que cambies esta contraseña provisoria por una definitiva por motivos de seguridad. 
@@ -113,42 +111,37 @@ IMPORTANTE:
 Saludos cordiales,
 Equipo Administrativo de Getaway Chile.
 """
-                try:
-                    send_mail(
-                        subject=asunto,
-                        message=mensaje,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[user_obj.personal_email] if user_obj.personal_email else [],
-                        fail_silently=False,
-                    )
-                except Exception as e:
-                    logger.error(f"Error enviando correo a usuario nuevo {user_obj.email}: {e}")
+            try:
+                send_mail(
+                    subject=asunto,
+                    message=mensaje,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.personal_email] if user.personal_email else [],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                logger.error(f"Error enviando correo a usuario nuevo {user.email}: {e}")
 
-                # WhatsApp de Bienvenida
-                try:
-                    from notifications.whatsapp import _ultramsg_send, _normalize_phone
-                    if user_obj.phone:
-                        phone = _normalize_phone(user_obj.phone, 'Chilena') # Default Chile para empleados
-                        if phone:
-                            wa_body = (
-                                f"👋 *¡Bienvenido al equipo de Getaway Chile!*\n\n"
-                                f"Hola {user_obj.first_name}, tu cuenta de {user_obj.get_role_display()} "
-                                f"ha sido activada exitosamente.\n\n"
-                                f"🔑 *Tus credenciales:*\n"
-                                f"• Email: {user_obj.email}\n"
-                                f"• Contraseña Temporal: {password}\n\n"
-                                f"Accede al sistema aquí: https://sistemagetawaychile.cl/login/\n\n"
-                                f"⚠️ _El sistema te pedirá cambiar esta contraseña provisoria al ingresar por primera vez._"
-                            )
-                            # Passing None for sale, not needed just for twilio auth
-                            _ultramsg_send(user_obj, phone, wa_body, 'ES')
-                except Exception as wa_e:
-                    logger.error(f"Error enviando WhatsApp a usuario nuevo {user_obj.email}: {wa_e}")
-
-            # Lanzar el envío de correo en un hilo paralelo para no congelar la pantalla de creación
-            email_thread = threading.Thread(target=enviar_correo_bienvenida, args=(user, generated_password))
-            email_thread.daemon = True
-            email_thread.start()
+            # WhatsApp de Bienvenida
+            try:
+                from notifications.whatsapp import _ultramsg_send, _normalize_phone
+                if user.phone:
+                    phone = _normalize_phone(user.phone, 'Chilena') # Default Chile para empleados
+                    if phone:
+                        wa_body = (
+                            f"👋 *¡Bienvenido al equipo de Getaway Chile!*\n\n"
+                            f"Hola {user.first_name}, tu cuenta de {user.get_role_display()} "
+                            f"ha sido activada exitosamente.\n\n"
+                            f"🔑 *Tus credenciales:*\n"
+                            f"• Email: {user.email}\n"
+                            f"• Contraseña Temporal: {generated_password}\n\n"
+                            f"Accede al sistema aquí: https://sistemagetawaychile.cl/login/\n\n"
+                            f"⚠️ _El sistema te pedirá cambiar esta contraseña provisoria al ingresar por primera vez._"
+                        )
+                        # Passing None for sale, not needed just for twilio auth
+                        _ultramsg_send(user, phone, wa_body, 'ES')
+            except Exception as wa_e:
+                logger.error(f"Error enviando WhatsApp a usuario nuevo {user.email}: {wa_e}")
             
         return user
 
