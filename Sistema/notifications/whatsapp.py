@@ -226,7 +226,7 @@ def send_whatsapp_notification(sale) -> tuple[bool, str]:
     return _ultramsg_send(sale, to_phone, body, lang)
 
 
-def send_whatsapp_notification_for_stops(sale, stops, lang: str) -> tuple[bool, str]:
+def send_whatsapp_notification_for_stops(sale, stops, lang: str, custom_msg: str = "") -> tuple[bool, str]:
     """
     Send WhatsApp notification for a specific list of SaleTour stops.
     Used when the user selects a particular tour stop to notify about.
@@ -237,4 +237,6 @@ def send_whatsapp_notification_for_stops(sale, stops, lang: str) -> tuple[bool, 
     if not to_phone:
         return False, f'Número de teléfono inválido: {sale.client_phone}'
     body = _build_message(sale, lang, stops=stops)
+    if custom_msg:
+        body += f"\n\nObservaciones:\n{custom_msg}"
     return _ultramsg_send(sale, to_phone, body, lang)
