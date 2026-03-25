@@ -198,7 +198,8 @@ def _ultramsg_send(sale, to_phone: str, body: str, lang: str) -> tuple[bool, str
         req = urllib.request.Request(url, data=data)
         req.add_header('content-type', 'application/x-www-form-urlencoded')
         
-        response = urllib.request.urlopen(req)
+        # Agregamos timeout de 10 segundos para evitar que Render se quede colgado (502)
+        response = urllib.request.urlopen(req, timeout=10)
         if response.getcode() == 200:
             lang_name = 'Español' if lang == 'ES' else ('Inglés' if lang == 'EN' else 'Portugués')
             sale_info = f" (Sale #{sale.pk})" if sale and hasattr(sale, 'pk') else ""
