@@ -686,7 +686,7 @@
                         <i class="fas fa-home"></i> Resumen
                     </a>
                 </li>
-                
+
                 {% if user.role == 'CONDUCTOR' or user.role == 'GUIA' %}
                 <li class="nav-item">
                     <a class="nav-link {% if 'mis-viajes' in request.path %}active{% endif %}"
@@ -703,7 +703,8 @@
                         <i class="fas fa-shopping-bag"></i> Ventas
                     </a>
                     <ul class="dropdown-menu mt-2 p-2">
-                        <li><a class="dropdown-item rounded py-2" href="{% url 'sales:create' %}"><i class="fas fa-plus me-1"></i> Nueva Venta</a></li>
+                        <li><a class="dropdown-item rounded py-2" href="{% url 'sales:create' %}"><i
+                                    class="fas fa-plus me-1"></i> Nueva Venta</a></li>
                     </ul>
                 </li>
                 {% endif %}
@@ -716,14 +717,21 @@
                     </a>
                     <ul class="dropdown-menu mt-2 p-2">
                         <li><a class="dropdown-item rounded py-2 {% if '/logistics/dashboard/' in request.path or '/logistics/operaciones/' in request.path %}active{% endif %}"
-                                href="{% url 'logistics_dashboard' %}"><i
-                                    class="fas fa-route me-2"></i>Centro de Operaciones</a></li>
-                        <li><a class="dropdown-item rounded py-2" href="{% url 'logistics_vehicle_list' %}"><i class="fas fa-truck me-1"></i> Flota y Vehículos</a></li>
-                        <li><a class="dropdown-item rounded py-2 {% if '/logistics/ocupacion_vehiculos/' in request.path %}active{% endif %}" href="{% url 'logistics_vehicle_occupancy' %}"><i class="fas fa-bus-alt me-1"></i> Mapa de Ocupación</a></li>
-                        <li><a class="dropdown-item rounded py-2" href="{% url 'logistics_quotas_manager' %}"><i class="fas fa-ticket-alt me-1"></i> Gestión de Cupos</a></li>
+                                href="{% url 'logistics_dashboard' %}"><i class="fas fa-route me-2"></i>Centro de
+                                Operaciones</a></li>
+                        <li><a class="dropdown-item rounded py-2" href="{% url 'logistics_vehicle_list' %}"><i
+                                    class="fas fa-truck me-1"></i> Flota y Vehículos</a></li>
+                        <li><a class="dropdown-item rounded py-2 {% if '/logistics/ocupacion_vehiculos/' in request.path %}active{% endif %}"
+                                href="{% url 'logistics_vehicle_occupancy' %}"><i class="fas fa-bus-alt me-1"></i> Mapa
+                                de Ocupación</a></li>
+                        <li><a class="dropdown-item rounded py-2" href="{% url 'logistics_quotas_manager' %}"><i
+                                    class="fas fa-ticket-alt me-1"></i> Gestión de Cupos</a></li>
                         {% if user.is_admin %}
-                        <li><hr class="dropdown-divider" style="border-color: rgba(44,110,122,0.1)"></li>
-                        <li><a class="dropdown-item rounded py-2" href="{% url 'agency-list' %}"><i class="fas fa-building me-1"></i> Gestor de Agencias</a></li>
+                        <li>
+                            <hr class="dropdown-divider" style="border-color: rgba(44,110,122,0.1)">
+                        </li>
+                        <li><a class="dropdown-item rounded py-2" href="{% url 'agency-list' %}"><i
+                                    class="fas fa-building me-1"></i> Gestor de Agencias</a></li>
                         {% endif %}
                     </ul>
                 </li>
@@ -734,8 +742,10 @@
                         <i class="fas fa-map-marked-alt"></i> Catálogo
                     </a>
                     <ul class="dropdown-menu mt-2 p-2">
-                        <li><a class="dropdown-item rounded py-2" href="{% url 'tour_list' %}"><i class="fas fa-list me-2 text-muted"></i>Ver Catálogo</a></li>
-                        <li><a class="dropdown-item rounded py-2" href="{% url 'tour_create' %}"><i class="fas fa-plus me-2 text-muted"></i>Añadir Tour</a></li>
+                        <li><a class="dropdown-item rounded py-2" href="{% url 'tour_list' %}"><i
+                                    class="fas fa-list me-2 text-muted"></i>Ver Catálogo</a></li>
+                        <li><a class="dropdown-item rounded py-2" href="{% url 'tour_create' %}"><i
+                                    class="fas fa-plus me-2 text-muted"></i>Añadir Tour</a></li>
                     </ul>
                 </li>
                 {% endif %}
@@ -761,20 +771,28 @@
                         <i class="fas fa-history"></i> Auditoría
                     </a>
                     <ul class="dropdown-menu mt-2 p-2">
-                        <li><a class="dropdown-item rounded py-2" href="{% url 'history_sale_list' %}"><i class="fas fa-receipt me-2 text-muted"></i>Historial de Ventas</a></li>
-                        <li><a class="dropdown-item rounded py-2" href="{% url 'history_tour_list' %}"><i class="fas fa-map-signs me-2 text-muted"></i>Historial de Tours</a></li>
+                        <li><a class="dropdown-item rounded py-2" href="{% url 'history_sale_list' %}"><i
+                                    class="fas fa-receipt me-2 text-muted"></i>Historial de Ventas</a></li>
+                        <li><a class="dropdown-item rounded py-2" href="{% url 'history_tour_list' %}"><i
+                                    class="fas fa-map-signs me-2 text-muted"></i>Historial de Tours</a></li>
                     </ul>
                 </li>
 
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {% if 'users' in request.path or 'profile' in request.path %}active{% endif %}" href="#"
-                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle {% if 'users' in request.path or 'profile' in request.path %}active{% endif %}"
+                        href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-cogs"></i> Sistema
                     </a>
                     <ul class="dropdown-menu mt-2 p-2">
-                        <li><a class="dropdown-item rounded py-2 {% if 'profile' in request.path %}active{% endif %}" href="{% url 'user_profile' %}"><i class="fas fa-id-card me-2 text-muted"></i>Mi Perfil</a></li>
-                        <li><hr class="dropdown-divider" style="border-color: rgba(44,110,122,0.1)"></li>
-                        <li><a class="dropdown-item rounded py-2 {% if 'users' in request.path %}active{% endif %}" href="{% url 'user_list' %}"><i class="fas fa-users-cog me-2 text-muted"></i>Usuarios y Accesos</a>
+                        <li><a class="dropdown-item rounded py-2 {% if 'profile' in request.path %}active{% endif %}"
+                                href="{% url 'user_profile' %}"><i class="fas fa-id-card me-2 text-muted"></i>Mi
+                                Perfil</a></li>
+                        <li>
+                            <hr class="dropdown-divider" style="border-color: rgba(44,110,122,0.1)">
+                        </li>
+                        <li><a class="dropdown-item rounded py-2 {% if 'users' in request.path %}active{% endif %}"
+                                href="{% url 'user_list' %}"><i class="fas fa-users-cog me-2 text-muted"></i>Usuarios y
+                                Accesos</a>
                         </li>
                     </ul>
                 </li>
@@ -796,7 +814,9 @@
                     <a class="gc-bell-btn" href="#" data-bs-toggle="dropdown" role="button">
                         <i class="fas fa-bell fa-sm"></i>
                         {% if unread_notifications_count %}
-                        <span class="badge-dot" style="position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; border-radius: 8px; background: var(--gc-gold); font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; padding: 0 3px;">{{ unread_notifications_count }}</span>
+                        <span class="badge-dot"
+                            style="position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; border-radius: 8px; background: var(--gc-gold); font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; padding: 0 3px;">{{
+                            unread_notifications_count }}</span>
                         {% endif %}
                     </a>
                     <div class="dropdown-menu gc-dropdown-menu dropdown-menu-end mt-2">
@@ -902,8 +922,8 @@
             <div class="greeting-name">Hola, {{ user_display_name }}</div>
             <div class="greeting-sub">Panel de Administración · Getaway Chile Turismo &amp; Transporte</div>
         </div>
-        </div>
     </div>
+</div>
 </div>
 
 {# ===== MAIN CONTENT ===== #}
@@ -917,67 +937,79 @@
 
 {# ===== WELCOME / ONBOARDING MODAL ===== #}
 {% if user.requires_password_change %}
-    {% if user.role == "VENDEDOR" or user.role == "LOGISTICA" or user.role == "CONDUCTOR" %}
-    <!-- Welcome Modal Auto-Trigger -->
-    <div class="modal fade" id="welcomeOnboardingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0" style="border-radius: 16px; overflow: hidden; box-shadow: 0 15px 50px rgba(44,110,122,0.2);">
-                <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--gc-teal), var(--gc-teal-dark)); padding: 1.5rem; border: none;">
-                    <h5 class="modal-title fw-bold" style="font-family: 'Poppins', sans-serif;">
-                        <i class="fas fa-hand-sparkles me-2 text-warning"></i> ¡Te damos la bienvenida al Equipo!
-                    </h5>
-                </div>
-                <div class="modal-body p-4 text-center">
-                    <div class="mb-4">
-                        <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: rgba(44,110,122,0.08); color: var(--gc-teal); font-size: 2.5rem;">
-                            {% if user.role == "VENDEDOR" %}<i class="fas fa-headset"></i>
-                            {% elif user.role == "LOGISTICA" %}<i class="fas fa-route"></i>
-                            {% elif user.role == "CONDUCTOR" %}<i class="fas fa-shuttle-van"></i>{% endif %}
-                        </div>
+{% if user.role == "VENDEDOR" or user.role == "LOGISTICA" or user.role == "CONDUCTOR" %}
+<!-- Welcome Modal Auto-Trigger -->
+<div class="modal fade" id="welcomeOnboardingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0"
+            style="border-radius: 16px; overflow: hidden; box-shadow: 0 15px 50px rgba(44,110,122,0.2);">
+            <div class="modal-header text-white"
+                style="background: linear-gradient(135deg, var(--gc-teal), var(--gc-teal-dark)); padding: 1.5rem; border: none;">
+                <h5 class="modal-title fw-bold" style="font-family: 'Poppins', sans-serif;">
+                    <i class="fas fa-hand-sparkles me-2 text-warning"></i> ¡Te damos la bienvenida al Equipo!
+                </h5>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-4">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 80px; height: 80px; background: rgba(44,110,122,0.08); color: var(--gc-teal); font-size: 2.5rem;">
+                        {% if user.role == "VENDEDOR" %}<i class="fas fa-headset"></i>
+                        {% elif user.role == "LOGISTICA" %}<i class="fas fa-route"></i>
+                        {% elif user.role == "CONDUCTOR" %}<i class="fas fa-shuttle-van"></i>{% endif %}
                     </div>
-                    
-                    <h4 class="fw-bold mb-3" style="color: var(--gc-teal);">Hola, {{ user.first_name }}</h4>
-                    
-                    <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.6;">
-                        Tu perfil como <strong class="text-dark">{{ user.get_role_display }}</strong> ha sido configurado con éxito.
-                        
-                        {% if user.role == "VENDEDOR" %}
-                        <br><br>Desde aquí podrás registrar reservas, administrar clientes y llevar un historial detallado de todas tus comisiones y ventas confirmadas.
-                        {% elif user.role == "LOGISTICA" %}
-                        <br><br>Desde aquí podrás asignar vehículos, controlar los aforos de tours y asegurarte que toda la operación diaria fluya sin inconvenientes.
-                        {% elif user.role == "CONDUCTOR" %}
-                        <br><br>Desde aquí podrás ver tus rutas asignadas diarias, reportar el estado de término de tus viajes y notificar incidentes al control base.
-                        {% endif %}
-                    </p>
+                </div>
 
-                    <div class="alert text-start mb-0" style="background: #fff8eb; border-left: 4px solid var(--gc-gold); color: #856114;">
-                        <div class="d-flex align-items-start gap-3">
-                            <i class="fas fa-shield-alt mt-1 fs-5"></i>
-                            <div>
-                                <h6 class="fw-bold mb-1">Tu Seguridad es lo Primero</h6>
-                                <p class="mb-0 small" style="opacity: 0.9;">Estás ingresando con una <strong>contraseña temporal</strong>. Te pedimos que ingreses a "<a href="{% url 'user_profile' %}" class="fw-bold" style="color:var(--gc-gold);">Mi Perfil</a>" cuando puedas y la cambies para proteger tu cuenta.</p>
-                            </div>
+                <h4 class="fw-bold mb-3" style="color: var(--gc-teal);">Hola, {{ user.first_name }}</h4>
+
+                <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                    Tu perfil como <strong class="text-dark">{{ user.get_role_display }}</strong> ha sido configurado
+                    con éxito.
+
+                    {% if user.role == "VENDEDOR" %}
+                    <br><br>Desde aquí podrás registrar reservas, administrar clientes y llevar un historial detallado
+                    de todas tus comisiones y ventas confirmadas.
+                    {% elif user.role == "LOGISTICA" %}
+                    <br><br>Desde aquí podrás asignar vehículos, controlar los aforos de tours y asegurarte que toda la
+                    operación diaria fluya sin inconvenientes.
+                    {% elif user.role == "CONDUCTOR" %}
+                    <br><br>Desde aquí podrás ver tus rutas asignadas diarias, reportar el estado de término de tus
+                    viajes y notificar incidentes al control base.
+                    {% endif %}
+                </p>
+
+                <div class="alert text-start mb-0"
+                    style="background: #fff8eb; border-left: 4px solid var(--gc-gold); color: #856114;">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="fas fa-shield-alt mt-1 fs-5"></i>
+                        <div>
+                            <h6 class="fw-bold mb-1">Tu Seguridad es lo Primero</h6>
+                            <p class="mb-0 small" style="opacity: 0.9;">Estás ingresando con una <strong>contraseña
+                                    temporal</strong>. Te pedimos que ingreses a "<a href="{% url 'user_profile' %}"
+                                    class="fw-bold" style="color:var(--gc-gold);">Mi Perfil</a>" cuando puedas y la
+                                cambies para proteger tu cuenta.</p>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light border-0 p-3 d-flex justify-content-center">
-                    <button type="button" class="btn btn-gc-primary px-5 py-2 fw-bold" data-bs-dismiss="modal">
-                        Comenzar a Trabajar <i class="fas fa-arrow-right ms-2"></i>
-                    </button>
-                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 p-3 d-flex justify-content-center">
+                <button type="button" class="btn btn-gc-primary px-5 py-2 fw-bold" data-bs-dismiss="modal">
+                    Comenzar a Trabajar <i class="fas fa-arrow-right ms-2"></i>
+                </button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                var welcomeModal = new bootstrap.Modal(document.getElementById('welcomeOnboardingModal'));
-                welcomeModal.show();
-            }, 800); // Pequeño retraso para que no sea intrusivo con la carga de la ruta.
-        });
-    </script>
-    {% endif %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+            var welcomeModal = new bootstrap.Modal(document.getElementById('welcomeOnboardingModal'));
+            welcomeModal.show();
+        }, 800); // Pequeño retraso para que no sea intrusivo con la carga de la ruta.
+    });
+</script>
+{% endif %}
 {% endif %}
 
 {% endblock %}

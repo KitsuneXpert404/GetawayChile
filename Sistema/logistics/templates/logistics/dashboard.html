@@ -225,35 +225,56 @@
         </span>
     </div>
 
-    <!-- Filters -->
+    <!-- Filters (Client-side JS) -->
     <div class="p-3 border-bottom bg-light">
-        <form method="get" class="row g-2 align-items-end search-bar">
-            <input type="hidden" name="date" value="{{ selected_date }}">
-            <div class="col-md-4">
-                <label class="form-label small fw-bold mb-1">Buscar cliente</label>
-                <input type="text" name="q" class="form-control form-control-sm" placeholder="Nombre, RUT, email, teléfono…" value="{{ search_q }}">
+        <div class="row g-2 align-items-end search-bar">
+            <!-- Búsqueda General -->
+            <div class="col-md-3">
+                <label class="form-label small fw-bold mb-1">Buscar cliente / reserva</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" id="js-search-q" class="form-control" placeholder="Nombre, email, tel..." onkeyup="filterSalesTable()">
+                </div>
             </div>
+            
+            <!-- Filtro: Tour -->
             <div class="col-md-2">
-                <label class="form-label small fw-bold mb-1">Filtrar por fecha</label>
-                <input type="date" name="fdate" class="form-control form-control-sm" value="{{ date_filter }}">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-bold mb-1">Estado</label>
-                <select name="status" class="form-select form-select-sm">
-                    {% for opt in status_options %}
-                    <option value="{{ opt.value }}" {% if opt.selected %}selected{% endif %}>{{ opt.label }}</option>
+                <label class="form-label small fw-bold mb-1">Filtrar por Tour</label>
+                <select id="js-search-tour" class="form-select form-select-sm" onchange="filterSalesTable()">
+                    <option value="">Todos los Tours</option>
+                    {% for tour in tours|default:'' %}
+                        <option value="{{ tour.name }}">{{ tour.name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-sm btn-gc-primary flex-fill">
-                    <i class="fas fa-search me-1"></i>Buscar
-                </button>
-                <a href="{% url 'logistics_dashboard' %}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">
-                    <i class="fas fa-times me-1"></i> Limpiar filtros
-                </a>
+            
+            <!-- Filtro: Estado -->
+            <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Estado</label>
+                <select id="js-search-status" class="form-select form-select-sm" onchange="filterSalesTable()">
+                    <option value="">Todos los estados</option>
+                    <option value="CONFIRMADA">Confirmada</option>
+                    <option value="PENDIENTE">Pendiente</option>
+                    <option value="CANCELADA">Cancelada</option>
+                </select>
             </div>
-        </form>
+            
+            <!-- Ordenar -->
+            <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Ordenar por</label>
+                <select id="js-sort" class="form-select form-select-sm" onchange="sortSalesTable()">
+                    <option value="recent">Más recientes primero</option>
+                    <option value="oldest">Más antiguos primero</option>
+                </select>
+            </div>
+            
+            <!-- Acciones -->
+            <div class="col-md-3 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-100 fw-bold" onclick="clearSalesFilters()" title="Limpiar filtros sin recargar">
+                    <i class="fas fa-eraser me-1"></i> Limpiar Filtros
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Table -->
@@ -272,9 +293,14 @@
                     <th class="text-end pe-3">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="sales-tbody">
                 {% for row in sales_rows %}
-                <tr class="{{ row.row_class|default:'' }}">
+                <tr class="sale-row {{ row.row_class|default:'' }}" 
+                    data-id="{{ row.obj.id }}" 
+                    data-search="{{ row.client_full_name|lower }} {{ row.client_phone|lower }} {{ row.obj.client_email|lower }}"
+                    data-tour="{{ row.tour_display }}"
+                    data-status="{{ row.obj.status }}"
+                    data-timestamp="{{ row.obj.created_at|date:'U' }}">
                     <td class="ps-3 fw-bold text-muted">#{{ row.obj.id }}</td>
                     <td>
                         <div class="fw-bold text-dark">{{ row.client_full_name }}</div>
@@ -315,9 +341,112 @@
     {% else %}
     <div class="text-center py-5 text-muted">
         <i class="fas fa-search fa-2x mb-3 opacity-50"></i>
-        <p>No se encontraron ventas con los filtros actuales.</p>
+        <p>No hay ventas registradas.</p>
     </div>
     {% endif %}
+    
+    <div id="js-no-results" class="text-center py-5 text-muted d-none">
+        <i class="fas fa-search fa-2x mb-3 opacity-50"></i>
+        <p>No se encontraron resultados con los filtros actuales.</p>
+    </div>
 </div>
 
+<script>
+    // Build unique tour list from active rows on load to populate the Tour dropdown dynamically
+    document.addEventListener("DOMContentLoaded", function() {
+        const rows = document.querySelectorAll('.sale-row');
+        const tours = new Set();
+        rows.forEach(r => {
+            const t = r.getAttribute('data-tour');
+            if(t && t.trim() !== '' && t !== 'Tour Privado') {
+                tours.add(t);
+            }
+        });
+        const select = document.getElementById('js-search-tour');
+        if(select) {
+            Array.from(tours).sort().forEach(tour => {
+                let opt = document.createElement('option');
+                opt.value = tour;
+                opt.textContent = tour;
+                select.appendChild(opt);
+            });
+            // Also append privates
+            let optP = document.createElement('option');
+            optP.value = "Tour Privado";
+            optP.textContent = "Tour Privado";
+            select.appendChild(optP);
+        }
+    });
+
+    function filterSalesTable() {
+        const q = document.getElementById('js-search-q').value.toLowerCase();
+        const tour = document.getElementById('js-search-tour').value;
+        const status = document.getElementById('js-search-status').value;
+        
+        const rows = document.querySelectorAll('.sale-row');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const rowSearch = row.getAttribute('data-search') || '';
+            const rowTour = row.getAttribute('data-tour') || '';
+            const rowStatus = row.getAttribute('data-status') || '';
+            const rowId = row.getAttribute('data-id') || '';
+            
+            let matchQ = true;
+            if(q !== '') {
+                matchQ = rowSearch.includes(q) || rowId.includes(q);
+            }
+            let matchTour = true;
+            if(tour !== '') {
+                matchTour = rowTour.includes(tour);
+            }
+            let matchStatus = true;
+            if(status !== '') {
+                matchStatus = (rowStatus === status);
+            }
+            
+            if(matchQ && matchTour && matchStatus) {
+                row.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                row.classList.add('d-none');
+            }
+        });
+        
+        const noResults = document.getElementById('js-no-results');
+        const tWrap = document.querySelector('.table-responsive');
+        if(visibleCount === 0) {
+            if(noResults) noResults.classList.remove('d-none');
+            if(tWrap) tWrap.classList.add('d-none');
+        } else {
+            if(noResults) noResults.classList.add('d-none');
+            if(tWrap) tWrap.classList.remove('d-none');
+        }
+    }
+    
+    function sortSalesTable() {
+        const sortVal = document.getElementById('js-sort').value; // 'recent' or 'oldest'
+        const tbody = document.getElementById('sales-tbody');
+        if(!tbody) return;
+        
+        const rows = Array.from(tbody.querySelectorAll('.sale-row'));
+        rows.sort((a, b) => {
+            const ta = parseInt(a.getAttribute('data-timestamp') || '0', 10);
+            const tb = parseInt(b.getAttribute('data-timestamp') || '0', 10);
+            return sortVal === 'recent' ? (tb - ta) : (ta - tb);
+        });
+        
+        rows.forEach(row => tbody.appendChild(row));
+    }
+    
+    function clearSalesFilters() {
+        document.getElementById('js-search-q').value = '';
+        document.getElementById('js-search-tour').value = '';
+        document.getElementById('js-search-status').value = '';
+        document.getElementById('js-sort').value = 'recent';
+        
+        sortSalesTable();
+        filterSalesTable();
+    }
+</script>
 {% endblock %}
